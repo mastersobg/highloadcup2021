@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16.3)
 project(highloadcup2021)
 
-set(CMAKE_CXX_STANDARD 17)
+add_subdirectory(app)
 
-add_executable(highloadcup2021 main.cpp)
