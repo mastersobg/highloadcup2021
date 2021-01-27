@@ -28,9 +28,11 @@ elseif (BUILD_TYPE STREQUAL "profile-cpu")
 elseif (BUILD_TYPE STREQUAL "dump")
     # TODO
 elseif (BUILD_TYPE STREQUAL "lock")
-    # TODO
+    string(APPEND CMAKE_CXX_FLAGS " -g -fno-omit-frame-pointer -rdynamic")
 else ()
     message(FATAL_ERROR "wrong build type " ${BUILD_TYPE})
 endif ()
 
 message(STATUS "CXX flags: ${CMAKE_CXX_FLAGS}")
+
+target_link_libraries(highloadcup2021 pthread)

@@ -22,7 +22,7 @@ ENV GOPATH /go/
 
 RUN apt-get update && apt-get install -y \
     g++ libgoogle-perftools-dev vim golang git lynx graphviz curl \
-    net-tools
+    net-tools mutrace
 
 
 RUN go get -u github.com/google/pprof
