@@ -22,7 +22,7 @@ ENV GOPATH /go/
 
 RUN apt-get update && apt-get install -y \
     g++ libgoogle-perftools-dev vim golang git lynx graphviz curl \
-    net-tools mutrace
+    net-tools mutrace gdb htop
 
 
 RUN go get -u github.com/google/pprof
@@ -32,6 +32,8 @@ ENV PATH="/go/bin:${PATH}"
 COPY --from=build /app/highloadcup2021 .
 COPY server-runner.sh .
 COPY server-profile.sh .
+COPY server-dump.sh .
+RUN echo "set pagination off" > ~/.gdbinit
 
 ARG build_type
 

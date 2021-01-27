@@ -12,7 +12,7 @@ file(GLOB TARGET_SRC src/*.cpp)
 add_executable(highloadcup2021 ${TARGET_SRC})
 
 # common cxx flags
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion -Wlogical-op -Wshift-overflow=2  -Wduplicated-cond -Wcast-qual -Wcast-align -O2 -pedantic -pipe -march=nehalem")
+set(CMAKE_CXX_FLAGS "-Werror -Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion -Wlogical-op -Wshift-overflow=2  -Wduplicated-cond -Wcast-qual -Wcast-align -O2 -pedantic -pipe -march=nehalem")
 
 message(STATUS "build type ${BUILD_TYPE}")
 
@@ -26,7 +26,7 @@ elseif (BUILD_TYPE STREQUAL "profile-memory")
 elseif (BUILD_TYPE STREQUAL "profile-cpu")
     # TODO
 elseif (BUILD_TYPE STREQUAL "dump")
-    # TODO
+    string(APPEND CMAKE_CXX_FLAGS " -g -fno-omit-frame-pointer")
 elseif (BUILD_TYPE STREQUAL "lock")
     string(APPEND CMAKE_CXX_FLAGS " -g -fno-omit-frame-pointer -rdynamic")
 else ()
