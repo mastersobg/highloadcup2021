@@ -11,7 +11,7 @@ void exec() {
             p[i] = std::rand();
         }
 
-        u_int64_t sum{0};
+        int64_t sum{0};
 
         for (u_int32_t i = 0; i < size; i++) {
             sum += p[i];

@@ -11,7 +11,7 @@ COPY CMakeLists.txt .
 ARG build_type
 
 RUN cmake -DBUILD_TYPE=$build_type .
-RUN cmake --build . -j 35
+RUN cmake --build . -j 7
 
 FROM ubuntu:20.10
 
