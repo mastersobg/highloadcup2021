@@ -24,7 +24,8 @@ elseif (BUILD_TYPE STREQUAL "debug-thread")
 elseif (BUILD_TYPE STREQUAL "profile-memory")
     # TODO
 elseif (BUILD_TYPE STREQUAL "profile-cpu")
-    # TODO
+    # uncomment to see all functions on perf report
+    # string(APPEND CMAKE_CXX_FLAGS " -g -fno-omit-frame-pointer")
 elseif (BUILD_TYPE STREQUAL "dump")
     string(APPEND CMAKE_CXX_FLAGS " -g -fno-omit-frame-pointer")
 elseif (BUILD_TYPE STREQUAL "lock")

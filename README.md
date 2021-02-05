@@ -48,6 +48,7 @@ jwatch -path . -script ./sync.sh
 - после остановки будет распечатана статистика по lock contention
 
 ## Stack trace dump
+
 - собрать образ в режиме dump
 - запустить контейнер
 - выполнить скрипт `dump.sh`
