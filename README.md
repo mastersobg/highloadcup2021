@@ -52,3 +52,6 @@ jwatch -path . -script ./sync.sh
 - собрать образ в режиме dump
 - запустить контейнер
 - выполнить скрипт `dump.sh`
+
+## Полезные ссылки:
+- https://blog.feabhas.com/2015/11/becoming-a-rule-of-zero-hero/
