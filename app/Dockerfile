@@ -1,7 +1,7 @@
 FROM ubuntu:20.10 as build
 
 RUN apt-get update && apt-get install -y \
-    g++ cmake libgoogle-perftools-dev rapidjson-dev
+    g++ cmake libgoogle-perftools-dev rapidjson-dev libcurl4-openssl-dev
 
 WORKDIR /app
 

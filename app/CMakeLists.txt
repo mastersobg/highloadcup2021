@@ -39,4 +39,4 @@ endif ()
 
 message(STATUS "CXX flags: ${CMAKE_CXX_FLAGS}")
 
-target_link_libraries(highloadcup2021 pthread)
+target_link_libraries(highloadcup2021 pthread curl)
