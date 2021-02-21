@@ -8,6 +8,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(BUILD_TYPE "" CACHE STRING "")
 
+find_package(RapidJSON REQUIRED)
+include_directories(${RAPIDJSON_INCLUDE_DIRS})
+
 file(GLOB TARGET_SRC src/*.cpp)
 add_executable(highloadcup2021 ${TARGET_SRC})
 
