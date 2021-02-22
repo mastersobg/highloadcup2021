@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(BUILD_TYPE "" CACHE STRING "")
+set(COMMIT_HASH "" CACHE STRING "")
 
 find_package(RapidJSON REQUIRED)
 include_directories(${RAPIDJSON_INCLUDE_DIRS})
@@ -19,6 +20,7 @@ set(CMAKE_CXX_FLAGS "-Werror -Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion
 
 message(STATUS "build type ${BUILD_TYPE}")
 add_definitions("-DBUILD_TYPE=\"${BUILD_TYPE}\"")
+add_definitions("-DCOMMIT_HASH=\"${COMMIT_HASH}\"")
 
 if (BUILD_TYPE STREQUAL "release")
 elseif (BUILD_TYPE STREQUAL "debug")

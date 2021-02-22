@@ -9,8 +9,9 @@ COPY src ./src
 COPY CMakeLists.txt .
 
 ARG build_type
+ARG commit_hash
 
-RUN cmake -DBUILD_TYPE=$build_type .
+RUN cmake -DBUILD_TYPE=$build_type -DCOMMIT_HASH=$commit_hash .
 RUN cmake --build . -j 7
 
 FROM ubuntu:20.10

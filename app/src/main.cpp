@@ -8,15 +8,21 @@
 #include <string>
 #include "http_client.h"
 
-void printBuildType() {
+void printBuildInfo() {
 #ifndef BUILD_TYPE
 #define BUILD_TYPE "unknown"
 #endif
-    infof("Build type: %s", BUILD_TYPE);
+
+#ifndef COMMIT_HASH
+#define COMMIT_HASH "unknown"
+#endif
+
+    infof("Build type: %s commit hash: %s", BUILD_TYPE, COMMIT_HASH);
 }
 
+
 int main() {
-    printBuildType();
+    printBuildInfo();
     if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
         errorf("curl global init failed: %d", val);
         return 0;
