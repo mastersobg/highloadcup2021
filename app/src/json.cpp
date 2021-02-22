@@ -2,6 +2,18 @@
 #include "log.h"
 #include <rapidjson/document.h>
 #include "util.h"
+#include "const.h"
+
+rapidjson::GenericDocument<rapidjson::UTF8<>, rapidjson::MemoryPoolAllocator<>, rapidjson::MemoryPoolAllocator<>>
+parse(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer) {
+    rapidjson::MemoryPoolAllocator<> valueAllocator(valueBuffer, kJsonValueBufferSize);
+    rapidjson::MemoryPoolAllocator<> parseAllocator(parseBuffer, kJsonParseBufferSize);
+    rapidjson::GenericDocument<rapidjson::UTF8<>, rapidjson::MemoryPoolAllocator<>, rapidjson::MemoryPoolAllocator<>> d(
+            &valueAllocator, 0, &parseAllocator);
+    d.ParseInsitu(data.data());
+    debugf("value allocator: %d parse allocator: %d", valueAllocator.Size(), parseAllocator.Size());
+    return d;
+}
 
 Area unmarshalArea(
         const rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>> &json) noexcept {
@@ -12,9 +24,8 @@ Area unmarshalArea(
     return Area((int16_t) posX, (int16_t) posY, (int16_t) sizeX, (int16_t) sizeY);
 }
 
-ApiError unmarshalApiError(std::string &data) noexcept {
-    rapidjson::Document d;
-    d.ParseInsitu(data.data());
+ApiError unmarshalApiError(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer) noexcept {
+    auto d = parse(data, valueBuffer, parseBuffer);
     if (d.IsObject() && d.HasMember("code") && d.HasMember("message")) {
         return ApiError(d["code"].GetInt(), d["message"].GetString());
     } else {
@@ -22,9 +33,8 @@ ApiError unmarshalApiError(std::string &data) noexcept {
     }
 }
 
-ExploreResponse unmarshalExploreResponse(std::string &data) noexcept {
-    rapidjson::Document d;
-    d.Parse(data.data());
+ExploreResponse unmarshalExploreResponse(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer) noexcept {
+    auto d = parse(data, valueBuffer, parseBuffer);
     auto area = unmarshalArea(d["area"].GetObject());
     auto amount = d["amount"].GetInt();
     return ExploreResponse(area, (uint32_t) amount);

@@ -3,10 +3,12 @@
 
 #include "api_entities.h"
 #include <string>
+#include "const.h"
 
-ApiError unmarshalApiError(std::string &data) noexcept;
+ApiError unmarshalApiError(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer) noexcept;
 
-ExploreResponse unmarshalExploreResponse(std::string &data) noexcept;
+ExploreResponse
+unmarshalExploreResponse(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer) noexcept;
 
 void marshalArea(const Area &area, std::string &buffer) noexcept;
 

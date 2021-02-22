@@ -13,18 +13,22 @@ size_t httpCallback(char *ptr, size_t size, size_t nmemb, void *ud) noexcept {
 }
 
 template<class T, class Convertor>
-Expected<HttpResponse<T>> prepareResponse(Expected<int32_t> &response, std::string &data, Convertor convert) {
+Expected<HttpResponse<T>>
+prepareResponse(Expected<int32_t> &response, std::string &data, JsonBufferType *valueBuffer,
+                JsonBufferType *parseBuffer, Convertor convert) {
     auto code = response.get();
     if (code == 200) {
         return HttpResponse<T>(convert(data), code);
     } else {
-        return HttpResponse<T>(unmarshalApiError(data), code);
+        return HttpResponse<T>(unmarshalApiError(data, valueBuffer, parseBuffer), code);
     }
 }
 
 HttpClient::HttpClient(const std::string &address, const std::string &port,
                        const std::string &schema
 ) : errbuf_{0,},
+    valueBuffer_{0,},
+    parseBuffer_{0,},
     baseURL_{schema + "://" + address + ":" + port},
     checkHealthURL_{baseURL_ + "/health-check"},
     exploreURL_{baseURL_ + "/explore"},
@@ -69,7 +73,7 @@ Expected<HttpResponse<HealthResponse>> HttpClient::checkHealth() noexcept {
         return ret.error();
     }
 
-    return prepareResponse<HealthResponse>(ret, resp_.data, [](std::string &data) {
+    return prepareResponse<HealthResponse>(ret, resp_.data, valueBuffer_, parseBuffer_, [](std::string &data) {
         return HealthResponse(data);
     });
 }
@@ -82,8 +86,8 @@ Expected<HttpResponse<ExploreResponse>> HttpClient::explore(const Area &area) no
         return ret.error();
     }
 
-    return prepareResponse<ExploreResponse>(ret, resp_.data, [](std::string &data) {
-        return unmarshalExploreResponse(data);
+    return prepareResponse<ExploreResponse>(ret, resp_.data, valueBuffer_, parseBuffer_, [this](std::string &data) {
+        return unmarshalExploreResponse(data, this->valueBuffer_, this->parseBuffer_);
     });
 }
 

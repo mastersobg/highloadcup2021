@@ -6,6 +6,7 @@
 #include "api_entities.h"
 #include <variant>
 #include "error.h"
+#include "const.h"
 
 template<class T>
 class HttpResponse {
@@ -40,6 +41,8 @@ class HttpClient {
     CURL *session_;
 
     char errbuf_[CURL_ERROR_SIZE];
+    JsonBufferType valueBuffer_[kJsonValueBufferCap];
+    JsonBufferType parseBuffer_[kJsonParseBufferCap];
     respHolder resp_;
     std::string postDataBuffer_;
 
