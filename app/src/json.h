@@ -17,4 +17,8 @@ unmarshallWallet(std::string &data, JsonBufferType *valueBuffer, JsonBufferType 
 
 void marshalTreasureId(const std::string &treasureId, std::string &buffer) noexcept;
 
+void marshalDig(const LicenseID licenseId, int16_t posX, int16_t posY, int8_t depth, std::string &buffer) noexcept;
+
+void unmarshalTreasuriesList(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer,
+                             std::vector<TreasureID> &buf) noexcept;
 #endif //HIGHLOADCUP2021_JSON_H

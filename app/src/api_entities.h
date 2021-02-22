@@ -56,5 +56,6 @@ struct Wallet {
 };
 
 using TreasureID = std::string;
+using LicenseID = int32_t;
 
 #endif //HIGHLOADCUP2021_API_ENTITIES_H

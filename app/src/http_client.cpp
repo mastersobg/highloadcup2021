@@ -33,6 +33,7 @@ HttpClient::HttpClient(const std::string &address, const std::string &port,
     checkHealthURL_{baseURL_ + "/health-check"},
     exploreURL_{baseURL_ + "/explore"},
     cashURL_{baseURL_ + "/cash"},
+    digURL_{baseURL_ + "/dig"},
     headers_{nullptr} {
 
     session_ = curl_easy_init();
@@ -104,6 +105,20 @@ Expected<HttpResponse<void *>> HttpClient::cash(const TreasureID &treasureId, Wa
     });
 }
 
+Expected<HttpResponse<void *>> HttpClient::dig(LicenseID licenseId, int16_t posX, int16_t posY, int8_t depth,
+                                               std::vector<TreasureID> &buf) noexcept {
+    marshalDig(licenseId, posX, posY, depth, postDataBuffer_);
+    auto ret = makeRequest(digURL_, postDataBuffer_.c_str());
+    if (ret.hasError()) {
+        return ret.error();
+    }
+    return prepareResponse<void *>(ret, resp_.data, valueBuffer_, parseBuffer_, [this, &buf](std::string &data) {
+        unmarshalTreasuriesList(data, this->valueBuffer_, this->parseBuffer_, buf);
+        return nullptr;
+    });
+}
+
+
 Expected<int32_t>
 HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
     if (curl_easy_setopt(session_, CURLOPT_URL, url.c_str()) != CURLE_OK) {
@@ -133,5 +148,4 @@ HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
     }
     return (int32_t) code;
 }
-
 

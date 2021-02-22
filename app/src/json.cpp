@@ -51,12 +51,40 @@ unmarshallWallet(std::string &data, JsonBufferType *valueBuffer, JsonBufferType 
     }
 }
 
+void unmarshalTreasuriesList(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer,
+                             std::vector<TreasureID> &buf) noexcept {
+    buf.clear();
+
+    auto d = parse(data, valueBuffer, parseBuffer);
+    for (auto &val: d.GetArray()) {
+        buf.emplace_back(val.GetString());
+    }
+}
+
 void marshalTreasureId(const TreasureID &treasureId, std::string &buffer) noexcept {
     buffer.clear();
 
     buffer += '"';
     buffer += treasureId;
     buffer += '"';
+}
+
+void marshalDig(const LicenseID licenseId, int16_t posX, int16_t posY, int8_t depth, std::string &buffer) noexcept {
+    buffer.clear();
+
+    buffer += "{";
+    buffer += "\"licenseID\":";
+    writeIntToString(licenseId, buffer);
+    buffer += ",";
+    buffer += "\"posX\":";
+    writeIntToString(posX, buffer);
+    buffer += ",";
+    buffer += "\"posY\":";
+    writeIntToString(posY, buffer);
+    buffer += ",";
+    buffer += "\"depth\":";
+    writeIntToString(depth, buffer);
+    buffer += "}";
 }
 
 void marshalArea(const Area &area, std::string &buffer) noexcept {

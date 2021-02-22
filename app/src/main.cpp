@@ -24,9 +24,9 @@ int main() {
 
     HttpClient client(address, port, schema);
 
-    Wallet w;
+    std::vector<TreasureID> treasuries;
     for (;;) {
-        auto res = client.cash("123", w);
+        auto res = client.dig(123, 0, 0, 1, treasuries);
         if (res.hasError()) {
             errorf("error: %d", res.error());
             return 0;
