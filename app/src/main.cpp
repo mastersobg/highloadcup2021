@@ -23,18 +23,20 @@ int main() {
     std::string schema = std::getenv("Schema");
 
     HttpClient client(address, port, schema);
-    auto res = client.explore(Area(0, 0, 3500, 3500));
-    if (res.hasError()) {
-        errorf("error: %d", res.error());
-        return 0;
-    }
-    auto resp = std::move(res).get();
-    if (resp.hasError()) {
-        auto errResp = std::move(resp).getErrResponse();
-        errorf("errCode: %d errMessage: %s", errResp.errorCode_, errResp.message_.c_str());
-    } else {
-        auto successResp = std::move(resp).getResponse();
-        debugf("success amount: %d", successResp.amount_);
+    for (;;) {
+        auto res = client.explore(Area(0, 0, 3500, 3500));
+        if (res.hasError()) {
+            errorf("error: %d", res.error());
+            return 0;
+        }
+        auto resp = std::move(res).get();
+        if (resp.hasError()) {
+            auto errResp = std::move(resp).getErrResponse();
+            errorf("errCode: %d errMessage: %s", errResp.errorCode_, errResp.message_.c_str());
+        } else {
+            auto successResp = std::move(resp).getResponse();
+            debugf("success amount: %d", successResp.amount_);
+        }
     }
 
     auto healthRes = client.checkHealth();
