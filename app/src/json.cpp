@@ -11,7 +11,7 @@ parse(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffe
     rapidjson::GenericDocument<rapidjson::UTF8<>, rapidjson::MemoryPoolAllocator<>, rapidjson::MemoryPoolAllocator<>> d(
             &valueAllocator, 0, &parseAllocator);
     d.ParseInsitu(data.data());
-    debugf("value allocator: %d parse allocator: %d", valueAllocator.Size(), parseAllocator.Size());
+//    debugf("value allocator: %d parse allocator: %d", valueAllocator.Size(), parseAllocator.Size());
     return d;
 }
 

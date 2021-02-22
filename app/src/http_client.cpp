@@ -62,7 +62,7 @@ HttpClient::HttpClient(const std::string &address, const std::string &port,
         throw std::runtime_error("failed to set CURLOPT_HTTPHEADER");
     }
 
-    curl_easy_setopt(session_, CURLOPT_VERBOSE, 1L);
+//    curl_easy_setopt(session_, CURLOPT_VERBOSE, 1L);
 }
 
 HttpClient::~HttpClient() {

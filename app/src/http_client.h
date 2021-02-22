@@ -31,6 +31,10 @@ public:
         return std::move(std::get<T>(resp_));
     }
 
+    [[nodiscard]] int32_t getHttpCode() const noexcept {
+        return httpCode_;
+    }
+
 };
 
 struct respHolder {
