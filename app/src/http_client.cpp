@@ -32,6 +32,7 @@ HttpClient::HttpClient(const std::string &address, const std::string &port,
     baseURL_{schema + "://" + address + ":" + port},
     checkHealthURL_{baseURL_ + "/health-check"},
     exploreURL_{baseURL_ + "/explore"},
+    cashURL_{baseURL_ + "/cash"},
     headers_{nullptr} {
 
     session_ = curl_easy_init();
@@ -88,6 +89,18 @@ Expected<HttpResponse<ExploreResponse>> HttpClient::explore(const Area &area) no
 
     return prepareResponse<ExploreResponse>(ret, resp_.data, valueBuffer_, parseBuffer_, [this](std::string &data) {
         return unmarshalExploreResponse(data, this->valueBuffer_, this->parseBuffer_);
+    });
+}
+
+Expected<HttpResponse<void *>> HttpClient::cash(const std::string &treasureId, Wallet &buf) noexcept {
+    marshalTreasureId(treasureId, postDataBuffer_);
+    auto ret = makeRequest(cashURL_, postDataBuffer_.c_str());
+    if (ret.hasError()) {
+        return ret.error();
+    }
+    return prepareResponse<void *>(ret, resp_.data, valueBuffer_, parseBuffer_, [this, &buf](std::string &data) {
+        unmarshallWallet(data, this->valueBuffer_, this->parseBuffer_, buf);
+        return nullptr;
     });
 }
 

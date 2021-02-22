@@ -33,11 +33,30 @@ ApiError unmarshalApiError(std::string &data, JsonBufferType *valueBuffer, JsonB
     }
 }
 
-ExploreResponse unmarshalExploreResponse(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer) noexcept {
+ExploreResponse
+unmarshalExploreResponse(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer) noexcept {
     auto d = parse(data, valueBuffer, parseBuffer);
     auto area = unmarshalArea(d["area"].GetObject());
     auto amount = d["amount"].GetInt();
     return ExploreResponse(area, (uint32_t) amount);
+}
+
+void
+unmarshallWallet(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer, Wallet &buf) noexcept {
+    buf.coins.clear();
+
+    auto d = parse(data, valueBuffer, parseBuffer);
+    for (auto &val : d.GetArray()) {
+        buf.coins.push_back((uint32_t) val.GetInt());
+    }
+}
+
+void marshalTreasureId(const std::string &treasureId, std::string &buffer) noexcept {
+    buffer.clear();
+
+    buffer += '"';
+    buffer += treasureId;
+    buffer += '"';
 }
 
 void marshalArea(const Area &area, std::string &buffer) noexcept {

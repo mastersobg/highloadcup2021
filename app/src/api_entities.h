@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 constexpr int32_t ApiErrorCodeUnknown = 1;
 
@@ -39,5 +40,19 @@ struct ExploreResponse {
     ExploreResponse(Area area, uint32_t amount) : area_{area}, amount_{amount} {}
 };
 
+struct Wallet {
+    std::vector<uint32_t> coins;
+
+    Wallet() = default;
+
+    Wallet(const Wallet &o) = delete;
+
+    Wallet(Wallet &&o) = default;
+
+    Wallet &operator=(const Wallet &o) = delete;
+
+    Wallet &operator=(Wallet &&o) = default;
+
+};
 
 #endif //HIGHLOADCUP2021_API_ENTITIES_H

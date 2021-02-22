@@ -12,4 +12,9 @@ unmarshalExploreResponse(std::string &data, JsonBufferType *valueBuffer, JsonBuf
 
 void marshalArea(const Area &area, std::string &buffer) noexcept;
 
+void
+unmarshallWallet(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer, Wallet &buf) noexcept;
+
+void marshalTreasureId(const std::string &treasureId, std::string &buffer) noexcept;
+
 #endif //HIGHLOADCUP2021_JSON_H

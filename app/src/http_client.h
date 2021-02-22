@@ -49,6 +49,7 @@ class HttpClient {
     const std::string baseURL_;
     const std::string checkHealthURL_;
     const std::string exploreURL_;
+    const std::string cashURL_;
     curl_slist *headers_;
 
     [[nodiscard]]Expected<int32_t> makeRequest(const std::string &url, const char *data) noexcept;
@@ -69,6 +70,8 @@ public:
     [[nodiscard]] Expected<HttpResponse<HealthResponse>> checkHealth() noexcept;
 
     [[nodiscard]] Expected<HttpResponse<ExploreResponse>> explore(const Area &a) noexcept;
+
+    [[nodiscard]] Expected<HttpResponse<void *>> cash(const std::string &treasureId, Wallet &buf) noexcept;
 
 };
 

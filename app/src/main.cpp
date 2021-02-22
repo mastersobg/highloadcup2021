@@ -23,8 +23,10 @@ int main() {
     std::string schema = std::getenv("Schema");
 
     HttpClient client(address, port, schema);
+
+    Wallet w;
     for (;;) {
-        auto res = client.explore(Area(0, 0, 3500, 3500));
+        auto res = client.cash("123", w);
         if (res.hasError()) {
             errorf("error: %d", res.error());
             return 0;
@@ -34,8 +36,7 @@ int main() {
             auto errResp = std::move(resp).getErrResponse();
             errorf("errCode: %d errMessage: %s", errResp.errorCode_, errResp.message_.c_str());
         } else {
-            auto successResp = std::move(resp).getResponse();
-            debugf("success amount: %d", successResp.amount_);
+            debugf("success");
         }
     }
 
