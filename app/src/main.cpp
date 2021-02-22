@@ -2,7 +2,6 @@
 #include <csignal>
 #include <vector>
 #include "log.h"
-#include <rapidjson/document.h>
 #include <curl/curl.h>
 #include <cstdlib>
 #include <string>
@@ -23,6 +22,7 @@ void printBuildInfo() {
 
 int main() {
     printBuildInfo();
+
     if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
         errorf("curl global init failed: %d", val);
         return 0;
@@ -32,16 +32,9 @@ int main() {
         exit(0);
     });
 
-    std::string address;
-    if (auto a = std::getenv("ADDRESS")) {
-        address = a;
-    }
-    if (address.empty()) {
-        errorf("empty ADDRESS");
-        return 0;
-    }
-    std::string port = "8000";//std::getenv("Port");
-    std::string schema = "http";// std::getenv("Schema");
+    std::string address = std::getenv("ADDRESS");
+    std::string port = std::getenv("Port");
+    std::string schema = std::getenv("Schema");
 
     HttpClient client(address, port, schema);
 
