@@ -27,7 +27,8 @@ HttpClient::HttpClient(const std::string &address, const std::string &port,
 ) : errbuf_{0,},
     baseURL_{schema + "://" + address + ":" + port},
     checkHealthURL_{baseURL_ + "/health-check"},
-    exploreURL_{baseURL_ + "/explore"} {
+    exploreURL_{baseURL_ + "/explore"},
+    headers_{nullptr} {
 
     session_ = curl_easy_init();
     if (session_ == nullptr) {
