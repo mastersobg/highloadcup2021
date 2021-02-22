@@ -71,7 +71,7 @@ public:
 
     [[nodiscard]] Expected<HttpResponse<ExploreResponse>> explore(const Area &a) noexcept;
 
-    [[nodiscard]] Expected<HttpResponse<void *>> cash(const std::string &treasureId, Wallet &buf) noexcept;
+    [[nodiscard]] Expected<HttpResponse<void *>> cash(const TreasureID &treasureId, Wallet &buf) noexcept;
 
 };
 

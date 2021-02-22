@@ -92,7 +92,7 @@ Expected<HttpResponse<ExploreResponse>> HttpClient::explore(const Area &area) no
     });
 }
 
-Expected<HttpResponse<void *>> HttpClient::cash(const std::string &treasureId, Wallet &buf) noexcept {
+Expected<HttpResponse<void *>> HttpClient::cash(const TreasureID &treasureId, Wallet &buf) noexcept {
     marshalTreasureId(treasureId, postDataBuffer_);
     auto ret = makeRequest(cashURL_, postDataBuffer_.c_str());
     if (ret.hasError()) {

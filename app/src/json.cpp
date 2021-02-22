@@ -51,7 +51,7 @@ unmarshallWallet(std::string &data, JsonBufferType *valueBuffer, JsonBufferType 
     }
 }
 
-void marshalTreasureId(const std::string &treasureId, std::string &buffer) noexcept {
+void marshalTreasureId(const TreasureID &treasureId, std::string &buffer) noexcept {
     buffer.clear();
 
     buffer += '"';

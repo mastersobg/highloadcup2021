@@ -55,4 +55,6 @@ struct Wallet {
 
 };
 
+using TreasureID = std::string;
+
 #endif //HIGHLOADCUP2021_API_ENTITIES_H
