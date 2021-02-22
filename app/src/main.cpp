@@ -24,6 +24,22 @@ int main() {
 
     HttpClient client(address, port, schema);
 
+    for (;;) {
+        auto ret = client.checkHealth();
+        if (ret.hasError()) {
+            continue;
+        }
+
+        auto resp = ret.get();
+        if (resp.hasError()) {
+            continue;
+        }
+
+        if (resp.getHttpCode() == 200) {
+            break;
+        }
+    }
+
     int32_t digLeft{0};
     LicenseID licenseId;
     std::vector<TreasureID> treasuries;
