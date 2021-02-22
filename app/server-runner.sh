@@ -1,10 +1,11 @@
 #!/bin/bash
 
 set -e
+uname -a
 
 #dmesg -C
 
-cat /proc/cpuinfo | grep "model name"
+cat /proc/cpuinfo | grep "model name"  | head -1
 
 echo "first argument" $1
 
