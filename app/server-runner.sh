@@ -21,7 +21,7 @@ case $1 in
     mutrace --hash-size=10007 ./highloadcup2021 || echo "Crashed"
     ;;
   *)
-    ./highloadcup2021 || echo "Crashed"
+    ./highloadcup2021 2>&1 || echo "Crashed"
     ;;
 esac
 

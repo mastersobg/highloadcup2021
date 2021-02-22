@@ -19,8 +19,8 @@ int main() {
     });
 
     std::string address = std::getenv("ADDRESS");
-    std::string port = std::getenv("Port");
-    std::string schema = std::getenv("Schema");
+    std::string port = "8000";//std::getenv("Port");
+    std::string schema = "http";// std::getenv("Schema");
 
     HttpClient client(address, port, schema);
 
