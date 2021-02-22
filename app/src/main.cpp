@@ -18,7 +18,14 @@ int main() {
         exit(0);
     });
 
-    std::string address = std::getenv("ADDRESS");
+    std::string address;
+    if (auto a = std::getenv("ADDRESS")) {
+        address = a;
+    }
+    if (address.empty()) {
+        errorf("empty ADDRESS");
+        return 0;
+    }
     std::string port = "8000";//std::getenv("Port");
     std::string schema = "http";// std::getenv("Schema");
 

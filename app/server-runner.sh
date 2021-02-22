@@ -2,7 +2,7 @@
 
 set -e
 
-dmesg -C
+#dmesg -C
 
 cat /proc/cpuinfo | grep "model name"
 
