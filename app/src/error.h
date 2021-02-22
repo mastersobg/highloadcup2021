@@ -4,6 +4,8 @@
 #include <variant>
 
 enum class ErrorCode : int {
+    kNoErr = 0,
+    kErrCurl = 1,
 };
 
 template<class T>
@@ -11,11 +13,9 @@ class Expected {
     std::variant<T, ErrorCode> val_;
 
 public:
-    explicit Expected(ErrorCode code) : val_{code} {}
+    Expected(ErrorCode code) : val_{code} {} // NOLINT(google-explicit-constructor)
 
-    explicit Expected(T val) : val_{std::move(val)} {}
-
-    explicit Expected(T &&val) : val_{val} {}
+    Expected(T val) : val_{std::move(val)} {} // NOLINT(google-explicit-constructor)
 
     [[nodiscard]] bool hasError() const {
         return std::holds_alternative<ErrorCode>(val_);
@@ -34,5 +34,8 @@ public:
     }
 };
 
+
+using ExpectedVoid = Expected<void *>;
+const ExpectedVoid NoErr = Expected<void *>(nullptr);
 
 #endif //HIGHLOADCUP2021_ERROR_H
