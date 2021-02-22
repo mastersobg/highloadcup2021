@@ -7,8 +7,6 @@ uname -a
 
 cat /proc/cpuinfo | grep "model name"  | head -1
 
-echo "first argument" $1
-
 case $1 in
   profile-cpu)
     LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libprofiler.so env CPUPROFILE=/app/highloadcup2021.prof CPUPROFILESIGNAL=12 \

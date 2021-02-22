@@ -8,7 +8,15 @@
 #include <string>
 #include "http_client.h"
 
+void printBuildType() {
+#ifndef BUILD_TYPE
+#define BUILD_TYPE "unknown"
+#endif
+    infof("Build type: %s", BUILD_TYPE);
+}
+
 int main() {
+    printBuildType();
     if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
         errorf("curl global init failed: %d", val);
         return 0;

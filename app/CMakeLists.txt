@@ -18,6 +18,7 @@ add_executable(highloadcup2021 ${TARGET_SRC})
 set(CMAKE_CXX_FLAGS "-Werror -Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion -Warith-conversion -Wshadow -Wsign-conversion -Wlogical-op -Wdouble-promotion -Wshift-overflow=2  -Wduplicated-cond -Wcast-qual -Wcast-align -O2 -pedantic -pipe -march=sandybridge")
 
 message(STATUS "build type ${BUILD_TYPE}")
+add_definitions("-DBUILD_TYPE=\"${BUILD_TYPE}\"")
 
 if (BUILD_TYPE STREQUAL "release")
 elseif (BUILD_TYPE STREQUAL "debug")
