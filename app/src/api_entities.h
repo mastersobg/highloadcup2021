@@ -58,4 +58,12 @@ struct Wallet {
 using TreasureID = std::string;
 using LicenseID = int32_t;
 
+struct License {
+    const int32_t id_;
+    const uint32_t digAllowed_;
+    const uint32_t digUsed_;
+
+    License(int32_t id, uint32_t digAllowed, uint32_t digUsed) : id_{id}, digAllowed_{digAllowed}, digUsed_{digUsed} {}
+};
+
 #endif //HIGHLOADCUP2021_API_ENTITIES_H

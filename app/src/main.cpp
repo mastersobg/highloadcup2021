@@ -24,9 +24,8 @@ int main() {
 
     HttpClient client(address, port, schema);
 
-    std::vector<TreasureID> treasuries;
-    for (;;) {
-        auto res = client.dig(123, 0, 0, 1, treasuries);
+    for (auto i = 0; i < 5; i++) {
+        auto res = client.issueLicense(Wallet());
         if (res.hasError()) {
             errorf("error: %d", res.error());
             return 0;
@@ -36,7 +35,7 @@ int main() {
             auto errResp = std::move(resp).getErrResponse();
             errorf("errCode: %d errMessage: %s", errResp.errorCode_, errResp.message_.c_str());
         } else {
-            debugf("success");
+            debugf("success: ", res.get().getResponse().id_);
         }
     }
 

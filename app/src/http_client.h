@@ -51,6 +51,7 @@ class HttpClient {
     const std::string exploreURL_;
     const std::string cashURL_;
     const std::string digURL_;
+    const std::string issueLicenseURL_;
     curl_slist *headers_;
 
     [[nodiscard]]Expected<int32_t> makeRequest(const std::string &url, const char *data) noexcept;
@@ -77,6 +78,7 @@ public:
     [[nodiscard]] Expected<HttpResponse<void *>>
     dig(LicenseID licenseId, int16_t posX, int16_t posY, int8_t depth, std::vector<TreasureID> &buf) noexcept;
 
+    [[nodiscard]] Expected<HttpResponse<License>> issueLicense(const Wallet &w) noexcept;
 };
 
 

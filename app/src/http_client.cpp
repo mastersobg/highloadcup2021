@@ -34,6 +34,7 @@ HttpClient::HttpClient(const std::string &address, const std::string &port,
     exploreURL_{baseURL_ + "/explore"},
     cashURL_{baseURL_ + "/cash"},
     digURL_{baseURL_ + "/dig"},
+    issueLicenseURL_{baseURL_ + "/licenses"},
     headers_{nullptr} {
 
     session_ = curl_easy_init();
@@ -118,6 +119,17 @@ Expected<HttpResponse<void *>> HttpClient::dig(LicenseID licenseId, int16_t posX
     });
 }
 
+
+Expected<HttpResponse<License>> HttpClient::issueLicense(const Wallet &w) noexcept {
+    marshalWallet(w, postDataBuffer_);
+    auto ret = makeRequest(issueLicenseURL_, postDataBuffer_.c_str());
+    if (ret.hasError()) {
+        return ret.error();
+    }
+    return prepareResponse<License>(ret, resp_.data, valueBuffer_, parseBuffer_, [this](std::string &data) {
+        return unmarshalLicense(data, this->valueBuffer_, this->parseBuffer_);
+    });
+}
 
 Expected<int32_t>
 HttpClient::makeRequest(const std::string &url, const char *data) noexcept {

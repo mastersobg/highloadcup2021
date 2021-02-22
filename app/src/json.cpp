@@ -24,6 +24,12 @@ Area unmarshalArea(
     return Area((int16_t) posX, (int16_t) posY, (int16_t) sizeX, (int16_t) sizeY);
 }
 
+License unmarshalLicense(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer) noexcept {
+    auto d = parse(data, valueBuffer, parseBuffer);
+
+    return License(d["id"].GetInt(), (uint32_t) d["digAllowed"].GetInt(), (uint32_t) d["digUsed"].GetInt());
+}
+
 ApiError unmarshalApiError(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer) noexcept {
     auto d = parse(data, valueBuffer, parseBuffer);
     if (d.IsObject() && d.HasMember("code") && d.HasMember("message")) {
@@ -51,6 +57,21 @@ unmarshallWallet(std::string &data, JsonBufferType *valueBuffer, JsonBufferType 
     }
 }
 
+void marshalWallet(const Wallet &w, std::string &buffer) noexcept {
+    buffer.clear();
+
+    buffer += "[";
+    int idx{0};
+    for (auto v : w.coins) {
+        if (idx > 0) {
+            buffer += ",";
+        }
+        writeIntToString(v, buffer);
+        idx++;
+    }
+    buffer += "]";
+}
+
 void unmarshalTreasuriesList(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer,
                              std::vector<TreasureID> &buf) noexcept {
     buf.clear();
@@ -69,7 +90,7 @@ void marshalTreasureId(const TreasureID &treasureId, std::string &buffer) noexce
     buffer += '"';
 }
 
-void marshalDig(const LicenseID licenseId, int16_t posX, int16_t posY, int8_t depth, std::string &buffer) noexcept {
+void marshalDig(LicenseID licenseId, int16_t posX, int16_t posY, int8_t depth, std::string &buffer) noexcept {
     buffer.clear();
 
     buffer += "{";
