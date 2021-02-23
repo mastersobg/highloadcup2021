@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <curl/curl.h>
 #include "json.h"
+#include "app.h"
 
 size_t httpCallback(char *ptr, size_t size, size_t nmemb, void *ud) noexcept {
     auto resp = (respHolder *) ud;
@@ -148,6 +149,7 @@ HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
         }
     }
 
+    getApp().getStats().incRequestsCnt();
     auto reqResult = curl_easy_perform(session_);
     if (reqResult != CURLE_OK) {
 //        errorf("curl_easy_perform failed: %s %s %s", checkHealthURL_.c_str(), curl_easy_strerror(reqResult), errbuf_);

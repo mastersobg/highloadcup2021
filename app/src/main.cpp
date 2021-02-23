@@ -6,6 +6,8 @@
 #include <cstdlib>
 #include <string>
 #include "http_client.h"
+#include "app.h"
+#include <thread>
 
 void printBuildInfo() {
 #ifndef BUILD_TYPE
@@ -22,6 +24,8 @@ void printBuildInfo() {
 
 int main() {
     printBuildInfo();
+
+    std::thread statsThread(statsPrintLoop);
 
     if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
         errorf("curl global init failed: %d", val);
@@ -82,7 +86,7 @@ int main() {
             }
 
             int treasuriesLeft = (int) exploreResp.amount_;
-            debugf("%d %d: %d", i, j, treasuriesLeft);
+            //debugf("%d %d: %d", i, j, treasuriesLeft);
             int depth{1};
             int treasuriesGathered{0};
             while (treasuriesLeft > 0) {
@@ -123,9 +127,9 @@ int main() {
                                errResp.errorCode_, errResp.message_.c_str());
                     }
                 }
-                if (!treasuries.empty()) {
-                    debugf("treasuries found: %d depth: %d", treasuries.size(), depth);
-                }
+//                if (!treasuries.empty()) {
+//                    debugf("treasuries found: %d depth: %d", treasuries.size(), depth);
+//                }
 
                 digLeft--;
                 depth++;
