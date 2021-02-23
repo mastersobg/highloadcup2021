@@ -15,6 +15,7 @@ void Stats::print() noexcept {
     infof("Requests count: %lld", requestsCnt_.load());
     infof("RPS: %lld", rps);
     infof("Tick RPS: %lld", tickRPS);
+    infof("Curl errs: %lld", curlErrCnt_.load());
     infof("Time elapsed: %lld", timeElapsedMs);
 
 

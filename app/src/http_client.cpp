@@ -135,16 +135,19 @@ Expected<HttpResponse<License>> HttpClient::issueLicense(const Wallet &w) noexce
 Expected<int32_t>
 HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
     if (curl_easy_setopt(session_, CURLOPT_URL, url.c_str()) != CURLE_OK) {
+        getApp().getStats().incCurlErrCnt();
         return ErrorCode::kErrCurl;
     }
     this->resp_.data.clear();
 
     if (data != nullptr) {
         if (curl_easy_setopt(session_, CURLOPT_POSTFIELDS, data) != CURLE_OK) {
+            getApp().getStats().incCurlErrCnt();
             return ErrorCode::kErrCurl;
         }
     } else {
         if (curl_easy_setopt(session_, CURLOPT_HTTPGET, 1L) != CURLE_OK) {
+            getApp().getStats().incCurlErrCnt();
             return ErrorCode::kErrCurl;
         }
     }
@@ -155,11 +158,13 @@ HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
         errorf("curl_easy_perform failed: %s err code: %d err message: %s errbuf: %s", url.c_str(), reqResult,
                curl_easy_strerror(reqResult),
                errbuf_);
+        getApp().getStats().incCurlErrCnt();
         return ErrorCode::kErrCurl;
     }
 
     long code;
     if (curl_easy_getinfo(session_, CURLINFO_RESPONSE_CODE, &code) != CURLE_OK) {
+        getApp().getStats().incCurlErrCnt();
         return ErrorCode::kErrCurl;
     }
     return (int32_t) code;
