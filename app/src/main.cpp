@@ -53,6 +53,7 @@ int run() {
     int32_t digLeft{0};
     LicenseID licenseId;
     std::vector<TreasureID> treasuries;
+    Wallet wallet{};
     std::set<std::pair<int, int>> usedCells{};
     for (auto x = 0; x < (1 << 30); x++) {
         auto i = distribution(rnd);
@@ -91,7 +92,13 @@ int run() {
         int treasuriesGathered{0};
         while (treasuriesLeft > 0) {
             if (digLeft <= 0) {
-                auto issueLicenseRet = client.issueLicense(Wallet());
+                Wallet w{};
+                if (!wallet.coins.empty()) {
+                    uint32_t c = wallet.coins[wallet.coins.size() - 1];
+                    wallet.coins.pop_back();
+                    w.coins.push_back(c);
+                }
+                auto issueLicenseRet = client.issueLicense(w);
                 if (issueLicenseRet.hasError()) {
                     errorf("error: %d", issueLicenseRet.error());
                     return 0;
@@ -146,6 +153,12 @@ int run() {
                 if (cashRet.hasError()) {
                     errorf("error: %d", cashRet.error());
                     return 0;
+                }
+
+                if (cashRet.get().getHttpCode() == 200) {
+                    for (const auto val : w.coins) {
+                        wallet.coins.push_back(val);
+                    }
                 }
             }
         }
