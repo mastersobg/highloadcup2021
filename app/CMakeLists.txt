@@ -16,7 +16,7 @@ file(GLOB TARGET_SRC src/*.cpp)
 add_executable(highloadcup2021 ${TARGET_SRC})
 
 # common cxx flags
-set(CMAKE_CXX_FLAGS "-Werror -Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion -Warith-conversion -Wshadow -Wsign-conversion -Wlogical-op -Wdouble-promotion -Wshift-overflow=2  -Wduplicated-cond -Wcast-qual -Wcast-align -O2 -pedantic -pipe -march=sandybridge")
+set(CMAKE_CXX_FLAGS "-Werror -Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion -Warith-conversion -Wshadow -Wsign-conversion -Wlogical-op -Wdouble-promotion -Wshift-overflow=2  -Wduplicated-cond -Wcast-qual -Wcast-align -O2 -pedantic -pipe")
 
 message(STATUS "build type ${BUILD_TYPE}")
 add_definitions("-DBUILD_TYPE=\"${BUILD_TYPE}\"")
