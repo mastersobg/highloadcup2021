@@ -34,10 +34,10 @@ void statsPrintLoop() {
     for (;;) {
         std::this_thread::sleep_for(std::chrono::milliseconds(statsSleepDelayMs));
 
+        getApp().getStats().print();
+
         if (getApp().getStats().isStopped()) {
             break;
         }
-
-        getApp().getStats().print();
     }
 }
