@@ -152,7 +152,9 @@ HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
     getApp().getStats().incRequestsCnt();
     auto reqResult = curl_easy_perform(session_);
     if (reqResult != CURLE_OK) {
-//        errorf("curl_easy_perform failed: %s %s %s", url.c_str(), curl_easy_strerror(reqResult), errbuf_);
+        errorf("curl_easy_perform failed: %s err code: %d err message: %s errbuf: %s", url.c_str(), reqResult,
+               curl_easy_strerror(reqResult),
+               errbuf_);
         return ErrorCode::kErrCurl;
     }
 
