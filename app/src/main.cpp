@@ -8,9 +8,6 @@
 #include "http_client.h"
 #include "app.h"
 #include <thread>
-#include <cstdio>
-
-extern char **environ;
 
 void printBuildInfo() {
 #ifndef BUILD_TYPE
@@ -22,32 +19,12 @@ void printBuildInfo() {
 #endif
 
     infof("Build type: %s commit hash: %s", BUILD_TYPE, COMMIT_HASH);
-
-    int i = 0;
-    for (char *s = *environ; s; i++) {
-        debugf("%s", s);
-        s = *(environ + i);
-    }
 }
 
-
-int main() {
-    printBuildInfo();
-
-    std::thread statsThread(statsPrintLoop);
-
-    if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
-        errorf("curl global init failed: %d", val);
-        return 0;
-    }
-
-    std::signal(SIGINT, []([[maybe_unused]]int signal) {
-        exit(0);
-    });
-
+int run() {
     std::string address = std::getenv("ADDRESS");
-    std::string port = "8000";//std::getenv("Port");
-    std::string schema = "http";//std::getenv("Schema");
+    std::string port = "8000";
+    std::string schema = "http";
     infof("address: %s port: %s schema: %s", address.c_str(), port.c_str(), schema.c_str());
 
     HttpClient client(address, port, schema);
@@ -103,7 +80,7 @@ int main() {
                     auto issueLicenseRet = client.issueLicense(Wallet());
                     if (issueLicenseRet.hasError()) {
                         errorf("error: %d", issueLicenseRet.error());
-                        continue;
+                        return 0;
                     }
 
                     auto issueLicenseResp = issueLicenseRet.get();
@@ -124,7 +101,7 @@ int main() {
                 auto digRet = client.dig(licenseId, (int16_t) i, (int16_t) j, (int8_t) depth, treasuries);
                 if (digRet.hasError()) {
                     errorf("error: %d", digRet.error());
-                    continue;
+                    return 0;
                 }
 
                 auto digResp = digRet.get();
@@ -150,12 +127,35 @@ int main() {
                     auto cashRet = client.cash(id, w);
                     if (cashRet.hasError()) {
                         errorf("error: %d", cashRet.error());
+                        return 0;
                     }
                 }
             }
         }
     }
 
-    curl_global_cleanup();
     return 0;
+}
+
+int main() {
+    printBuildInfo();
+
+    std::thread statsThread(statsPrintLoop);
+
+    if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
+        errorf("curl global init failed: %d", val);
+        return 0;
+    }
+
+    std::signal(SIGINT, []([[maybe_unused]]int signal) {
+        exit(0);
+    });
+
+    auto runResult = run();
+
+    getApp().getStats().stop();
+    statsThread.join();
+
+    curl_global_cleanup();
+    return runResult;
 }

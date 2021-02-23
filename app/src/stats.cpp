@@ -21,9 +21,21 @@ void Stats::print() noexcept {
     lastTickRequestsCnt_ = requestsCnt_.load();
 }
 
+void Stats::stop() noexcept {
+    stopped_ = true;
+}
+
+bool Stats::isStopped() const noexcept {
+    return stopped_;
+}
+
 void statsPrintLoop() {
-    for (auto i = 0; i < 1 << 30; i++) {
+    for (;;) {
         std::this_thread::sleep_for(std::chrono::milliseconds(statsSleepDelayMs));
+
+        if (getApp().getStats().isStopped()) {
+            break;
+        }
 
         getApp().getStats().print();
     }

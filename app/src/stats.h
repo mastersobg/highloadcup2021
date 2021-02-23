@@ -13,6 +13,7 @@ private:
 
     std::atomic<int64_t> lastTickRequestsCnt_{0};
 
+    std::atomic<bool> stopped_{false};
 
 public:
 
@@ -29,6 +30,10 @@ public:
     void incRequestsCnt() noexcept {
         requestsCnt_++;
     }
+
+    void stop() noexcept;
+
+    bool isStopped() const noexcept;
 
     void print() noexcept;
 };
