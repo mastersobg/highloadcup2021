@@ -4,6 +4,7 @@
 #include "app.h"
 #include "util.h"
 #include <algorithm>
+#include "sys.h"
 
 constexpr int64_t statsSleepDelayMs = 5000;
 
@@ -35,6 +36,7 @@ void Stats::print() noexcept {
 
     printEndpointsStats();
     printDepthHistogram();
+    printCpuStat();
 
     lastTickRequestsCnt_ = requestsCnt_.load();
 }
@@ -103,6 +105,23 @@ void Stats::printDepthHistogram() noexcept {
         logString += ", ";
     }
     infof("depth histogram: %s", logString.c_str());
+}
+
+void Stats::printCpuStat() noexcept {
+    auto stats = getCpuStats();
+    infof("CPU active: %f%% CPU idle: %f%%\nUser: %f%% Nice: %f%% System: %f%% Idle: %f%% IOWait: %f%% Irq: %f%% SoftIrq: %f%% Steal: %f%% Guest: %f%% GuestNice: %f%%",
+          stats.getActivePercent(), stats.getIdlePercent(),
+          stats.getStatsPercent(CpuStatsState::User),
+          stats.getStatsPercent(CpuStatsState::Nice),
+          stats.getStatsPercent(CpuStatsState::System),
+          stats.getStatsPercent(CpuStatsState::Idle),
+          stats.getStatsPercent(CpuStatsState::IOWait),
+          stats.getStatsPercent(CpuStatsState::Irq),
+          stats.getStatsPercent(CpuStatsState::Softirq),
+          stats.getStatsPercent(CpuStatsState::Steal),
+          stats.getStatsPercent(CpuStatsState::Guest),
+          stats.getStatsPercent(CpuStatsState::GuestNice)
+    );
 }
 
 void statsPrintLoop() {

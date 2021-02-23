@@ -41,6 +41,8 @@ private:
 
     void printDepthHistogram() noexcept;
 
+    void printCpuStat() noexcept;
+
 public:
 
     Stats();
