@@ -142,8 +142,6 @@ int run() {
                 getApp().getStats().recordTreasuireDepth(depth, (int) treasuries.size());
             }
 
-            digLeft--;
-            depth++;
 
             treasuriesLeft -= (int) treasuries.size();
             treasuriesGathered += (int) treasuries.size();
@@ -156,11 +154,15 @@ int run() {
                 }
 
                 if (cashRet.get().getHttpCode() == 200) {
+                    getApp().getStats().recordCoinsDepth(depth, (int) w.coins.size());
                     for (const auto val : w.coins) {
                         wallet.coins.push_back(val);
                     }
                 }
             }
+
+            digLeft--;
+            depth++;
         }
     }
 

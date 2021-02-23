@@ -30,7 +30,11 @@ private:
     std::unordered_map<std::string, EndpointStats> endpointStatsMap_;
 
     std::shared_mutex depthHistogramMutex_;
-    std::array<int, 11> depthHistogram_;
+    std::array<int, 11> depthHistogram_{0,};
+
+
+    std::shared_mutex depthCoinsHistogramMutex_;
+    std::array<int, 11> depthCoinsHistogram_{0,};
 
     std::atomic<int64_t> lastTickRequestsCnt_{0};
     std::atomic<int64_t> startTime_{0};
@@ -40,6 +44,8 @@ private:
     void printEndpointsStats() noexcept;
 
     void printDepthHistogram() noexcept;
+
+    void printCoinsDepthHistogram() noexcept;
 
     void printCpuStat() noexcept;
 
@@ -67,6 +73,12 @@ public:
         std::scoped_lock lock(depthHistogramMutex_);
 
         depthHistogram_[(size_t) depth] += count;
+    }
+
+    void recordCoinsDepth(int depth, int coinsCount) noexcept {
+        std::scoped_lock lock(depthCoinsHistogramMutex_);
+
+        depthCoinsHistogram_[(size_t) depth] += coinsCount;
     }
 
     void recordEndpointStats(const std::string &endpoint, int32_t httpCode, int32_t durationMs) noexcept;

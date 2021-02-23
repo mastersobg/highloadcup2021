@@ -36,6 +36,7 @@ void Stats::print() noexcept {
 
     printEndpointsStats();
     printDepthHistogram();
+    printCoinsDepthHistogram();
     printCpuStat();
 
     lastTickRequestsCnt_ = requestsCnt_.load();
@@ -105,6 +106,17 @@ void Stats::printDepthHistogram() noexcept {
         logString += ", ";
     }
     infof("depth histogram: %s", logString.c_str());
+}
+
+void Stats::printCoinsDepthHistogram() noexcept {
+    std::shared_lock lock(depthCoinsHistogramMutex_);
+    std::string logString{};
+    for (size_t i = 0; i <= 10; i++) {
+        writeIntToString(depthCoinsHistogram_[i], logString);
+        logString += ", ";
+    }
+
+    infof("depth coins histogram: %s", logString.c_str());
 }
 
 void Stats::printCpuStat() noexcept {
