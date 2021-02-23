@@ -1,11 +1,21 @@
 #!/bin/bash
 
-set -e
+#set -e
+#set -x
 uname -a
 
 #dmesg -C
 
 cat /proc/cpuinfo | grep "model name"  | head -1
+
+URL="http://"$ADDRESS":8000/explore"
+curl -v -X POST $URL --data '{"posX":0, "posY":0, "sizeX":1, "sizeY":1}' -H 'Content-Type:application/json' > /dev/null 2>&1
+
+while [ $? -ne 0 ]; do
+  curl -X POST $URL --data '{"posX":0, "posY":0, "sizeX":1, "sizeY":1}' -H 'Content-Type:application/json' > /dev/null 2>&1
+done
+
+echo "Server is up"
 
 case $1 in
   profile-cpu)
