@@ -8,6 +8,9 @@
 #include "http_client.h"
 #include "app.h"
 #include <thread>
+#include <cstdio>
+
+extern char **environ;
 
 void printBuildInfo() {
 #ifndef BUILD_TYPE
@@ -19,6 +22,12 @@ void printBuildInfo() {
 #endif
 
     infof("Build type: %s commit hash: %s", BUILD_TYPE, COMMIT_HASH);
+
+    int i = 0;
+    for (char *s = *environ; s; i++) {
+        debugf("%s", s);
+        s = *(environ + i);
+    }
 }
 
 
@@ -37,8 +46,8 @@ int main() {
     });
 
     std::string address = std::getenv("ADDRESS");
-    std::string port = std::getenv("Port");
-    std::string schema = std::getenv("Schema");
+    std::string port = "8000";//std::getenv("Port");
+    std::string schema = "http";//std::getenv("Schema");
     infof("address: %s port: %s schema: %s", address.c_str(), port.c_str(), schema.c_str());
 
     HttpClient client(address, port, schema);
