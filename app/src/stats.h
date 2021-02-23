@@ -10,6 +10,8 @@
 #include <map>
 #include <vector>
 #include <mutex>
+#include <array>
+#include <shared_mutex>
 
 struct EndpointStats {
     std::map<int32_t, int32_t> httpCodes;
@@ -20,17 +22,24 @@ class Stats {
 private:
     std::atomic<int64_t> requestsCnt_{0};
     std::atomic<int64_t> curlErrCnt_{0};
-
+    std::atomic<int64_t> exploreCellTotalAmount_{0};
+    std::atomic<int64_t> exploreCellCount_{0};
+    std::atomic<int64_t> cellsWithTreasuries{0};
 
     std::mutex endpointStatsMutex_;
     std::unordered_map<std::string, EndpointStats> endpointStatsMap_;
+
+    std::shared_mutex depthHistogramMutex_;
+    std::array<int, 11> depthHistogram_;
 
     std::atomic<int64_t> lastTickRequestsCnt_{0};
     std::atomic<int64_t> startTime_{0};
 
     std::atomic<bool> stopped_{false};
 
-    void printEndpointsStats();
+    void printEndpointsStats() noexcept;
+
+    void printDepthHistogram() noexcept;
 
 public:
 
@@ -52,7 +61,21 @@ public:
         curlErrCnt_++;
     }
 
+    void recordTreasuireDepth(int depth, int count) noexcept {
+        std::scoped_lock lock(depthHistogramMutex_);
+
+        depthHistogram_[(size_t) depth] += count;
+    }
+
     void recordEndpointStats(const std::string &endpoint, int32_t httpCode, int32_t durationMs) noexcept;
+
+    void recordExploreCell(uint32_t amount) noexcept {
+        exploreCellTotalAmount_ += (int64_t) amount;
+        exploreCellCount_++;
+        if (amount > 0) {
+            cellsWithTreasuries++;
+        }
+    }
 
     void stop() noexcept;
 

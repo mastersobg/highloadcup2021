@@ -24,8 +24,17 @@ void Stats::print() noexcept {
     infof("Tick RPS: %lld", tickRPS);
     infof("Curl errs: %lld", curlErrCnt_.load());
     infof("Time elapsed: %lld ms", timeElapsedMs);
+    infof("Explored cells: %lld", exploreCellCount_.load());
+    infof("Explored treasuries amount: %lld", exploreCellTotalAmount_.load());
+    if (exploreCellCount_.load() > 0) {
+        infof("Percent of cells with treasuries: %f",
+              (double) cellsWithTreasuries.load() / (double) exploreCellCount_.load());
+        infof("Average treasuries per cell: %f",
+              (double) exploreCellTotalAmount_.load() / (double) cellsWithTreasuries.load());
+    }
 
     printEndpointsStats();
+    printDepthHistogram();
 
     lastTickRequestsCnt_ = requestsCnt_.load();
 }
@@ -52,7 +61,7 @@ void Stats::recordEndpointStats(const std::string &endpoint, int32_t httpCode, i
     stats.durations.push_back(durationMs);
 }
 
-void Stats::printEndpointsStats() {
+void Stats::printEndpointsStats() noexcept {
     std::scoped_lock endpointStatsLock(endpointStatsMutex_);
     for (auto &[endpointId, stats] : endpointStatsMap_) {
         std::string logString{};
@@ -83,6 +92,17 @@ void Stats::printEndpointsStats() {
 
         infof("%s", logString.c_str());
     }
+}
+
+void Stats::printDepthHistogram() noexcept {
+    std::shared_lock lock(depthHistogramMutex_);
+
+    std::string logString{};
+    for (size_t i = 0; i <= 10; i++) {
+        writeIntToString(depthHistogram_[i], logString);
+        logString += ", ";
+    }
+    infof("depth histogram: %s", logString.c_str());
 }
 
 void statsPrintLoop() {
