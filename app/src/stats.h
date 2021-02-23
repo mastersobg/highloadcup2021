@@ -9,11 +9,14 @@
 class Stats {
 private:
     std::atomic<int64_t> requestsCnt_{0};
-    std::atomic<int64_t> startTime_{0};
+    std::atomic<int64_t> tickCnt_{0};
+
+    std::atomic<int64_t> lastTickRequestsCnt_{0};
+
 
 public:
 
-    Stats();
+    Stats() = default;
 
     Stats(const Stats &o) = delete;
 
@@ -27,7 +30,7 @@ public:
         requestsCnt_++;
     }
 
-    void print() const noexcept;
+    void print() noexcept;
 };
 
 void statsPrintLoop();

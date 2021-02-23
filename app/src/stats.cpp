@@ -3,30 +3,27 @@
 #include <thread>
 #include "app.h"
 
-void Stats::print() const noexcept {
-//    auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-//            std::chrono::steady_clock::now().time_since_epoch()
-//    ).count();
-//    auto timeElapsed = currentTime - startTime_.load();
-    int64_t rps{0};
-//    if (timeElapsed > 0) {
-//        rps = requestsCnt_.load() * 1000 / timeElapsed;
-//    }
+constexpr int64_t statsSleepDelayMs = 5000;
+
+void Stats::print() noexcept {
+    tickCnt_++;
+
+    auto timeElapsedMs = tickCnt_.load() * statsSleepDelayMs;
+    int64_t rps = requestsCnt_.load() * 1000L / timeElapsedMs;
+    int64_t tickRPS = (requestsCnt_.load() - lastTickRequestsCnt_.load()) * 1000L / statsSleepDelayMs;
 
     infof("Requests count: %lld", requestsCnt_.load());
     infof("RPS: %lld", rps);
-//    infof("Time elapsed: %lld", timeElapsed);
-}
+    infof("Tick RPS: %lld", tickRPS);
+    infof("Time elapsed: %lld", timeElapsedMs);
 
-Stats::Stats() {
-//    startTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
-//            std::chrono::steady_clock::now().time_since_epoch()
-//    ).count();
+
+    lastTickRequestsCnt_ = requestsCnt_.load();
 }
 
 void statsPrintLoop() {
     for (auto i = 0; i < 1 << 30; i++) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(statsSleepDelayMs));
 
         getApp().getStats().print();
     }
