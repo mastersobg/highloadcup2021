@@ -37,8 +37,8 @@ int main() {
     });
 
     std::string address = std::getenv("ADDRESS");
-    std::string port = std::getenv("Port");
-    std::string schema = std::getenv("Schema");
+    std::string port = "8000";// std::getenv("Port");
+    std::string schema = "http";//std::getenv("Schema");
     infof("address: %s port: %s schema: %s", address.c_str(), port.c_str(), schema.c_str());
 
     HttpClient client(address, port, schema);
