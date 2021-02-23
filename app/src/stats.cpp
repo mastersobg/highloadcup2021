@@ -37,6 +37,7 @@ void Stats::print() noexcept {
     printEndpointsStats();
     printDepthHistogram();
     printCoinsDepthHistogram();
+    printExploreAreaHistogram();
     printCpuStat();
 
     lastTickRequestsCnt_ = requestsCnt_.load();
@@ -134,6 +135,26 @@ void Stats::printCpuStat() noexcept {
           stats.getStatsPercent(CpuStatsState::Guest),
           stats.getStatsPercent(CpuStatsState::GuestNice)
     );
+}
+
+void Stats::printExploreAreaHistogram() noexcept {
+    std::shared_lock lock(exploreAreaHistogramMutex_);
+
+    std::string avgDurationStr{};
+    std::string countStr{};
+    for (size_t i = 0; i < exploreAreaHistogramCount_.size(); i++) {
+        int avgDuration = 0;
+        if (exploreAreaHistogramCount_[i] > 0) {
+            avgDuration = exploreAreaHistogramDuration_[i] / exploreAreaHistogramCount_[i];
+        }
+        writeIntToString(avgDuration, avgDurationStr);
+        avgDurationStr += ", ";
+
+        writeIntToString(exploreAreaHistogramCount_[i], countStr);
+        countStr += ", ";
+    }
+    infof("explore area avg duration histogram: %s", avgDurationStr.c_str());
+    infof("explore area count histogram: %s", countStr.c_str());
 }
 
 void statsPrintLoop() {

@@ -7,6 +7,7 @@
 #include <string>
 #include "http_client.h"
 #include "app.h"
+#include "util.h"
 #include <thread>
 #include <random>
 #include <set>
@@ -21,6 +22,71 @@ void printBuildInfo() {
 #endif
 
     infof("Build type: %s commit hash: %s", BUILD_TYPE, COMMIT_HASH);
+}
+
+int runExplore() {
+    std::string address = std::getenv("ADDRESS");
+    std::string port = "8000";
+    std::string schema = "http";
+    infof("address: %s port: %s schema: %s", address.c_str(), port.c_str(), schema.c_str());
+
+    HttpClient client(address, port, schema);
+
+    for (;;) {
+        auto ret = client.checkHealth();
+        if (ret.hasError()) {
+            continue;
+        }
+
+        auto resp = ret.get();
+        if (resp.hasError()) {
+            continue;
+        }
+
+        if (resp.getHttpCode() == 200) {
+            break;
+        }
+    }
+
+    std::random_device randomDevice;
+    std::default_random_engine rnd{randomDevice()};
+    std::uniform_int_distribution distribution{0, 3500 - 1};
+
+
+    for (auto it = 0; it < (1 << 30); it++) {
+        auto x1 = distribution(rnd);
+        auto y1 = distribution(rnd);
+        auto s1 = distribution(rnd);
+        auto s2 = distribution(rnd);
+        auto x2 = x1 + s1;
+        auto y2 = y1 + s2;
+
+        if (s1 > 0 && s2 > 0 && x2 < 3500 && y2 < 3500) {
+
+        } else {
+            continue;
+        }
+        Measure<std::chrono::milliseconds> tm{};
+        auto ret = client.explore(Area((int16_t) x1, (int16_t) y1, (int16_t) s1, (int16_t) s2));
+        if (ret.hasError()) {
+            errorf("error: %d", ret.error());
+            return 0;
+        }
+
+        auto resp = std::move(ret).get();
+
+        if (resp.hasError()) {
+            auto httpCode = resp.getHttpCode();
+            auto errResp = std::move(resp).getErrResponse();
+            errorf("explore: http code: %d error code: %d message: %s", httpCode, errResp.errorCode_,
+                   errResp.message_.c_str());
+            errorf("%d %d %d %d", x1, y1, x2, y2);
+            continue;
+        }
+
+        getApp().getStats().recordExploreArea(s1 * s2, tm.getInt32());
+    }
+    return 0;
 }
 
 int run() {
@@ -183,7 +249,7 @@ int main() {
         exit(0);
     });
 
-    auto runResult = run();
+    auto runResult = runExplore();
 
     getApp().getStats().stop();
     statsThread.join();

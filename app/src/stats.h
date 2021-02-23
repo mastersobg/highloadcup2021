@@ -36,6 +36,10 @@ private:
     std::shared_mutex depthCoinsHistogramMutex_;
     std::array<int, 11> depthCoinsHistogram_{0,};
 
+    std::shared_mutex exploreAreaHistogramMutex_;
+    std::array<int, 10> exploreAreaHistogramCount_{0,};
+    std::array<int, 10> exploreAreaHistogramDuration_{0,};
+
     std::atomic<int64_t> lastTickRequestsCnt_{0};
     std::atomic<int64_t> startTime_{0};
 
@@ -46,6 +50,8 @@ private:
     void printDepthHistogram() noexcept;
 
     void printCoinsDepthHistogram() noexcept;
+
+    void printExploreAreaHistogram() noexcept;
 
     void printCpuStat() noexcept;
 
@@ -89,6 +95,18 @@ public:
         if (amount > 0) {
             cellsWithTreasuries++;
         }
+    }
+
+    void recordExploreArea(int area, int32_t durationMs) noexcept {
+        size_t idx = 0;
+        while (area >= 10) {
+            area /= 10;
+            idx++;
+        }
+
+        std::scoped_lock lock(exploreAreaHistogramMutex_);
+        exploreAreaHistogramCount_[idx]++;
+        exploreAreaHistogramDuration_[idx] += durationMs;
     }
 
     void stop() noexcept;
