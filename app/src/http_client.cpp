@@ -4,6 +4,10 @@
 #include <curl/curl.h>
 #include "json.h"
 #include "app.h"
+#include "util.h"
+
+const std::string IssueFreeLicense = "issue_license_free";
+const std::string IssuePaidLicense = "issue_license_paid";
 
 size_t httpCallback(char *ptr, size_t size, size_t nmemb, void *ud) noexcept {
     auto resp = (respHolder *) ud;
@@ -72,11 +76,13 @@ HttpClient::~HttpClient() {
 }
 
 Expected<HttpResponse<HealthResponse>> HttpClient::checkHealth() noexcept {
+    Measure<std::chrono::milliseconds> tm;
     auto ret = makeRequest(checkHealthURL_, nullptr);
     if (ret.hasError()) {
         return ret.error();
     }
 
+    getApp().getStats().recordEndpointStats("health", ret.get(), tm.getInt32());
     return prepareResponse<HealthResponse>(ret, resp_.data, valueBuffer_, parseBuffer_, [](std::string &data) {
         return HealthResponse(data);
     });
@@ -85,11 +91,13 @@ Expected<HttpResponse<HealthResponse>> HttpClient::checkHealth() noexcept {
 
 Expected<HttpResponse<ExploreResponse>> HttpClient::explore(const Area &area) noexcept {
     marshalArea(area, postDataBuffer_);
+    Measure<std::chrono::milliseconds> tm;
     auto ret = makeRequest(exploreURL_, postDataBuffer_.c_str());
     if (ret.hasError()) {
         return ret.error();
     }
 
+    getApp().getStats().recordEndpointStats("explore", ret.get(), tm.getInt32());
     return prepareResponse<ExploreResponse>(ret, resp_.data, valueBuffer_, parseBuffer_, [this](std::string &data) {
         return unmarshalExploreResponse(data, this->valueBuffer_, this->parseBuffer_);
     });
@@ -97,10 +105,12 @@ Expected<HttpResponse<ExploreResponse>> HttpClient::explore(const Area &area) no
 
 Expected<HttpResponse<void *>> HttpClient::cash(const TreasureID &treasureId, Wallet &buf) noexcept {
     marshalTreasureId(treasureId, postDataBuffer_);
+    Measure<std::chrono::milliseconds> tm;
     auto ret = makeRequest(cashURL_, postDataBuffer_.c_str());
     if (ret.hasError()) {
         return ret.error();
     }
+    getApp().getStats().recordEndpointStats("cash", ret.get(), tm.getInt32());
     return prepareResponse<void *>(ret, resp_.data, valueBuffer_, parseBuffer_, [this, &buf](std::string &data) {
         unmarshallWallet(data, this->valueBuffer_, this->parseBuffer_, buf);
         return nullptr;
@@ -110,10 +120,12 @@ Expected<HttpResponse<void *>> HttpClient::cash(const TreasureID &treasureId, Wa
 Expected<HttpResponse<void *>> HttpClient::dig(LicenseID licenseId, int16_t posX, int16_t posY, int8_t depth,
                                                std::vector<TreasureID> &buf) noexcept {
     marshalDig(licenseId, posX, posY, depth, postDataBuffer_);
+    Measure<std::chrono::milliseconds> tm;
     auto ret = makeRequest(digURL_, postDataBuffer_.c_str());
     if (ret.hasError()) {
         return ret.error();
     }
+    getApp().getStats().recordEndpointStats("dig", ret.get(), tm.getInt32());
     return prepareResponse<void *>(ret, resp_.data, valueBuffer_, parseBuffer_, [this, &buf](std::string &data) {
         unmarshalTreasuriesList(data, this->valueBuffer_, this->parseBuffer_, buf);
         return nullptr;
@@ -123,10 +135,13 @@ Expected<HttpResponse<void *>> HttpClient::dig(LicenseID licenseId, int16_t posX
 
 Expected<HttpResponse<License>> HttpClient::issueLicense(const Wallet &w) noexcept {
     marshalWallet(w, postDataBuffer_);
+    Measure<std::chrono::milliseconds> tm;
     auto ret = makeRequest(issueLicenseURL_, postDataBuffer_.c_str());
     if (ret.hasError()) {
         return ret.error();
     }
+    getApp().getStats().recordEndpointStats(w.coins.empty() ? IssueFreeLicense : IssuePaidLicense, ret.get(),
+                                            tm.getInt32());
     return prepareResponse<License>(ret, resp_.data, valueBuffer_, parseBuffer_, [this](std::string &data) {
         return unmarshalLicense(data, this->valueBuffer_, this->parseBuffer_);
     });
