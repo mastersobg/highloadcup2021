@@ -52,42 +52,75 @@ int runExplore() {
     std::default_random_engine rnd{randomDevice()};
     std::uniform_int_distribution distribution{0, 3500 - 1};
 
+    std::array<std::array<uint32_t, 10>, 10> arr{};
+    for (size_t i = 0; i < 3500; i += 350) {
+        for (size_t j = 0; j < 3500; j += 350) {
 
-    for (auto it = 0; it < (1 << 30); it++) {
-        auto x1 = distribution(rnd);
-        auto y1 = distribution(rnd);
-//        auto s1 = distribution(rnd);
-//        auto s2 = distribution(rnd);
-        auto s1 = 1;
-        auto s2 = 1;
-        auto x2 = x1 + s1;
-        auto y2 = y1 + s2;
+            auto ret = client.explore(Area((int16_t) i, (int16_t) j, (int16_t) 350, (int16_t) 350));
+            if (ret.hasError()) {
+                errorf("error: %d", ret.error());
+                return 0;
+            }
 
-        if (s1 > 0 && s2 > 0 && x2 < 3500 && y2 < 3500) {
+            auto resp = std::move(ret).get();
 
-        } else {
-            continue;
+            if (resp.hasError()) {
+                auto httpCode = resp.getHttpCode();
+                auto errResp = std::move(resp).getErrResponse();
+                errorf("explore: http code: %d error code: %d message: %s", httpCode, errResp.errorCode_,
+                       errResp.message_.c_str());
+                errorf("%d %d %d %d", i, j, 350, 350);
+                continue;
+            }
+
+            auto respVal = std::move(resp).getResponse();
+            arr[i / 350][j / 350] = respVal.amount_;
         }
-        Measure<std::chrono::milliseconds> tm{};
-        auto ret = client.explore(Area((int16_t) x1, (int16_t) y1, (int16_t) s1, (int16_t) s2));
-        if (ret.hasError()) {
-            errorf("error: %d", ret.error());
-            return 0;
-        }
-
-        auto resp = std::move(ret).get();
-
-        if (resp.hasError()) {
-            auto httpCode = resp.getHttpCode();
-            auto errResp = std::move(resp).getErrResponse();
-            errorf("explore: http code: %d error code: %d message: %s", httpCode, errResp.errorCode_,
-                   errResp.message_.c_str());
-            errorf("%d %d %d %d", x1, y1, x2, y2);
-            continue;
-        }
-
-        getApp().getStats().recordExploreArea(s1 * s2, tm.getInt32());
     }
+    std::string logStr{};
+    for (const auto &a:arr) {
+        for (const auto &v:a) {
+            writeIntToString(v, logStr);
+            logStr += " ";
+        }
+        logStr += "\n";
+    }
+    debugf("\n%s", logStr.c_str());
+//    for (auto it = 0; it < (1 << 30); it++) {
+//        auto x1 = distribution(rnd);
+//        auto y1 = distribution(rnd);
+////        auto s1 = distribution(rnd);
+////        auto s2 = distribution(rnd);
+//        auto s1 = 1;
+//        auto s2 = 1;
+//        auto x2 = x1 + s1;
+//        auto y2 = y1 + s2;
+//
+//        if (s1 > 0 && s2 > 0 && x2 < 3500 && y2 < 3500) {
+//
+//        } else {
+//            continue;
+//        }
+//        Measure<std::chrono::milliseconds> tm{};
+//        auto ret = client.explore(Area((int16_t) x1, (int16_t) y1, (int16_t) s1, (int16_t) s2));
+//        if (ret.hasError()) {
+//            errorf("error: %d", ret.error());
+//            return 0;
+//        }
+//
+//        auto resp = std::move(ret).get();
+//
+//        if (resp.hasError()) {
+//            auto httpCode = resp.getHttpCode();
+//            auto errResp = std::move(resp).getErrResponse();
+//            errorf("explore: http code: %d error code: %d message: %s", httpCode, errResp.errorCode_,
+//                   errResp.message_.c_str());
+//            errorf("%d %d %d %d", x1, y1, x2, y2);
+//            continue;
+//        }
+//
+//        getApp().getStats().recordExploreArea(s1 * s2, tm.getInt32());
+//    }
     return 0;
 }
 
@@ -252,7 +285,7 @@ int main() {
     });
 
     std::vector<std::thread> threads{};
-    for (auto i = 0; i < 10; i++) {
+    for (auto i = 0; i < 1; i++) {
         std::thread t(runExplore);
         threads.push_back(std::move(t));
     }
