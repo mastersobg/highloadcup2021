@@ -56,8 +56,10 @@ int runExplore() {
     for (auto it = 0; it < (1 << 30); it++) {
         auto x1 = distribution(rnd);
         auto y1 = distribution(rnd);
-        auto s1 = distribution(rnd);
-        auto s2 = distribution(rnd);
+//        auto s1 = distribution(rnd);
+//        auto s2 = distribution(rnd);
+        auto s1 = 1;
+        auto s2 = 1;
         auto x2 = x1 + s1;
         auto y2 = y1 + s2;
 

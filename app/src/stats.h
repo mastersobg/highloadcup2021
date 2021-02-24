@@ -37,8 +37,8 @@ private:
     std::array<int, 11> depthCoinsHistogram_{0,};
 
     std::shared_mutex exploreAreaHistogramMutex_;
-    std::array<int, 10> exploreAreaHistogramCount_{0,};
-    std::array<int, 10> exploreAreaHistogramDuration_{0,};
+    std::array<int64_t, 10> exploreAreaHistogramCount_{0,};
+    std::array<int64_t, 10> exploreAreaHistogramDuration_{0,};
 
     std::atomic<int64_t> lastTickRequestsCnt_{0};
     std::atomic<int64_t> startTime_{0};

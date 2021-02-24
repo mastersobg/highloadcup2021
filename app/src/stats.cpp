@@ -143,7 +143,7 @@ void Stats::printExploreAreaHistogram() noexcept {
     std::string avgDurationStr{};
     std::string countStr{};
     for (size_t i = 0; i < exploreAreaHistogramCount_.size(); i++) {
-        int avgDuration = 0;
+        int64_t avgDuration = 0;
         if (exploreAreaHistogramCount_[i] > 0) {
             avgDuration = exploreAreaHistogramDuration_[i] / exploreAreaHistogramCount_[i];
         }
