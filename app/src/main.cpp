@@ -251,11 +251,18 @@ int main() {
         exit(0);
     });
 
-    auto runResult = runExplore();
+    std::vector<std::thread> threads{};
+    for (auto i = 0; i < 10; i++) {
+        std::thread t(runExplore);
+        threads.push_back(std::move(t));
+    }
+    for (auto &t: threads) {
+        t.join();
+    }
 
     getApp().getStats().stop();
     statsThread.join();
 
     curl_global_cleanup();
-    return runResult;
+    return 0;
 }
