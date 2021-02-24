@@ -5,6 +5,7 @@
 #include "log.h"
 
 const std::string CPU_STR = "cpu ";
+CpuStats prevStats;
 
 CpuStats getCpuStats() noexcept {
     std::ifstream fileStat("/proc/stat");
@@ -27,5 +28,7 @@ CpuStats getCpuStats() noexcept {
 
     fileStat.close();
 
-    return stats;
+    auto ret = stats - prevStats;
+    prevStats = stats;
+    return ret;
 }

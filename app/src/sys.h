@@ -36,6 +36,14 @@ struct CpuStats {
                data_[CpuStatsState::GuestNice];
     }
 
+    CpuStats operator-(const CpuStats &r) const noexcept {
+        CpuStats ret;
+        for (size_t i = 0; i < this->data_.size(); i++) {
+            ret.data_[i] = this->data_[i] - r.data_[i];
+        }
+        return ret;
+    }
+
     size_t getTotalTime() noexcept {
         return getIdleTime() + getActiveTime();
     }
