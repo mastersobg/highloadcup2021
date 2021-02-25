@@ -52,11 +52,13 @@ int runExplore() {
     std::default_random_engine rnd{randomDevice()};
     std::uniform_int_distribution distribution{0, 3500 - 1};
 
-    std::array<std::array<uint32_t, 10>, 10> arr{};
-    for (size_t i = 0; i < 3500; i += 350) {
-        for (size_t j = 0; j < 3500; j += 350) {
-
-            auto ret = client.explore(Area((int16_t) i, (int16_t) j, (int16_t) 350, (int16_t) 350));
+//    std::array<std::array<uint32_t, 10>, 10> arr{};
+    int totalWrong{0};
+    int total{0};
+    for (size_t i = 0; i < 3500; i += 100) {
+        for (size_t j = 0; j < 3500; j += 100) {
+            ++total;
+            auto ret = client.explore(Area((int16_t) i, (int16_t) j, (int16_t) 100, (int16_t) 100));
             if (ret.hasError()) {
                 errorf("error: %d", ret.error());
                 return 0;
@@ -74,18 +76,23 @@ int runExplore() {
             }
 
             auto respVal = std::move(resp).getResponse();
-            arr[i / 350][j / 350] = respVal.amount_;
+            if (respVal.amount_ < 350 || respVal.amount_ > 450) {
+                ++totalWrong;
+                debugf("x: %d y: %d amount: %d", i, j, respVal.amount_);
+            }
         }
     }
-    std::string logStr{};
-    for (const auto &a:arr) {
-        for (const auto &v:a) {
-            writeIntToString(v, logStr);
-            logStr += " ";
-        }
-        logStr += "\n";
-    }
-    debugf("\n%s", logStr.c_str());
+
+    debugf("total diff: %d out of %d", totalWrong, total);
+//    std::string logStr{};
+//    for (const auto &a:arr) {
+//        for (const auto &v:a) {
+//            writeIntToString(v, logStr);
+//            logStr += " ";
+//        }
+//        logStr += "\n";
+//    }
+//    debugf("\n%s", logStr.c_str());
 //    for (auto it = 0; it < (1 << 30); it++) {
 //        auto x1 = distribution(rnd);
 //        auto y1 = distribution(rnd);
