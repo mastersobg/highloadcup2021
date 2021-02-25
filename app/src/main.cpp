@@ -53,15 +53,15 @@ int runExplore() {
     std::uniform_int_distribution distribution{0, 3500 - 1};
 
 //    std::array<std::array<uint32_t, 10>, 10> arr{};
-    int totalWrong{0};
-    int total{0};
-    for (size_t i = 0; i < 3500; i += 100) {
-        for (size_t j = 0; j < 3500; j += 100) {
-            ++total;
-            auto ret = client.explore(Area((int16_t) i, (int16_t) j, (int16_t) 100, (int16_t) 100));
+    int emptyCnt{0};
+    int totalCnt{0};
+    for (size_t i = 0; i < 3500; i += 5) {
+        for (size_t j = 0; j < 3500; j += 5) {
+            ++totalCnt;
+            auto ret = client.explore(Area((int16_t) i, (int16_t) j, (int16_t) 5, (int16_t) 5));
             if (ret.hasError()) {
                 errorf("error: %d", ret.error());
-                return 0;
+                goto endloop;
             }
 
             auto resp = std::move(ret).get();
@@ -76,14 +76,15 @@ int runExplore() {
             }
 
             auto respVal = std::move(resp).getResponse();
-            if (respVal.amount_ < 350 || respVal.amount_ > 450) {
-                ++totalWrong;
-                debugf("x: %d y: %d amount: %d", i, j, respVal.amount_);
+            if (respVal.amount_ == 0) {
+                emptyCnt++;
             }
         }
     }
 
-    debugf("total diff: %d out of %d", totalWrong, total);
+    endloop:
+
+    debugf("Got %d empty squares out of %d", emptyCnt, totalCnt);
 //    std::string logStr{};
 //    for (const auto &a:arr) {
 //        for (const auto &v:a) {
