@@ -24,7 +24,7 @@ void printBuildInfo() {
     infof("Build type: %s commit hash: %s", BUILD_TYPE, COMMIT_HASH);
 }
 
-int runExplore() {
+int runExplore(size_t startX) {
     std::string address = std::getenv("ADDRESS");
     std::string port = "8000";
     std::string schema = "http";
@@ -53,9 +53,9 @@ int runExplore() {
     std::uniform_int_distribution distribution{0, 3500 - 1};
 
 //    std::array<std::array<uint32_t, 10>, 10> arr{};
-    int emptyCnt{0};
     int totalCnt{0};
-    for (size_t i = 0; i < 3500; i += 5) {
+    std::array<int, 10> histogram{};
+    for (size_t i = startX; i < 3500; i += 5) {
         for (size_t j = 0; j < 3500; j += 5) {
             ++totalCnt;
             auto ret = client.explore(Area((int16_t) i, (int16_t) j, (int16_t) 5, (int16_t) 5));
@@ -76,15 +76,20 @@ int runExplore() {
             }
 
             auto respVal = std::move(resp).getResponse();
-            if (respVal.amount_ == 0) {
-                emptyCnt++;
-            }
+            auto amount = respVal.amount_ >= 10 ? 9 : respVal.amount_;
+            histogram[amount]++;
         }
     }
 
     endloop:
 
-    debugf("Got %d empty squares out of %d", emptyCnt, totalCnt);
+    debugf("total squares: %d", totalCnt);
+    std::string logStr{};
+    for (const auto &v : histogram) {
+        writeIntToString(v, logStr);
+        logStr += " ";
+    }
+    debugf("squares amount histogram: %s", logStr.c_str());
 //    std::string logStr{};
 //    for (const auto &a:arr) {
 //        for (const auto &v:a) {
@@ -292,14 +297,19 @@ int main() {
         exit(0);
     });
 
-    std::vector<std::thread> threads{};
-    for (auto i = 0; i < 1; i++) {
-        std::thread t(runExplore);
-        threads.push_back(std::move(t));
-    }
-    for (auto &t: threads) {
-        t.join();
-    }
+    std::thread t1(runExplore, 0);
+    std::thread t2(runExplore, 3500 / 2);
+
+    t1.join();
+    t2.join();
+//    std::vector<std::thread> threads{};
+//    for (auto i = 0; i < 1; i++) {
+//        std::thread t(runExplore);
+//        threads.push_back(std::move(t));
+//    }
+//    for (auto &t: threads) {
+//        t.join();
+//    }
 
     getApp().getStats().stop();
     statsThread.join();
