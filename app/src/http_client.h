@@ -11,7 +11,7 @@
 template<class T>
 class HttpResponse {
     std::variant<T, ApiError> resp_;
-    int32_t httpCode_;
+    int32_t httpCode_{0};
 
 public:
 

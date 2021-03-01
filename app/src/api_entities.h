@@ -8,18 +8,17 @@
 constexpr int32_t ApiErrorCodeUnknown = 1;
 
 struct ApiError {
-    const int32_t errorCode_;
-    const std::string message_;
+    int32_t errorCode_;
+    std::string message_;
 
     ApiError(int32_t errorCode, std::string message) : errorCode_{errorCode},
                                                        message_{std::move(message)} {}
 };
 
 struct HealthResponse {
-    const std::string details_;
+    std::string details_;
 
     explicit HealthResponse(std::string details) : details_{std::move(details)} {
-
     }
 };
 
@@ -31,6 +30,12 @@ struct Area {
 
     Area(int16_t posX, int16_t posY, int16_t sizeX, int16_t sizeY) : posX_{posX}, posY_{posY}, sizeX_{sizeX},
                                                                      sizeY_{sizeY} {}
+};
+
+struct ExploreRequest {
+    const Area area_;
+
+    explicit ExploreRequest(Area a) : area_{a} {}
 };
 
 struct ExploreResponse {

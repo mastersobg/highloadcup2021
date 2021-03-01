@@ -11,6 +11,8 @@
 #include <thread>
 #include <random>
 #include <set>
+#include "api.h"
+#include <chrono>
 
 void printBuildInfo() {
 #ifndef BUILD_TYPE
@@ -296,12 +298,12 @@ int main() {
     std::signal(SIGINT, []([[maybe_unused]]int signal) {
         exit(0);
     });
-
-    std::thread t1(runExplore, 0);
-    std::thread t2(runExplore, 3500 / 2);
-
-    t1.join();
-    t2.join();
+//
+//    std::thread t1(runExplore, 0);
+//    std::thread t2(runExplore, 3500 / 2);
+//
+//    t1.join();
+//    t2.join();
 //    std::vector<std::thread> threads{};
 //    for (auto i = 0; i < 1; i++) {
 //        std::thread t(runExplore);
@@ -310,6 +312,45 @@ int main() {
 //    for (auto &t: threads) {
 //        t.join();
 //    }
+
+    Api api(10, std::getenv("ADDRESS"));
+
+
+    for (;;) {
+        auto err = api.scheduleCheckHealth();
+        if (err.hasError()) {
+            if (err.error() != ErrorCode::kMaxApiRequestsQueueSizeExceeded) {
+                errorf("error on scheduling API request: %d", err.error());
+            }
+        }
+
+        auto response = api.getAvailableResponse();
+        if (!response) {
+            debugf("no available response");
+            continue;
+        }
+        Response resp = std::move(response.value());
+        switch (resp.type_) {
+            case ApiEndpointType::CheckHealth: {
+                auto healthResponseWrapper = resp.getHealthResponse();
+                if (healthResponseWrapper.hasError()) {
+                    errorf("response contains error: %d", healthResponseWrapper.error());
+                    goto loopExit;
+                }
+                auto healthResponse = std::move(healthResponseWrapper).get();
+
+//                debugf("%s", std::move(healthResponse).getResponse().details_.c_str());
+                break;
+            }
+            default: {
+                errorf("unknown response type: %d", resp.type_);
+                break;
+            }
+        }
+
+    }
+
+    loopExit:
 
     getApp().stop();
     statsThread.join();

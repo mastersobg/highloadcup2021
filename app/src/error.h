@@ -6,6 +6,8 @@
 enum class ErrorCode : int {
     kNoErr = 0,
     kErrCurl = 1,
+    kMaxApiRequestsQueueSizeExceeded = 2,
+    kUnknownRequestType = 3,
 };
 
 template<class T>
