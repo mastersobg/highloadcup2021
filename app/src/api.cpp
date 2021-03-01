@@ -57,13 +57,17 @@ Api::~Api() {
 }
 
 Expected<Response> Api::makeApiRequest(HttpClient &client, const Request &r) noexcept {
-    switch (r.type) {
+    switch (r.type_) {
         case ApiEndpointType::CheckHealth: {
             auto resp = client.checkHealth();
             return Response(std::move(resp));
         }
+        case ApiEndpointType::Explore: {
+            auto area = r.getExploreRequest();
+            return Response(client.explore(area));
+        }
         default: {
-            errorf("Unsupported request type: %d", r.type);
+            errorf("Unsupported request type: %d", r.type_);
             return ErrorCode::kUnknownRequestType;
         }
     }
@@ -77,21 +81,7 @@ void Api::publishResponse(Response &&r) noexcept {
 }
 
 ExpectedVoid Api::scheduleCheckHealth() noexcept {
-
-    std::unique_lock lock(requestsMu_);
-
-    auto size = requests_.size();
-
-    if (size >= kMaxApiRequestsQueueSize) {
-        return ErrorCode::kMaxApiRequestsQueueSizeExceeded;
-    }
-
-    requests_.push_back(Request::NewCheckHealthRequest());
-
-    lock.unlock();
-    requestCondVar_.notify_one();
-
-    return NoErr;
+    return scheduleRequest(Request::NewCheckHealthRequest());
 }
 
 std::optional<Response> Api::getAvailableResponse() noexcept {
@@ -103,8 +93,25 @@ std::optional<Response> Api::getAvailableResponse() noexcept {
 
     auto r = std::move(responses_.front());
     responses_.pop_front();
-//    responsesSize_--;
 
     return r;
+}
+
+ExpectedVoid Api::explore(Area area) noexcept {
+    return scheduleRequest(Request::NewExploreRequest(area));
+}
+
+ExpectedVoid Api::scheduleRequest(Request r) noexcept {
+    std::unique_lock lock(requestsMu_);
+
+    if (requests_.size() > kMaxApiRequestsQueueSize) {
+        return ErrorCode::kMaxApiRequestsQueueSizeExceeded;
+    }
+
+    requests_.push_back(std::move(r));
+
+    lock.unlock();
+    requestCondVar_.notify_one();
+    return NoErr;
 }
 

@@ -22,8 +22,10 @@ enum class ApiEndpointType : int {
 };
 
 class Request {
+
 public:
-    ApiEndpointType type;
+    ApiEndpointType type_{0};
+    std::variant<Area> request_;
 
     Request() = default;
 
@@ -35,10 +37,20 @@ public:
 
     Request &operator=(Request &&r) = default;
 
+    Area getExploreRequest() const noexcept {
+        return std::get<Area>(request_);
+    }
 
     static Request NewCheckHealthRequest() noexcept {
         Request r{};
-        r.type = ApiEndpointType::CheckHealth;
+        r.type_ = ApiEndpointType::CheckHealth;
+        return r;
+    }
+
+    static Request NewExploreRequest(Area area) noexcept {
+        Request r{};
+        r.type_ = ApiEndpointType::Explore;
+        r.request_ = area;
         return r;
     }
 };
@@ -47,6 +59,7 @@ class Response {
 public:
 
     using HealthResponseWrapper = Expected<HttpResponse<HealthResponse>>;
+    using ExploreResponseWrapper = Expected<HttpResponse<ExploreResponse>>;
 
     Response(const Response &r) = delete;
 
@@ -57,12 +70,14 @@ public:
     Response &operator=(Response &&r) = default;
 
     ApiEndpointType type_;
-    std::variant<HealthResponseWrapper> response_;
+    std::variant<HealthResponseWrapper, ExploreResponseWrapper> response_;
 
 
     explicit Response(Expected<HttpResponse<HealthResponse>> &&healthResponse)
             : type_{ApiEndpointType::CheckHealth},
               response_{healthResponse} {}
+
+    explicit Response(ExploreResponseWrapper &&r) : type_{ApiEndpointType::Explore}, response_{r} {}
 
     [[nodiscard]] HealthResponseWrapper getHealthResponse() const noexcept {
         return std::get<HealthResponseWrapper>(response_);
@@ -91,6 +106,8 @@ private:
 
     void publishResponse(Response &&r) noexcept;
 
+    ExpectedVoid scheduleRequest(Request r) noexcept;
+
 public:
     explicit Api(size_t threadsCount, std::string address);
 
@@ -105,6 +122,8 @@ public:
     ~Api();
 
     ExpectedVoid scheduleCheckHealth() noexcept;
+
+    ExpectedVoid explore(Area area) noexcept;
 
     std::optional<Response> getAvailableResponse() noexcept;
 

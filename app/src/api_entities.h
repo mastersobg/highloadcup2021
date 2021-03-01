@@ -23,24 +23,20 @@ struct HealthResponse {
 };
 
 struct Area {
-    const int16_t posX_;
-    const int16_t posY_;
-    const int16_t sizeX_;
-    const int16_t sizeY_;
+    int16_t posX_;
+    int16_t posY_;
+    int16_t sizeX_;
+    int16_t sizeY_;
+
+    Area() = default;
 
     Area(int16_t posX, int16_t posY, int16_t sizeX, int16_t sizeY) : posX_{posX}, posY_{posY}, sizeX_{sizeX},
                                                                      sizeY_{sizeY} {}
 };
 
-struct ExploreRequest {
-    const Area area_;
-
-    explicit ExploreRequest(Area a) : area_{a} {}
-};
-
 struct ExploreResponse {
-    const Area area_;
-    const uint32_t amount_;
+    Area area_;
+    uint32_t amount_;
 
     ExploreResponse(Area area, uint32_t amount) : area_{area}, amount_{amount} {}
 };

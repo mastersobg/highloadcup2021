@@ -317,7 +317,7 @@ int main() {
 
 
     for (;;) {
-        auto err = api.scheduleCheckHealth();
+        auto err = api.explore(Area(0, 0, 1, 1));
         if (err.hasError()) {
             if (err.error() != ErrorCode::kMaxApiRequestsQueueSizeExceeded) {
                 errorf("error on scheduling API request: %d", err.error());
@@ -340,6 +340,10 @@ int main() {
                 auto healthResponse = std::move(healthResponseWrapper).get();
 
 //                debugf("%s", std::move(healthResponse).getResponse().details_.c_str());
+                break;
+            }
+            case ApiEndpointType::Explore: {
+
                 break;
             }
             default: {
