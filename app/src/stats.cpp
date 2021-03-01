@@ -49,14 +49,6 @@ Stats::Stats() {
     ).count();
 }
 
-void Stats::stop() noexcept {
-    stopped_ = true;
-}
-
-bool Stats::isStopped() const noexcept {
-    return stopped_;
-}
-
 void Stats::recordEndpointStats(const std::string &endpoint, int32_t httpCode, int32_t durationMs) noexcept {
     std::scoped_lock lck{endpointStatsMutex_};
 
@@ -163,7 +155,7 @@ void statsPrintLoop() {
 
         getApp().getStats().print();
 
-        if (getApp().getStats().isStopped()) {
+        if (getApp().isStopped()) {
             break;
         }
     }

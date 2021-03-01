@@ -311,7 +311,7 @@ int main() {
 //        t.join();
 //    }
 
-    getApp().getStats().stop();
+    getApp().stop();
     statsThread.join();
 
     curl_global_cleanup();

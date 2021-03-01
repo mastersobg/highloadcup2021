@@ -43,8 +43,6 @@ private:
     std::atomic<int64_t> lastTickRequestsCnt_{0};
     std::atomic<int64_t> startTime_{0};
 
-    std::atomic<bool> stopped_{false};
-
     void printEndpointsStats() noexcept;
 
     void printDepthHistogram() noexcept;
@@ -108,10 +106,6 @@ public:
         exploreAreaHistogramCount_[idx]++;
         exploreAreaHistogramDuration_[idx] += durationMs;
     }
-
-    void stop() noexcept;
-
-    bool isStopped() const noexcept;
 
     void print() noexcept;
 };
