@@ -2,17 +2,24 @@
 #define HIGHLOADCUP2021_APP_H
 
 #include "stats.h"
+#include "api.h"
 #include <atomic>
+#include <thread>
 
 
 class App {
 private:
+    std::thread statsThread_;
+    std::string address_;
+    Api api_;
     Stats stats_{};
 
     std::atomic<bool> stopped_{false};
 
 public:
-    App() {}
+    App();
+
+    ~App();
 
     App(const App &o) = delete;
 
@@ -33,6 +40,8 @@ public:
     Stats &getStats() noexcept {
         return stats_;
     }
+
+    void run() noexcept;
 };
 
 App &getApp();
