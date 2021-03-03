@@ -143,7 +143,7 @@ public:
 
     Response getAvailableResponse() noexcept;
 
-
+    size_t requestsQueueSize() noexcept;
 };
 
 #endif //HIGHLOADCUP2021_API_H

@@ -4,6 +4,7 @@
 #include "log.h"
 #include <utility>
 #include "error.h"
+#include <thread>
 
 Api::Api(size_t threadsCount, std::string address) : address_{std::move(address)} {
     for (size_t i = 0; i < threadsCount; i++) {
@@ -74,9 +75,10 @@ Expected<Response> Api::makeApiRequest(HttpClient &client, Request &r) noexcept 
 }
 
 void Api::publishResponse(Response &&r) noexcept {
-    std::scoped_lock lock(responsesMu_);
+    std::unique_lock lock(responsesMu_);
 
     responses_.push_back(std::move(r));
+    lock.unlock();
     responsesCondVar_.notify_one();
 }
 
@@ -103,7 +105,7 @@ ExpectedVoid Api::scheduleExplore(Area area) noexcept {
 ExpectedVoid Api::scheduleRequest(Request r) noexcept {
     std::unique_lock lock(requestsMu_);
 
-    if (requests_.size() > kMaxApiRequestsQueueSize) {
+    if (requests_.size() >= kMaxApiRequestsQueueSize) {
         return ErrorCode::kMaxApiRequestsQueueSizeExceeded;
     }
 
@@ -112,5 +114,10 @@ ExpectedVoid Api::scheduleRequest(Request r) noexcept {
     lock.unlock();
     requestCondVar_.notify_one();
     return NoErr;
+}
+
+size_t Api::requestsQueueSize() noexcept {
+    std::scoped_lock lock(requestsMu_);
+    return requests_.size();
 }
 

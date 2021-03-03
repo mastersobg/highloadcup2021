@@ -25,7 +25,7 @@ App &getApp() {
 
 App::App() : statsThread_{statsPrintLoop},
              address_{std::getenv("ADDRESS")},
-             api_{10, address_} {
+             api_{kApiThreadCount, address_} {
     printBuildInfo();
     if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
         errorf("curl global init failed: %d", val);
@@ -39,24 +39,27 @@ App::App() : statsThread_{statsPrintLoop},
 }
 
 App::~App() {
+    stop();
     curl_global_cleanup();
     statsThread_.join();
 }
 
-std::pair<int16_t, int16_t> App::fireInitExplores() noexcept {
-    for (int16_t i = 0; i < (int16_t) kFieldMaxX; i++) {
-        for (int16_t j = 0; j < (int16_t) kFieldMaxY; j++) {
-            auto err = api_.scheduleExplore(Area(i, j, 1, 1));
-            if (err.hasError()) {
-                return {i, j};
-            }
+ExpectedVoid App::fireInitExplores() noexcept {
+    for (size_t i = 0; i < kApiThreadCount * 10; i++) {
+        auto err = api_.scheduleExplore(Area(state_.lastX(), state_.lastY(), 1, 1));
+        if (err.hasError()) {
+            return err;
         }
+        state_.nextExploreCoord();
     }
-    return {kFieldMaxX, kFieldMaxY};
+    return NoErr;
 }
 
 void App::run() noexcept {
-    fireInitExplores();
+    if (auto err = fireInitExplores(); err.hasError()) {
+        errorf("fireInitExplores: error: %d", err.error());
+        return;
+    }
 
     for (;;) {
         if (getApp().isStopped()) {
@@ -98,5 +101,6 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     auto successResp = std::move(resp).getResponse();
     getStats().recordExploreCell(successResp.amount_);
 
-    return NoErr;
+    auto[x, y] = state_.nextExploreCoord();
+    return api_.scheduleExplore(Area(x, y, 1, 1));
 }

@@ -6,6 +6,7 @@
 #include <atomic>
 #include <thread>
 #include <utility>
+#include "state.h"
 
 
 class App {
@@ -14,10 +15,11 @@ private:
     std::string address_;
     Api api_;
     Stats stats_{};
+    State state_;
 
     std::atomic<bool> stopped_{false};
 
-    std::pair<int16_t, int16_t> fireInitExplores() noexcept;
+    [[nodiscard]] ExpectedVoid fireInitExplores() noexcept;
 
     [[nodiscard]] ExpectedVoid processResponse(Response &r) noexcept;
 
