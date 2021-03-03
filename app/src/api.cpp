@@ -56,15 +56,15 @@ Api::~Api() {
     }
 }
 
-Expected<Response> Api::makeApiRequest(HttpClient &client, const Request &r) noexcept {
+Expected<Response> Api::makeApiRequest(HttpClient &client, Request &r) noexcept {
     switch (r.type_) {
         case ApiEndpointType::CheckHealth: {
             auto resp = client.checkHealth();
-            return Response(std::move(resp));
+            return Response(std::move(r), std::move(resp));
         }
         case ApiEndpointType::Explore: {
             auto area = r.getExploreRequest();
-            return Response(client.explore(area));
+            return Response(std::move(r), client.explore(area));
         }
         default: {
             errorf("Unsupported request type: %d", r.type_);
@@ -84,8 +84,7 @@ ExpectedVoid Api::scheduleCheckHealth() noexcept {
     return scheduleRequest(Request::NewCheckHealthRequest());
 }
 
-std::optional<Response> Api::getAvailableResponse() noexcept {
-
+Response Api::getAvailableResponse() noexcept {
     std::unique_lock lock(responsesMu_);
     responsesCondVar_.wait(lock, [this] {
         return !responses_.empty();
@@ -97,7 +96,7 @@ std::optional<Response> Api::getAvailableResponse() noexcept {
     return r;
 }
 
-ExpectedVoid Api::explore(Area area) noexcept {
+ExpectedVoid Api::scheduleExplore(Area area) noexcept {
     return scheduleRequest(Request::NewExploreRequest(area));
 }
 

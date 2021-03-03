@@ -56,10 +56,14 @@ public:
 };
 
 class Response {
-public:
-
     using HealthResponseWrapper = Expected<HttpResponse<HealthResponse>>;
     using ExploreResponseWrapper = Expected<HttpResponse<ExploreResponse>>;
+
+    ApiEndpointType type_;
+    std::variant<HealthResponseWrapper, ExploreResponseWrapper> response_;
+    Request request_;
+public:
+
 
     Response(const Response &r) = delete;
 
@@ -69,18 +73,30 @@ public:
 
     Response &operator=(Response &&r) = default;
 
-    ApiEndpointType type_;
-    std::variant<HealthResponseWrapper, ExploreResponseWrapper> response_;
+    [[nodiscard]] ApiEndpointType getType() const noexcept {
+        return type_;
+    }
 
+    Request &getRequest() noexcept {
+        return request_;
+    }
 
-    explicit Response(Expected<HttpResponse<HealthResponse>> &&healthResponse)
+    explicit Response(Request &&r, Expected<HttpResponse<HealthResponse>> &&healthResponse)
             : type_{ApiEndpointType::CheckHealth},
-              response_{healthResponse} {}
+              response_{std::move(healthResponse)},
+              request_{std::move(r)} {}
 
-    explicit Response(ExploreResponseWrapper &&r) : type_{ApiEndpointType::Explore}, response_{r} {}
+    explicit Response(Request &&r, ExploreResponseWrapper &&exploreResponse) :
+            type_{ApiEndpointType::Explore},
+            response_{std::move(exploreResponse)},
+            request_{std::move(r)} {}
 
-    [[nodiscard]] HealthResponseWrapper getHealthResponse() const noexcept {
+    [[nodiscard]] HealthResponseWrapper &getHealthResponse() noexcept {
         return std::get<HealthResponseWrapper>(response_);
+    }
+
+    [[nodiscard]] ExploreResponseWrapper &getExploreResponse() noexcept {
+        return std::get<ExploreResponseWrapper>(response_);
     }
 };
 
@@ -102,7 +118,7 @@ private:
 
     void threadLoop() noexcept;
 
-    static Expected<Response> makeApiRequest(HttpClient &client, const Request &r) noexcept;
+    static Expected<Response> makeApiRequest(HttpClient &client, Request &r) noexcept;
 
     void publishResponse(Response &&r) noexcept;
 
@@ -123,9 +139,9 @@ public:
 
     ExpectedVoid scheduleCheckHealth() noexcept;
 
-    ExpectedVoid explore(Area area) noexcept;
+    ExpectedVoid scheduleExplore(Area area) noexcept;
 
-    std::optional<Response> getAvailableResponse() noexcept;
+    Response getAvailableResponse() noexcept;
 
 
 };

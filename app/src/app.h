@@ -5,6 +5,7 @@
 #include "api.h"
 #include <atomic>
 #include <thread>
+#include <utility>
 
 
 class App {
@@ -15,6 +16,12 @@ private:
     Stats stats_{};
 
     std::atomic<bool> stopped_{false};
+
+    std::pair<int16_t, int16_t> fireInitExplores() noexcept;
+
+    [[nodiscard]] ExpectedVoid processResponse(Response &r) noexcept;
+
+    ExpectedVoid processExploreResponse(Request &req, HttpResponse<ExploreResponse> &resp) noexcept;
 
 public:
     App();

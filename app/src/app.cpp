@@ -1,6 +1,9 @@
 #include "app.h"
 #include <curl/curl.h>
 #include <csignal>
+#include <cstdlib>
+#include <thread>
+#include <chrono>
 
 App app{};
 
@@ -20,7 +23,9 @@ App &getApp() {
     return app;
 }
 
-App::App() : statsThread_{statsPrintLoop}, address_{std::getenv("ADDRESS")}, api_{10, address_} {
+App::App() : statsThread_{statsPrintLoop},
+             address_{std::getenv("ADDRESS")},
+             api_{10, address_} {
     printBuildInfo();
     if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
         errorf("curl global init failed: %d", val);
@@ -28,6 +33,8 @@ App::App() : statsThread_{statsPrintLoop}, address_{std::getenv("ADDRESS")}, api
     }
     std::signal(SIGINT, []([[maybe_unused]]int signal) {
         app.stop();
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+        std::abort();
     });
 }
 
@@ -36,48 +43,60 @@ App::~App() {
     statsThread_.join();
 }
 
+std::pair<int16_t, int16_t> App::fireInitExplores() noexcept {
+    for (int16_t i = 0; i < (int16_t) kFieldMaxX; i++) {
+        for (int16_t j = 0; j < (int16_t) kFieldMaxY; j++) {
+            auto err = api_.scheduleExplore(Area(i, j, 1, 1));
+            if (err.hasError()) {
+                return {i, j};
+            }
+        }
+    }
+    return {kFieldMaxX, kFieldMaxY};
+}
+
 void App::run() noexcept {
+    fireInitExplores();
+
     for (;;) {
         if (getApp().isStopped()) {
             break;
         }
-        auto err = api_.explore(Area(0, 0, 1, 1));
-        if (err.hasError()) {
-            if (err.error() != ErrorCode::kMaxApiRequestsQueueSizeExceeded) {
-                errorf("error on scheduling API request: %d", err.error());
-            }
-        }
 
         auto response = api_.getAvailableResponse();
-        if (!response) {
-            debugf("no available response");
-            continue;
+
+        auto err = processResponse(response);
+        if (err.hasError()) {
+            errorf("error occurred: %d", err.error());
+            break;
         }
-        Response resp = std::move(response.value());
-        switch (resp.type_) {
-            case ApiEndpointType::CheckHealth: {
-                auto healthResponseWrapper = resp.getHealthResponse();
-                if (healthResponseWrapper.hasError()) {
-                    errorf("response contains error: %d", healthResponseWrapper.error());
-                    break;
-//                    goto loopExit;
-                }
-                auto healthResponse = std::move(healthResponseWrapper).get();
-
-//                debugf("%s", std::move(healthResponse).getResponse().details_.c_str());
-                break;
-            }
-            case ApiEndpointType::Explore: {
-
-                break;
-            }
-            default: {
-                errorf("unknown response type: %d", resp.type_);
-                break;
-            }
-        }
-
     }
 
 }
 
+ExpectedVoid App::processResponse(Response &resp) noexcept {
+    switch (resp.getType()) {
+        case ApiEndpointType::Explore: {
+            if (resp.getExploreResponse().hasError()) {
+                return resp.getExploreResponse().error();
+            }
+            auto apiResp = resp.getExploreResponse().get();
+            return processExploreResponse(resp.getRequest(), apiResp);
+        }
+        default: {
+            errorf("unknown response type: %d", resp.getType());
+            break;
+        }
+    }
+    return ErrorCode::kUnknownRequestType;
+}
+
+ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreResponse> &resp) noexcept {
+    if (resp.getHttpCode() != 200) {
+        return api_.scheduleExplore(req.getExploreRequest());
+    }
+    auto successResp = std::move(resp).getResponse();
+    getStats().recordExploreCell(successResp.amount_);
+
+    return NoErr;
+}
