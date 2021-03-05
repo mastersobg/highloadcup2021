@@ -13,7 +13,7 @@ Api::Api(size_t threadsCount, std::string address) : address_{std::move(address)
     }
 }
 
-void Api::threadLoop() noexcept {
+void Api::threadLoop() {
     HttpClient client{address_, "8000", "http"};
     for (;;) {
         std::unique_lock lock(requestsMu_);

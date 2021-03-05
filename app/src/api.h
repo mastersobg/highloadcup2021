@@ -199,7 +199,7 @@ private:
 
     std::string address_;
 
-    void threadLoop() noexcept;
+    void threadLoop();
 
     static Expected<Response> makeApiRequest(HttpClient &client, Request &r) noexcept;
 
