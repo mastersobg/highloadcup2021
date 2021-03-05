@@ -82,7 +82,7 @@ void App::run() noexcept {
             break;
         }
 
-        getStats().recordLicenses(state_.getInUseLicensesCount());
+        getStats().recordInUseLicenses(state_.getInUseLicensesCount());
         getStats().recordCoinsAmount(state_.getCoinsAmount());
     }
 
@@ -165,6 +165,7 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
 
     auto license = std::move(resp).getResponse();
     state_.addLicence(license);
+    getStats().incIssuedLicenses();
 
     for (; state_.hasQueuedDigRequests();) {
         if (!state_.hasAvailableLicense()) {
@@ -251,6 +252,7 @@ ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) no
     }
     auto successResp = std::move(resp).getResponse();
     state_.addCoins(successResp);
+    getStats().incCashedCoins((int64_t) successResp.coins.size());
     return NoErr;
 }
 

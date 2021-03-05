@@ -26,9 +26,13 @@ private:
     std::atomic<int64_t> exploreCellCount_{0};
     std::atomic<int64_t> cellsWithTreasuries{0};
     std::atomic<int64_t> wokenWithEmptyRequestsQueue_{0};
-    std::atomic<int64_t> licensesSum_{0};
-    std::atomic<int64_t> licensesCnt_{0};
+    std::atomic<int64_t> inUseLicensesSum_{0};
+    std::atomic<int64_t> inUseLicensesCnt_{0};
     std::atomic<size_t> coinsAmount_{0};
+    std::atomic<int64_t> issuedLicenses_{0};
+
+    std::atomic<int64_t> cashedCoinsSum_{0};
+    std::atomic<int64_t> cashedTreasuriesCnt_{0};
 
 
     std::mutex endpointStatsMutex_;
@@ -82,9 +86,13 @@ public:
         curlErrCnt_++;
     }
 
-    void recordLicenses(int cnt) noexcept {
-        licensesSum_ += cnt;
-        licensesCnt_++;
+    void recordInUseLicenses(int cnt) noexcept {
+        inUseLicensesSum_ += cnt;
+        inUseLicensesCnt_++;
+    }
+
+    void incIssuedLicenses() noexcept {
+        issuedLicenses_++;
     }
 
     void recordTreasureDepth(int depth, int count) noexcept {
@@ -107,6 +115,11 @@ public:
         if (amount > 0) {
             cellsWithTreasuries++;
         }
+    }
+
+    void incCashedCoins(int64_t amount) noexcept {
+        cashedCoinsSum_ += amount;
+        cashedTreasuriesCnt_++;
     }
 
     void recordCoinsAmount(size_t amount) {

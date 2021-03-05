@@ -28,7 +28,10 @@ void Stats::print() noexcept {
     infof("Explored cells: %lld", exploreCellCount_.load());
     infof("Explored treasuries amount: %lld", exploreCellTotalAmount_.load());
     infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
-    infof("Average in use licenses: %f", (double) licensesSum_ / (double) licensesCnt_);
+    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
+    infof("Total cashed: %lld coins, %lld treasuries, %f avg", cashedCoinsSum_.load(), cashedTreasuriesCnt_.load(),
+          (double) cashedCoinsSum_.load() / (double) cashedTreasuriesCnt_.load());
+    infof("Issued licenses: %lld", issuedLicenses_.load());
     infof("Coins amount: %d", coinsAmount_.load());
     if (exploreCellCount_.load() > 0) {
         infof("Percent of cells with treasuries: %f",
