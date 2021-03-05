@@ -34,6 +34,8 @@ private:
 
     Expected<LicenseID> reserveLicense() noexcept;
 
+    ExpectedVoid scheduleIssueLicense() noexcept;
+
 public:
     App();
 

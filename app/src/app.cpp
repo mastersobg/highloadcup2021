@@ -81,6 +81,11 @@ void App::run() noexcept {
             errorf("error occurred: %d", err.error());
             break;
         }
+
+//        state_.printLicenses();
+//        if (state_.getInUseLicensesCount() < 10) {
+//            errorf("AAAA: %d", state_.getInUseLicensesCount());
+//        }
         getStats().recordLicenses(state_.getInUseLicensesCount());
     }
 
@@ -158,7 +163,7 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     return api_.scheduleExplore(Area(x, y, 1, 1));
 }
 
-ExpectedVoid App::processIssueLicenseResponse(Request &req, HttpResponse<License> &resp) noexcept {
+ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, HttpResponse<License> &resp) noexcept {
     if (resp.getHttpCode() >= 400 && resp.getHttpCode() < 500) {
         auto errResp = std::move(resp).getErrResponse();
         errorf("processIssueLicenseResponse: err code: %d err message: %s", errResp.errorCode_,
@@ -166,15 +171,24 @@ ExpectedVoid App::processIssueLicenseResponse(Request &req, HttpResponse<License
         return ErrorCode::kIssueLicenceError;
     }
     if (resp.getHttpCode() != 200) {
-        if (req.type_ == ApiEndpointType::IssueFreeLicense) {
-            return api_.scheduleIssueFreeLicense();
-        } else {
-            return api_.scheduleIssuePaidLicense(req.getIssueLicenseRequest());
-        }
+        return scheduleIssueLicense();
     }
 
     auto license = std::move(resp).getResponse();
     state_.addLicence(license);
+    return NoErr;
+}
+
+ExpectedVoid App::scheduleIssueLicense() noexcept {
+    if (state_.hasCoins()) {
+        if (auto err = api_.scheduleIssuePaidLicense(state_.borrowCoin()); err.hasError()) {
+            return err.error();
+        }
+    } else {
+        if (auto err = api_.scheduleIssueFreeLicense(); err.hasError()) {
+            return err.error();
+        }
+    }
     return NoErr;
 }
 
@@ -184,14 +198,8 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
         auto &license = state_.getLicenseById(digRequest.licenseId_);
         license.digConfirmed_++;
         if (license.digAllowed_ == license.digConfirmed_) {
-            if (state_.hasCoins()) {
-                if (auto err = api_.scheduleIssuePaidLicense(state_.borrowCoin()); err.hasError()) {
-                    return err.error();
-                }
-            } else {
-                if (auto err = api_.scheduleIssueFreeLicense(); err.hasError()) {
-                    return err.error();
-                }
+            if (auto err = scheduleIssueLicense(); err.hasError()) {
+                return err.error();
             }
         }
     }
@@ -273,3 +281,4 @@ Expected<LicenseID> App::reserveLicense() noexcept {
     }
     return license.get().id_;
 }
+
