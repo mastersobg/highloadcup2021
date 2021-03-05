@@ -5,6 +5,7 @@
 #include "util.h"
 #include <algorithm>
 #include "sys.h"
+#include <numeric>
 
 constexpr int64_t statsSleepDelayMs = 5000;
 
@@ -76,10 +77,14 @@ void Stats::printEndpointsStats() noexcept {
             logString += " ";
         }
 
-        logString += "\nduration percentiles: ";
+        auto avg = std::accumulate(stats.durations.begin(), stats.durations.end(), 0) /
+                   (int) stats.durations.size();
+        logString += "\nduration: ";
+        logString += "avg: ";
+        writeIntToString(avg, logString);
         std::sort(stats.durations.begin(), stats.durations.end());
         auto size = stats.durations.size();
-        logString += "p50: ";
+        logString += " p50: ";
         writeIntToString(stats.durations[size / 2], logString);
         logString += " p90: ";
         writeIntToString(stats.durations[size * 9 / 10], logString);
