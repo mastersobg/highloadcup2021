@@ -170,7 +170,6 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
             break;
         }
 
-        debugf("submit queued digs");
         auto r = state_.getNextDigRequest();
         if (auto err = scheduleDigRequest(r.x_, r.y_, r.depth_); err.hasError()) {
             return err.error();
