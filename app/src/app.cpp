@@ -81,6 +81,7 @@ void App::run() noexcept {
             errorf("error occurred: %d", err.error());
             break;
         }
+        getStats().recordLicenses(state_.getInUseLicensesCount());
     }
 
 }

@@ -28,6 +28,7 @@ void Stats::print() noexcept {
     infof("Explored cells: %lld", exploreCellCount_.load());
     infof("Explored treasuries amount: %lld", exploreCellTotalAmount_.load());
     infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
+    infof("Average in use licenses: %f", (double) licensesSum_ / (double) licensesCnt_);
     if (exploreCellCount_.load() > 0) {
         infof("Percent of cells with treasuries: %f",
               (double) cellsWithTreasuries.load() / (double) exploreCellCount_.load());

@@ -26,6 +26,9 @@ private:
     std::atomic<int64_t> exploreCellCount_{0};
     std::atomic<int64_t> cellsWithTreasuries{0};
     std::atomic<int64_t> wokenWithEmptyRequestsQueue_{0};
+    std::atomic<int64_t> licensesSum_{0};
+    std::atomic<int64_t> licensesCnt_{0};
+
 
     std::mutex endpointStatsMutex_;
     std::unordered_map<std::string, EndpointStats> endpointStatsMap_;
@@ -76,6 +79,11 @@ public:
 
     void incCurlErrCnt() noexcept {
         curlErrCnt_++;
+    }
+
+    void recordLicenses(int cnt) noexcept {
+        licensesSum_ += cnt;
+        licensesCnt_++;
     }
 
     void recordTreasureDepth(int depth, int count) noexcept {
