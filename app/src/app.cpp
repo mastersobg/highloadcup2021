@@ -83,6 +83,7 @@ void App::run() noexcept {
         }
 
         getStats().recordLicenses(state_.getInUseLicensesCount());
+        getStats().recordCoinsAmount(state_.getCoinsAmount());
     }
 
 }

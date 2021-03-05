@@ -111,6 +111,10 @@ public:
         return ret;
     }
 
+    size_t getCoinsAmount() {
+        return coins_.size();
+    }
+
     License &getLicenseById(LicenseID id) {
         for (auto &v : licenses_) {
             if (v.id_ == id) {

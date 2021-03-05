@@ -28,6 +28,7 @@ private:
     std::atomic<int64_t> wokenWithEmptyRequestsQueue_{0};
     std::atomic<int64_t> licensesSum_{0};
     std::atomic<int64_t> licensesCnt_{0};
+    std::atomic<size_t> coinsAmount_{0};
 
 
     std::mutex endpointStatsMutex_;
@@ -106,6 +107,10 @@ public:
         if (amount > 0) {
             cellsWithTreasuries++;
         }
+    }
+
+    void recordCoinsAmount(size_t amount) {
+        coinsAmount_ = amount;
     }
 
     void recordExploreArea(int area, int32_t durationMs) noexcept {
