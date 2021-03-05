@@ -7,6 +7,7 @@
 #include <thread>
 #include <utility>
 #include "state.h"
+#include "rate_limiter.h"
 #include <vector>
 
 
@@ -19,6 +20,8 @@ private:
     Api api_;
     Stats stats_{};
     State state_;
+    RateLimiter rateLimiter_;
+
 
     [[nodiscard]] ExpectedVoid fireInitRequests() noexcept;
 
@@ -59,6 +62,10 @@ public:
 
     Stats &getStats() noexcept {
         return stats_;
+    }
+
+    RateLimiter &getRateLimiter() noexcept {
+        return rateLimiter_;
     }
 
     void run() noexcept;

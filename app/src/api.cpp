@@ -31,10 +31,11 @@ void Api::threadLoop() {
             continue;
         }
 
-
         Request r = std::move(requests_.extract(requests_.begin()).value());
 
         lock.unlock();
+
+        getApp().getRateLimiter().acquire(r.getCost());
 
         auto ret = makeApiRequest(client, r);
         if (ret.hasError()) {

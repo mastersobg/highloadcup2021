@@ -28,6 +28,7 @@ enum class ApiEndpointType : int {
 
 class Request {
     int8_t priority{0};
+    int32_t cost_{1};
 public:
     ApiEndpointType type_{0};
     std::variant<Area, CoinID, DigRequest, TreasureID> request_;
@@ -44,6 +45,10 @@ public:
 
     Area getExploreRequest() const noexcept {
         return std::get<Area>(request_);
+    }
+
+    int32_t getCost() const noexcept {
+        return cost_;
     }
 
     CoinID getIssueLicenseRequest() const noexcept {

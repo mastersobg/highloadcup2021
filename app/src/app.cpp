@@ -27,7 +27,8 @@ App::App() :
         stopped_{false},
         statsThread_{statsPrintLoop},
         address_{std::getenv("ADDRESS")},
-        api_{kApiThreadCount, address_} {
+        api_{kApiThreadCount, address_},
+        rateLimiter_{kMaxRPS} {
     printBuildInfo();
     if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
         errorf("curl global init failed: %d", val);
