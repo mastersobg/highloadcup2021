@@ -82,10 +82,6 @@ void App::run() noexcept {
             break;
         }
 
-//        state_.printLicenses();
-//        if (state_.getInUseLicensesCount() < 10) {
-//            errorf("AAAA: %d", state_.getInUseLicensesCount());
-//        }
         getStats().recordLicenses(state_.getInUseLicensesCount());
     }
 
