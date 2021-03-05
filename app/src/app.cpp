@@ -140,17 +140,9 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     getStats().recordExploreCell(successResp.amount_);
     if (successResp.amount_ > 0) {
         state_.setLeftTreasuriesAmount(successResp.area_.posX_, successResp.area_.posY_, (int32_t) successResp.amount_);
-        auto licenseId = reserveLicense();
-        if (licenseId.hasError()) {
-            return licenseId.error();
-        }
-        if (auto err = api_.scheduleDig(
-                    DigRequest(
-                            licenseId.get(),
-                            successResp.area_.posX_,
-                            successResp.area_.posY_,
-                            1)
-            ); err.hasError()) {
+        if (auto err = scheduleDigRequest(successResp.area_.posX_,
+                                          successResp.area_.posY_,
+                                          1); err.hasError()) {
             return err.error();
         }
     }
@@ -164,7 +156,7 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
         auto errResp = std::move(resp).getErrResponse();
         errorf("processIssueLicenseResponse: err code: %d err message: %s", errResp.errorCode_,
                errResp.message_.c_str());
-        return ErrorCode::kIssueLicenceError;
+        return ErrorCode::kIssueLicenseError;
     }
     if (resp.getHttpCode() != 200) {
         return scheduleIssueLicense();
@@ -172,6 +164,18 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
 
     auto license = std::move(resp).getResponse();
     state_.addLicence(license);
+
+    for (; state_.hasQueuedDigRequests();) {
+        if (!state_.hasAvailableLicense()) {
+            break;
+        }
+
+        debugf("submit queued digs");
+        auto r = state_.getNextDigRequest();
+        if (auto err = scheduleDigRequest(r.x_, r.y_, r.depth_); err.hasError()) {
+            return err.error();
+        }
+    }
     return NoErr;
 }
 
@@ -216,33 +220,13 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
                 return ErrorCode::kTreasuriesLeftInconsistency;
             }
             if (leftCount > 0) {
-                auto licenseId = reserveLicense();
-                if (licenseId.hasError()) {
-                    return licenseId.error();
-                }
-                return api_.scheduleDig(
-                        DigRequest(
-                                licenseId.get(),
-                                digRequest.posX_,
-                                digRequest.posY_,
-                                (int8_t) (digRequest.depth_ + 1))
-                );
+                return scheduleDigRequest(digRequest.posX_, digRequest.posY_, (int8_t) (digRequest.depth_ + 1));
             }
 
             return NoErr;
         }
         case 404: {
-            auto licenseId = reserveLicense();
-            if (licenseId.hasError()) {
-                return licenseId.error();
-            }
-            return api_.scheduleDig(
-                    DigRequest(
-                            licenseId.get(),
-                            digRequest.posX_,
-                            digRequest.posY_,
-                            (int8_t) (digRequest.depth_ + 1))
-            );
+            return scheduleDigRequest(digRequest.posX_, digRequest.posY_, (int8_t) (digRequest.depth_ + 1));
         }
         default: {
             auto httpCode = resp.getHttpCode();
@@ -270,11 +254,15 @@ ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) no
     return NoErr;
 }
 
-Expected<LicenseID> App::reserveLicense() noexcept {
-    auto license = state_.getAvailableLicenceID();
-    if (license.hasError()) {
-        return license.error();
+ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcept {
+    if (state_.hasAvailableLicense()) {
+        auto licenseId = state_.reserveAvailableLicenseId();
+        if (licenseId.hasError()) {
+            return licenseId.error();
+        }
+        return api_.scheduleDig({licenseId.get(), x, y, depth});
+    } else {
+        state_.addDigRequest({x, y, depth});
+        return NoErr;
     }
-    return license.get().id_;
 }
-

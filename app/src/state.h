@@ -10,6 +10,15 @@
 #include "log.h"
 #include <list>
 #include <stdexcept>
+#include <algorithm>
+
+struct DelayedDigRequest {
+    int16_t x_, y_;
+    int8_t depth_;
+
+    DelayedDigRequest(int16_t x, int16_t y, int8_t depth) :
+            x_{x}, y_{y}, depth_{depth} {}
+};
 
 class State {
 private:
@@ -19,6 +28,7 @@ private:
     std::array<License, kMaxLicensesCount> licenses_{};
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
+    std::list<DelayedDigRequest> digRequests_;
 
 public:
     State() = default;
@@ -61,11 +71,17 @@ public:
         }
     }
 
-    Expected<License> getAvailableLicenceID() {
+    bool hasAvailableLicense() {
+        return std::any_of(licenses_.begin(), licenses_.end(), [](const License &l) {
+            return l.digAllowed_ - l.digUsed_ > 0;
+        });
+    }
+
+    [[nodiscard]] Expected<LicenseID> reserveAvailableLicenseId() {
         for (auto &v : licenses_) {
             if (v.digAllowed_ - v.digUsed_ > 0) {
                 v.digUsed_++;
-                return v;
+                return v.id_;
             }
         }
         return ErrorCode::kNoAvailableLicense;
@@ -123,6 +139,19 @@ public:
         debugf("==============");
     }
 
+    void addDigRequest(DelayedDigRequest r) noexcept {
+        digRequests_.push_back(r);
+    }
+
+    bool hasQueuedDigRequests() noexcept {
+        return !digRequests_.empty();
+    }
+
+    DelayedDigRequest getNextDigRequest() noexcept {
+        auto r = digRequests_.front();
+        digRequests_.pop_front();
+        return r;
+    }
 };
 
 
