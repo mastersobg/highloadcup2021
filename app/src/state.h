@@ -105,6 +105,24 @@ public:
         throw std::runtime_error("license not found");
     }
 
+    int getInUseLicensesCount() noexcept {
+        int cnt = 0;
+        for (const auto &v: licenses_) {
+            if (v.digAllowed_ > v.digConfirmed_) {
+                cnt++;
+            }
+        }
+        return cnt;
+    }
+
+    void printLicenses() noexcept {
+        for (const auto &v: licenses_) {
+            errorf("id: %d allowed: %d used: %d confirmed: %d",
+                   v.id_, v.digAllowed_, v.digUsed_, v.digConfirmed_);
+        }
+        debugf("==============");
+    }
+
 };
 
 
