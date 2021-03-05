@@ -7,23 +7,32 @@
 #include <thread>
 #include <utility>
 #include "state.h"
+#include <vector>
 
 
 class App {
 private:
+    std::atomic<bool> stopped_;
+
     std::thread statsThread_;
     std::string address_;
     Api api_;
     Stats stats_{};
     State state_;
 
-    std::atomic<bool> stopped_{false};
-
-    [[nodiscard]] ExpectedVoid fireInitExplores() noexcept;
+    [[nodiscard]] ExpectedVoid fireInitRequests() noexcept;
 
     [[nodiscard]] ExpectedVoid processResponse(Response &r) noexcept;
 
     ExpectedVoid processExploreResponse(Request &req, HttpResponse<ExploreResponse> &resp) noexcept;
+
+    ExpectedVoid processIssueLicenseResponse(Request &req, HttpResponse<License> &resp) noexcept;
+
+    ExpectedVoid processDigResponse(Request &req, HttpResponse<std::vector<TreasureID>> &resp) noexcept;
+
+    ExpectedVoid processCashResponse(Request &r, HttpResponse<Wallet> &resp) noexcept;
+
+    Expected<LicenseID> reserveLicense() noexcept;
 
 public:
     App();

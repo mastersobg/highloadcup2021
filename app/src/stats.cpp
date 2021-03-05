@@ -36,8 +36,8 @@ void Stats::print() noexcept {
 
     printEndpointsStats();
     printDepthHistogram();
-    printCoinsDepthHistogram();
-    printExploreAreaHistogram();
+//    printCoinsDepthHistogram();
+//    printExploreAreaHistogram();
     printCpuStat();
 
     lastTickRequestsCnt_ = requestsCnt_.load();

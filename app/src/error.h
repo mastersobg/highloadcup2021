@@ -8,6 +8,11 @@ enum class ErrorCode : int {
     kErrCurl = 1,
     kMaxApiRequestsQueueSizeExceeded = 2,
     kUnknownRequestType = 3,
+    kIssueLicenceError = 4,
+    kNoAvailableLicense = 5,
+    kUnexpectedDigResponse = 6,
+    kTreasuriesLeftInconsistency = 7,
+    kUnexpectedCashResponse = 8,
 };
 
 template<class T>

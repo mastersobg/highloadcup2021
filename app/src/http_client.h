@@ -15,9 +15,9 @@ class HttpResponse {
 
 public:
 
-    HttpResponse(ApiError &&err, int32_t httpCode) : resp_{err}, httpCode_{httpCode} {}
+    HttpResponse(ApiError &&err, int32_t httpCode) : resp_{std::move(err)}, httpCode_{httpCode} {}
 
-    HttpResponse(T &&r, int32_t httpCode) : resp_{r}, httpCode_{httpCode} {}
+    HttpResponse(T &&r, int32_t httpCode) : resp_{std::move(r)}, httpCode_{httpCode} {}
 
     [[nodiscard]] bool hasError() const noexcept {
         return std::holds_alternative<ApiError>(resp_);
@@ -77,12 +77,13 @@ public:
 
     [[nodiscard]] Expected<HttpResponse<ExploreResponse>> explore(const Area &a) noexcept;
 
-    [[nodiscard]] Expected<HttpResponse<void *>> cash(const TreasureID &treasureId, Wallet &buf) noexcept;
+    [[nodiscard]] Expected<HttpResponse<Wallet>> cash(const TreasureID &treasureId) noexcept;
 
-    [[nodiscard]] Expected<HttpResponse<void *>>
-    dig(LicenseID licenseId, int16_t posX, int16_t posY, int8_t depth, std::vector<TreasureID> &buf) noexcept;
+    [[nodiscard]] Expected<HttpResponse<std::vector<TreasureID>>> dig(DigRequest request) noexcept;
 
-    [[nodiscard]] Expected<HttpResponse<License>> issueLicense(const Wallet &w) noexcept;
+    [[nodiscard]] Expected<HttpResponse<License>> issueLicense(CoinID coinId) noexcept;
+
+    [[nodiscard]] Expected<HttpResponse<License>> issueFreeLicense() noexcept;
 };
 
 

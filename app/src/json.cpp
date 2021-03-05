@@ -57,18 +57,18 @@ unmarshallWallet(std::string &data, JsonBufferType *valueBuffer, JsonBufferType 
     }
 }
 
-void marshalWallet(const Wallet &w, std::string &buffer) noexcept {
+void marshalFreeIssueLicenseRequest(std::string &buffer) noexcept {
     buffer.clear();
 
     buffer += "[";
-    int idx{0};
-    for (auto v : w.coins) {
-        if (idx > 0) {
-            buffer += ",";
-        }
-        writeIntToString(v, buffer);
-        idx++;
-    }
+    buffer += "]";
+}
+
+void marshalIssueLicenseRequest(CoinID coinId, std::string &buffer) noexcept {
+    buffer.clear();
+
+    buffer += "[";
+    writeIntToString(coinId, buffer);
     buffer += "]";
 }
 

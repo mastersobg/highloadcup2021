@@ -23,9 +23,11 @@ App &getApp() {
     return app;
 }
 
-App::App() : statsThread_{statsPrintLoop},
-             address_{std::getenv("ADDRESS")},
-             api_{kApiThreadCount, address_} {
+App::App() :
+        stopped_{false},
+        statsThread_{statsPrintLoop},
+        address_{std::getenv("ADDRESS")},
+        api_{kApiThreadCount, address_} {
     printBuildInfo();
     if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
         errorf("curl global init failed: %d", val);
@@ -44,7 +46,13 @@ App::~App() {
     statsThread_.join();
 }
 
-ExpectedVoid App::fireInitExplores() noexcept {
+ExpectedVoid App::fireInitRequests() noexcept {
+    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+        if (auto err = api_.scheduleIssueFreeLicense(); err.hasError()) {
+            return err;
+        }
+    }
+
     for (size_t i = 0; i < kApiThreadCount * 10; i++) {
         auto err = api_.scheduleExplore(Area(state_.lastX(), state_.lastY(), 1, 1));
         if (err.hasError()) {
@@ -56,8 +64,8 @@ ExpectedVoid App::fireInitExplores() noexcept {
 }
 
 void App::run() noexcept {
-    if (auto err = fireInitExplores(); err.hasError()) {
-        errorf("fireInitExplores: error: %d", err.error());
+    if (auto err = fireInitRequests(); err.hasError()) {
+        errorf("fireInitRequests: error: %d", err.error());
         return;
     }
 
@@ -86,6 +94,34 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
             auto apiResp = resp.getExploreResponse().get();
             return processExploreResponse(resp.getRequest(), apiResp);
         }
+        case ApiEndpointType::IssueFreeLicense: {
+            if (resp.getIssueLicenseResponse().hasError()) {
+                return resp.getIssueLicenseResponse().error();
+            }
+            auto apiResp = resp.getIssueLicenseResponse().get();
+            return processIssueLicenseResponse(resp.getRequest(), apiResp);
+        }
+        case ApiEndpointType::Dig: {
+            if (resp.getDigResponse().hasError()) {
+                return resp.getDigResponse().error();
+            }
+            auto apiResp = resp.getDigResponse().get();
+            return processDigResponse(resp.getRequest(), apiResp);
+        }
+        case ApiEndpointType::Cash: {
+            if (resp.getCashResponse().hasError()) {
+                return resp.getCashResponse().error();
+            }
+            auto apiResp = resp.getCashResponse().get();
+            return processCashResponse(resp.getRequest(), apiResp);
+        }
+        case ApiEndpointType::IssuePaidLicense: {
+            if (resp.getIssueLicenseResponse().hasError()) {
+                return resp.getIssueLicenseResponse().error();
+            }
+            auto apiResp = resp.getIssueLicenseResponse().get();
+            return processIssueLicenseResponse(resp.getRequest(), apiResp);
+        }
         default: {
             errorf("unknown response type: %d", resp.getType());
             break;
@@ -100,7 +136,139 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     }
     auto successResp = std::move(resp).getResponse();
     getStats().recordExploreCell(successResp.amount_);
+    if (successResp.amount_ > 0) {
+        state_.setLeftTreasuriesAmount(successResp.area_.posX_, successResp.area_.posY_, (int32_t) successResp.amount_);
+        auto licenseId = reserveLicense();
+        if (licenseId.hasError()) {
+            return licenseId.error();
+        }
+        if (auto err = api_.scheduleDig(
+                    DigRequest(
+                            licenseId.get(),
+                            successResp.area_.posX_,
+                            successResp.area_.posY_,
+                            1)
+            ); err.hasError()) {
+            return err.error();
+        }
+    }
 
     auto[x, y] = state_.nextExploreCoord();
     return api_.scheduleExplore(Area(x, y, 1, 1));
+}
+
+ExpectedVoid App::processIssueLicenseResponse(Request &req, HttpResponse<License> &resp) noexcept {
+    if (resp.getHttpCode() >= 400 && resp.getHttpCode() < 500) {
+        auto errResp = std::move(resp).getErrResponse();
+        errorf("processIssueLicenseResponse: err code: %d err message: %s", errResp.errorCode_,
+               errResp.message_.c_str());
+        return ErrorCode::kIssueLicenceError;
+    }
+    if (resp.getHttpCode() != 200) {
+        if (req.type_ == ApiEndpointType::IssueFreeLicense) {
+            return api_.scheduleIssueFreeLicense();
+        } else {
+            return api_.scheduleIssuePaidLicense(req.getIssueLicenseRequest());
+        }
+    }
+
+    auto license = std::move(resp).getResponse();
+    state_.addLicence(license);
+    return NoErr;
+}
+
+ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<TreasureID>> &resp) noexcept {
+    auto digRequest = req.getDigRequest();
+    if (resp.getHttpCode() == 200 || resp.getHttpCode() == 404) {
+        auto &license = state_.getLicenseById(digRequest.licenseId_);
+        license.digConfirmed_++;
+        if (license.digAllowed_ == license.digConfirmed_) {
+            if (state_.hasCoins()) {
+                if (auto err = api_.scheduleIssuePaidLicense(state_.borrowCoin()); err.hasError()) {
+                    return err.error();
+                }
+            } else {
+                if (auto err = api_.scheduleIssueFreeLicense(); err.hasError()) {
+                    return err.error();
+                }
+            }
+        }
+    }
+    switch (resp.getHttpCode()) {
+        case 200: {
+            auto treasuries = std::move(resp).getResponse();
+            getStats().recordTreasureDepth(digRequest.depth_, (int) treasuries.size());
+            for (const auto &id : treasuries) {
+                if (auto err = api_.scheduleCash(id); err.hasError()) {
+                    return err.error();
+                }
+            }
+
+            auto leftCount = state_.getLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_);
+            state_.setLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_, leftCount - (int32_t) treasuries.size());
+            leftCount = state_.getLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_);
+            if (leftCount < 0) {
+                return ErrorCode::kTreasuriesLeftInconsistency;
+            }
+            if (leftCount > 0) {
+                auto licenseId = reserveLicense();
+                if (licenseId.hasError()) {
+                    return licenseId.error();
+                }
+                return api_.scheduleDig(
+                        DigRequest(
+                                licenseId.get(),
+                                digRequest.posX_,
+                                digRequest.posY_,
+                                (int8_t) (digRequest.depth_ + 1))
+                );
+            }
+
+            return NoErr;
+        }
+        case 404: {
+            auto licenseId = reserveLicense();
+            if (licenseId.hasError()) {
+                return licenseId.error();
+            }
+            return api_.scheduleDig(
+                    DigRequest(
+                            licenseId.get(),
+                            digRequest.posX_,
+                            digRequest.posY_,
+                            (int8_t) (digRequest.depth_ + 1))
+            );
+        }
+        default: {
+            auto httpCode = resp.getHttpCode();
+            auto apiErr = std::move(resp).getErrResponse();
+            errorf("unexpected dig response: http code: %d api code: %d message: %s", httpCode, apiErr.errorCode_,
+                   apiErr.message_.c_str());
+            return ErrorCode::kUnexpectedDigResponse;
+        }
+    }
+}
+
+ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) noexcept {
+    auto httpCode = resp.getHttpCode();
+    if (httpCode >= 500) {
+        return api_.scheduleCash(r.getCashRequest());
+    }
+    if (httpCode >= 400) {
+        auto apiErr = std::move(resp).getErrResponse();
+        errorf("unexpected cash response: http code: %d api code: %d message: %s", httpCode, apiErr.errorCode_,
+               apiErr.message_.c_str());
+        return ErrorCode::kUnexpectedCashResponse;
+    }
+    auto successResp = std::move(resp).getResponse();
+    state_.addCoins(successResp);
+    return NoErr;
+}
+
+Expected<LicenseID> App::reserveLicense() noexcept {
+    auto license = state_.getAvailableLicenceID();
+    if (license.hasError()) {
+        return license.error();
+    }
+    return license.get().id_;
 }

@@ -73,7 +73,7 @@ public:
         curlErrCnt_++;
     }
 
-    void recordTreasuireDepth(int depth, int count) noexcept {
+    void recordTreasureDepth(int depth, int count) noexcept {
         std::scoped_lock lock(depthHistogramMutex_);
 
         depthHistogram_[(size_t) depth] += count;

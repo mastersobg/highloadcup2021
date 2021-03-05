@@ -30,8 +30,7 @@ void Api::threadLoop() noexcept {
         }
 
 
-        Request r = std::move(requests_.front());
-        requests_.pop_front();
+        Request r = std::move(requests_.extract(requests_.begin()).value());
 
         lock.unlock();
 
@@ -66,6 +65,21 @@ Expected<Response> Api::makeApiRequest(HttpClient &client, Request &r) noexcept 
         case ApiEndpointType::Explore: {
             auto area = r.getExploreRequest();
             return Response(std::move(r), client.explore(area));
+        }
+        case ApiEndpointType::IssueFreeLicense: {
+            return Response(std::move(r), client.issueFreeLicense());
+        }
+        case ApiEndpointType::Dig: {
+            auto digRequest = r.getDigRequest();
+            return Response(std::move(r), client.dig(digRequest));
+        }
+        case ApiEndpointType::Cash: {
+            auto cashRequest = r.getCashRequest();
+            return Response(std::move(r), client.cash(cashRequest));
+        }
+        case ApiEndpointType::IssuePaidLicense: {
+            auto coinId = r.getIssueLicenseRequest();
+            return Response(std::move(r), client.issueLicense(coinId));
         }
         default: {
             errorf("Unsupported request type: %d", r.type_);
@@ -102,6 +116,23 @@ ExpectedVoid Api::scheduleExplore(Area area) noexcept {
     return scheduleRequest(Request::NewExploreRequest(area));
 }
 
+ExpectedVoid Api::scheduleIssueFreeLicense() noexcept {
+    return scheduleRequest(Request::NewIssueFreeLicenseRequest());
+}
+
+ExpectedVoid Api::scheduleIssuePaidLicense(CoinID coinId) noexcept {
+    return scheduleRequest(Request::NewIssuePaidLicenseRequest(coinId));
+}
+
+ExpectedVoid Api::scheduleDig(DigRequest r) noexcept {
+    return scheduleRequest(Request::NewDigRequest(r));
+}
+
+
+ExpectedVoid Api::scheduleCash(TreasureID id) noexcept {
+    return scheduleRequest(Request::NewCashRequest(std::move(id)));
+}
+
 ExpectedVoid Api::scheduleRequest(Request r) noexcept {
     std::unique_lock lock(requestsMu_);
 
@@ -109,7 +140,7 @@ ExpectedVoid Api::scheduleRequest(Request r) noexcept {
         return ErrorCode::kMaxApiRequestsQueueSizeExceeded;
     }
 
-    requests_.push_back(std::move(r));
+    requests_.insert(std::move(r));
 
     lock.unlock();
     requestCondVar_.notify_one();
