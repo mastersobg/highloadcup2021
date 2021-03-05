@@ -27,6 +27,7 @@ void Api::threadLoop() noexcept {
 
         if (requests_.empty()) {
             errorf("Woken up but requests queue is empty");
+            getApp().getStats().incWokenWithEmptyRequestsQueue();
         }
 
 

@@ -25,6 +25,7 @@ private:
     std::atomic<int64_t> exploreCellTotalAmount_{0};
     std::atomic<int64_t> exploreCellCount_{0};
     std::atomic<int64_t> cellsWithTreasuries{0};
+    std::atomic<int64_t> wokenWithEmptyRequestsQueue_{0};
 
     std::mutex endpointStatsMutex_;
     std::unordered_map<std::string, EndpointStats> endpointStatsMap_;
@@ -67,6 +68,10 @@ public:
 
     void incRequestsCnt() noexcept {
         requestsCnt_++;
+    }
+
+    void incWokenWithEmptyRequestsQueue() noexcept {
+        wokenWithEmptyRequestsQueue_++;
     }
 
     void incCurlErrCnt() noexcept {
