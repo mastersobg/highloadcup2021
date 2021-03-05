@@ -38,7 +38,7 @@ void Api::threadLoop() {
         auto ret = makeApiRequest(client, r);
         if (ret.hasError()) {
             errorf("Error during making API request: %d", ret.error());
-            continue;
+            throw std::runtime_error("Error during making API request");
         }
 
         publishResponse(std::move(ret).get());
