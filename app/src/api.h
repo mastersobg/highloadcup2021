@@ -26,12 +26,19 @@ enum class ApiEndpointType : int {
     Cash = 5,
 };
 
+struct CashRequest {
+    TreasureID treasureId_;
+    int8_t depth_;
+
+    CashRequest(TreasureID treasureId, int8_t depth) : treasureId_(std::move(treasureId)), depth_(depth) {}
+};
+
 class Request {
     int8_t priority{0};
     int32_t cost_{1};
 public:
     ApiEndpointType type_{0};
-    std::variant<Area, CoinID, DigRequest, TreasureID> request_;
+    std::variant<Area, CoinID, DigRequest, CashRequest> request_;
 
     Request() = default;
 
@@ -59,8 +66,8 @@ public:
         return std::get<DigRequest>(request_);
     }
 
-    TreasureID getCashRequest() const noexcept {
-        return std::get<TreasureID>(request_);
+    [[nodiscard]] const CashRequest &getCashRequest() const noexcept {
+        return std::get<CashRequest>(request_);
     }
 
     static Request NewCheckHealthRequest() noexcept {
@@ -94,11 +101,11 @@ public:
         return r;
     }
 
-    static Request NewCashRequest(TreasureID id) noexcept {
+    static Request NewCashRequest(TreasureID id, int8_t depth) noexcept {
         Request r{};
         r.priority = 4;
         r.type_ = ApiEndpointType::Cash;
-        r.request_ = std::move(id);
+        r.request_ = CashRequest(std::move(id), depth);
         return r;
     }
 
@@ -235,7 +242,7 @@ public:
 
     ExpectedVoid scheduleDig(DigRequest r) noexcept;
 
-    ExpectedVoid scheduleCash(TreasureID id) noexcept;
+    ExpectedVoid scheduleCash(TreasureID id, int8_t depth) noexcept;
 
     Response getAvailableResponse() noexcept;
 

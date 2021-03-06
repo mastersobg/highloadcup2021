@@ -78,7 +78,7 @@ Expected<Response> Api::makeApiRequest(HttpClient &client, Request &r) noexcept 
         }
         case ApiEndpointType::Cash: {
             auto cashRequest = r.getCashRequest();
-            return Response(std::move(r), client.cash(cashRequest));
+            return Response(std::move(r), client.cash(cashRequest.treasureId_));
         }
         case ApiEndpointType::IssuePaidLicense: {
             auto coinId = r.getIssueLicenseRequest();
@@ -132,8 +132,8 @@ ExpectedVoid Api::scheduleDig(DigRequest r) noexcept {
 }
 
 
-ExpectedVoid Api::scheduleCash(TreasureID id) noexcept {
-    return scheduleRequest(Request::NewCashRequest(std::move(id)));
+ExpectedVoid Api::scheduleCash(TreasureID id, int8_t depth) noexcept {
+    return scheduleRequest(Request::NewCashRequest(std::move(id), depth));
 }
 
 ExpectedVoid Api::scheduleRequest(Request r) noexcept {

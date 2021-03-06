@@ -43,7 +43,7 @@ private:
 
 
     std::shared_mutex depthCoinsHistogramMutex_;
-    std::array<int, 11> depthCoinsHistogram_{0,};
+    std::array<int64_t, 11> depthCoinsHistogram_{0,};
 
     std::shared_mutex exploreAreaHistogramMutex_;
     std::array<int64_t, 10> exploreAreaHistogramCount_{0,};

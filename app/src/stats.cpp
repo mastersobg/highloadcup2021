@@ -43,7 +43,7 @@ void Stats::print() noexcept {
 
     printEndpointsStats();
     printDepthHistogram();
-//    printCoinsDepthHistogram();
+    printCoinsDepthHistogram();
 //    printExploreAreaHistogram();
     printCpuStat();
 
@@ -115,11 +115,15 @@ void Stats::printDepthHistogram() noexcept {
 void Stats::printCoinsDepthHistogram() noexcept {
     std::shared_lock lock(depthCoinsHistogramMutex_);
     std::string logString{};
+    int64_t totalDigs{0};
     for (size_t i = 0; i <= 10; i++) {
         writeIntToString(depthCoinsHistogram_[i], logString);
         logString += ", ";
+
+        totalDigs += (int64_t) i * depthCoinsHistogram_[i];
     }
 
+    infof("coin avg dig count: %f", (double) totalDigs / (double) cashedCoinsSum_.load());
     infof("depth coins histogram: %s", logString.c_str());
 }
 
