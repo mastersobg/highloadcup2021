@@ -70,14 +70,13 @@ ExpectedVoid App::fireInitRequests() noexcept {
 void App::run() noexcept {
 //    HttpClient client{address_, "8000", "http"};
 
-    constexpr size_t maxArea = 26;
+    constexpr size_t maxArea = 132;
     std::array<int64_t, maxArea> latencySum{0};
     std::array<int64_t, maxArea> requestCount{0};
 
     auto sectionStartTime = std::chrono::steady_clock::now();
 
-    const std::chrono::seconds allTimeSeconds(600);
-    const auto sectionTime = allTimeSeconds / (maxArea - 1);
+    const std::chrono::seconds sectionTime(10); //allTimeSeconds / (maxArea - 1);
     infof("section time: %ds", sectionTime.count());
 
     std::random_device randomDevice_;
@@ -94,7 +93,7 @@ void App::run() noexcept {
         }
     }
 
-    size_t currentAreaSize = 1;
+    size_t currentAreaSize = 26;
     for (; currentAreaSize < maxArea;) {
         if (getApp().isStopped()) {
             break;
