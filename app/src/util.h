@@ -21,6 +21,10 @@ public:
         return (int32_t) getInt64();
     }
 
+    T getDuration() {
+        return std::chrono::duration_cast<T>(std::chrono::steady_clock::now() - start_);
+    }
+
 };
 
 #endif //HIGHLOADCUP2021_UTIL_H

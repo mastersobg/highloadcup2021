@@ -68,7 +68,7 @@ ExpectedVoid App::fireInitRequests() noexcept {
 }
 
 void App::run() noexcept {
-    HttpClient client{address_, "8000", "http"};
+//    HttpClient client{address_, "8000", "http"};
 
     constexpr size_t maxArea = 26;
     std::array<int64_t, maxArea> latencySum{0};
@@ -85,11 +85,33 @@ void App::run() noexcept {
     std::uniform_int_distribution<> distribution_{0, 3500 - maxArea};
     int non200ErrorsCnt{0};
 
+    for (auto i = 0; i < 2'000; i++) {
+        auto x = distribution_(rnd_);
+        auto y = distribution_(rnd_);
+        if (auto err = api_.scheduleExplore({(int16_t) x, (int16_t) y, 1, 1}); err.hasError()) {
+            errorf("error occurred: %d", err.error());
+            return;
+        }
+    }
+
     size_t currentAreaSize = 1;
     for (; currentAreaSize < maxArea;) {
         if (getApp().isStopped()) {
             break;
         }
+
+        auto err = api_.getAvailableResponse().getExploreResponse();
+        if (err.hasError()) {
+            errorf("error occurred: %d", err.error());
+            break;
+        }
+        if (err.get().getHttpCode() != 200) {
+            non200ErrorsCnt++;
+            continue;
+        }
+        auto resp = err.get();
+        latencySum[currentAreaSize] += resp.getLatencyMcs().count();
+        requestCount[currentAreaSize]++;
 
         auto currentTime = std::chrono::steady_clock::now();
         if (currentTime - sectionStartTime >= sectionTime) {
@@ -100,20 +122,11 @@ void App::run() noexcept {
         auto x = distribution_(rnd_);
         auto y = distribution_(rnd_);
 
-
-        Measure<std::chrono::microseconds> tm;
-        auto err = client.explore({(int16_t) x, (int16_t) y, (int16_t) currentAreaSize, 1});
-        auto latencyMcs = tm.getInt64();
-        if (err.hasError()) {
-            errorf("error occurred: %d", err.error());
+        if (auto scheduleErr = api_.scheduleExplore(
+                    {(int16_t) x, (int16_t) y, (int16_t) currentAreaSize, 1}); scheduleErr.hasError()) {
+            errorf("error occurred: %d", scheduleErr.error());
             break;
         }
-        if (err.get().getHttpCode() != 200) {
-            non200ErrorsCnt++;
-            continue;
-        }
-        latencySum[currentAreaSize] += latencyMcs;
-        requestCount[currentAreaSize]++;
     }
 
     infof("non 200 errors count: %d", non200ErrorsCnt);
