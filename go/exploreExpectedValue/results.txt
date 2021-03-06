@@ -1,0 +1,5 @@
+Simple random: 23129
+Area 7: 52184
+Area 15: 32256
+Area 15, area 7: 4859
+4
