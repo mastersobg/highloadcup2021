@@ -8,7 +8,7 @@ if [[ -n $(git status --porcelain) ]]; then
 	read
 fi
 
-./build.sh lock
+./build.sh release
 
 tag=`git rev-parse --short HEAD`
 
