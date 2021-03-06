@@ -1,9 +1,12 @@
 #include "app.h"
+#include <random>
 #include <curl/curl.h>
 #include <csignal>
 #include <cstdlib>
 #include <thread>
 #include <chrono>
+#include <array>
+#include "util.h"
 
 App app{};
 
@@ -65,28 +68,71 @@ ExpectedVoid App::fireInitRequests() noexcept {
 }
 
 void App::run() noexcept {
-    if (auto err = fireInitRequests(); err.hasError()) {
-        errorf("fireInitRequests: error: %d", err.error());
-        return;
-    }
+    HttpClient client{address_, "8000", "http"};
 
-    for (;;) {
+    constexpr size_t maxArea = 26;
+    std::array<int64_t, maxArea> latencySum{0};
+    std::array<int64_t, maxArea> requestCount{0};
+
+    auto sectionStartTime = std::chrono::steady_clock::now();
+
+    const std::chrono::seconds allTimeSeconds(600);
+    const auto sectionTime = allTimeSeconds / (maxArea - 1);
+    infof("section time: %ds", sectionTime.count());
+
+    std::random_device randomDevice_;
+    std::default_random_engine rnd_{randomDevice_()};
+    std::uniform_int_distribution<> distribution_{0, 3500 - maxArea};
+    int non200ErrorsCnt{0};
+
+    size_t currentAreaSize = 1;
+    for (; currentAreaSize < maxArea;) {
         if (getApp().isStopped()) {
             break;
         }
 
-        auto response = api_.getAvailableResponse();
+        auto currentTime = std::chrono::steady_clock::now();
+        if (currentTime - sectionStartTime >= sectionTime) {
+            sectionStartTime = currentTime;
+            currentAreaSize++;
+        }
 
-        auto err = processResponse(response);
+        auto x = distribution_(rnd_);
+        auto y = distribution_(rnd_);
+
+
+        Measure<std::chrono::microseconds> tm;
+        auto err = client.explore({(int16_t) x, (int16_t) y, (int16_t) currentAreaSize, 1});
+        auto latencyMcs = tm.getInt64();
         if (err.hasError()) {
             errorf("error occurred: %d", err.error());
             break;
         }
-
-        getStats().recordInUseLicenses(state_.getInUseLicensesCount());
-        getStats().recordCoinsAmount(state_.getCoinsAmount());
+        if (err.get().getHttpCode() != 200) {
+            non200ErrorsCnt++;
+            continue;
+        }
+        latencySum[currentAreaSize] += latencyMcs;
+        requestCount[currentAreaSize]++;
     }
 
+    infof("non 200 errors count: %d", non200ErrorsCnt);
+
+    std::string logStr{};
+    for (size_t i = 1; i < maxArea; i++) {
+        if (requestCount[i] > 0) {
+            auto avgLatency = latencySum[i] / requestCount[i];
+            writeIntToString((int64_t) i, logStr);
+            logStr += ": ";
+            writeIntToString(avgLatency, logStr);
+            logStr += " mcs (";
+            writeIntToString(requestCount[i], logStr);
+            logStr += " reqs)";
+            logStr += ", ";
+
+        }
+    }
+    infof("explore latency: %s", logStr.c_str());
 }
 
 ExpectedVoid App::processResponse(Response &resp) noexcept {
