@@ -11,6 +11,7 @@
 #include <list>
 #include <stdexcept>
 #include <algorithm>
+#include <random>
 
 struct DelayedDigRequest {
     int16_t x_, y_;
@@ -29,6 +30,11 @@ private:
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
     std::list<DelayedDigRequest> digRequests_;
+
+    std::random_device randomDevice_;
+    std::default_random_engine rnd_{randomDevice_()};
+    std::uniform_int_distribution<> distribution_{0, 3500 - 1};
+
 
 public:
     State() = default;
@@ -50,16 +56,19 @@ public:
     }
 
     std::pair<int16_t, int16_t> nextExploreCoord() {
-        auto x = lastX_;
-        auto y = (int16_t) (lastY_ + 1);
-        if (y == kFieldMaxY) {
-            x++;
-            y = 0;
-        }
-
-        lastX_ = x;
-        lastY_ = y;
+        auto x = distribution_(rnd_);
+        auto y = distribution_(rnd_);
         return {x, y};
+//        auto x = lastX_;
+//        auto y = (int16_t) (lastY_ + 1);
+//        if (y == kFieldMaxY) {
+//            x++;
+//            y = 0;
+//        }
+//
+//        lastX_ = x;
+//        lastY_ = y;
+//        return {x, y};
     }
 
     void addLicence(License l) {
