@@ -48,11 +48,11 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-        if (auto err = api_.scheduleIssueFreeLicense(); err.hasError()) {
-            return err;
-        }
-    }
+//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+//        if (auto err = api_.scheduleIssueFreeLicense(); err.hasError()) {
+//            return err;
+//        }
+//    }
 
     for (size_t i = 0; i < kApiThreadCount * 10; i++) {
         auto err = api_.scheduleExplore(Area(state_.lastX(), state_.lastY(), 1, 1));
@@ -98,34 +98,34 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
             auto apiResp = resp.getExploreResponse().get();
             return processExploreResponse(resp.getRequest(), apiResp);
         }
-        case ApiEndpointType::IssueFreeLicense: {
-            if (resp.getIssueLicenseResponse().hasError()) {
-                return resp.getIssueLicenseResponse().error();
-            }
-            auto apiResp = resp.getIssueLicenseResponse().get();
-            return processIssueLicenseResponse(resp.getRequest(), apiResp);
-        }
-        case ApiEndpointType::Dig: {
-            if (resp.getDigResponse().hasError()) {
-                return resp.getDigResponse().error();
-            }
-            auto apiResp = resp.getDigResponse().get();
-            return processDigResponse(resp.getRequest(), apiResp);
-        }
-        case ApiEndpointType::Cash: {
-            if (resp.getCashResponse().hasError()) {
-                return resp.getCashResponse().error();
-            }
-            auto apiResp = resp.getCashResponse().get();
-            return processCashResponse(resp.getRequest(), apiResp);
-        }
-        case ApiEndpointType::IssuePaidLicense: {
-            if (resp.getIssueLicenseResponse().hasError()) {
-                return resp.getIssueLicenseResponse().error();
-            }
-            auto apiResp = resp.getIssueLicenseResponse().get();
-            return processIssueLicenseResponse(resp.getRequest(), apiResp);
-        }
+//        case ApiEndpointType::IssueFreeLicense: {
+//            if (resp.getIssueLicenseResponse().hasError()) {
+//                return resp.getIssueLicenseResponse().error();
+//            }
+//            auto apiResp = resp.getIssueLicenseResponse().get();
+//            return processIssueLicenseResponse(resp.getRequest(), apiResp);
+//        }
+//        case ApiEndpointType::Dig: {
+//            if (resp.getDigResponse().hasError()) {
+//                return resp.getDigResponse().error();
+//            }
+//            auto apiResp = resp.getDigResponse().get();
+//            return processDigResponse(resp.getRequest(), apiResp);
+//        }
+//        case ApiEndpointType::Cash: {
+//            if (resp.getCashResponse().hasError()) {
+//                return resp.getCashResponse().error();
+//            }
+//            auto apiResp = resp.getCashResponse().get();
+//            return processCashResponse(resp.getRequest(), apiResp);
+//        }
+//        case ApiEndpointType::IssuePaidLicense: {
+//            if (resp.getIssueLicenseResponse().hasError()) {
+//                return resp.getIssueLicenseResponse().error();
+//            }
+//            auto apiResp = resp.getIssueLicenseResponse().get();
+//            return processIssueLicenseResponse(resp.getRequest(), apiResp);
+//        }
         default: {
             errorf("unknown response type: %d", resp.getType());
             break;
