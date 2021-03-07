@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -372,36 +373,57 @@ func simulateBinSearch() int64 {
 	return int64(rec(0, 0, maxSize-1, maxSize-1))
 }
 
+func NewArea(x1, y1, x2, y2, cnt, depth int) area {
+	return area{
+		x1:    x1,
+		y1:    y1,
+		x2:    x2,
+		y2:    y2,
+		cnt:   cnt,
+		depth: depth,
+		val:   float64(cnt) / float64((x2-x1+1)*(y2-y1+1)),
+	}
+}
+
 type area struct {
 	x1, y1, x2, y2 int
 	cnt            int
 	depth          int
+	val            float64
 }
 
 type AreaSlice []area
 
-func (a AreaSlice) Len() int {
-	return len(a)
+func (a *AreaSlice) Len() int {
+	return len(*a)
 }
 
-func (a AreaSlice) Less(i, j int) bool {
-	a1 := a[i]
-	a2 := a[j]
-	val1 := float64(a1.cnt) / float64((a1.x2-a1.x1+1)*(a1.y2-a1.y1+1))
-	val2 := float64(a2.cnt) / float64((a2.x2-a2.x1+1)*(a2.y2-a2.y1+1))
-	return val1 > val2
+func (a *AreaSlice) Less(i, j int) bool {
+	a1 := (*a)[i]
+	a2 := (*a)[j]
+	return a1.val > a2.val
 }
 
-func (a AreaSlice) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
+func (a *AreaSlice) Swap(i, j int) {
+	arr := *a
+	arr[i], arr[j] = arr[j], arr[i]
 }
-
-var _ sort.Interface = AreaSlice{}
+func (a *AreaSlice) Push(x interface{}) {
+	*a = append(*a, x.(area))
+}
+func (a *AreaSlice) Pop() interface{} {
+	arr := *a
+	n := len(arr)
+	x := arr[n-1]
+	*a = arr[0 : n-1]
+	return x
+}
 
 func simulateSubAreas() int64 {
 	areas := [][]int{
-		{20, 50},
-		{5, 10},
+		{28, 28},
+		{14, 14},
+		{7, 7},
 		{1, 1},
 	}
 	state := generateState()
@@ -414,7 +436,8 @@ func simulateSubAreas() int64 {
 		if x1 == x2 && y1 == y2 {
 			return state[x1][y1]
 		}
-		q := make(AreaSlice, 0, 1<<20)
+		rawQ := make(AreaSlice, 0, 1<<20)
+		q := &rawQ
 		h := areas[depth][0]
 		w := areas[depth][1]
 
@@ -426,7 +449,7 @@ func simulateSubAreas() int64 {
 				}
 				cnt := calcTreasuries(state, i, j, i+h-1, j+w-1)
 				if cnt > 0 {
-					q = append(q, area{
+					*q = append(*q, area{
 						x1:  i,
 						y1:  j,
 						x2:  i + h - 1,
@@ -439,7 +462,7 @@ func simulateSubAreas() int64 {
 
 		sort.Sort(q)
 		ret := 0
-		for _, v := range q {
+		for _, v := range *q {
 			ret += rec(v.x1, v.y1, v.x2, v.y2, depth+1)
 			if capacity <= 0 {
 				break
@@ -449,6 +472,55 @@ func simulateSubAreas() int64 {
 	}
 
 	return int64(rec(0, 0, maxSize-1, maxSize-1, 0))
+}
+
+var state = generateState()
+
+func simulateSubAreasSharedQueue(areas [][]int) int64 {
+
+	capacity := maxCapacity
+
+	rawq := make(AreaSlice, 0, 1<<20)
+	q := &rawq
+	heap.Init(q)
+	heap.Push(q, NewArea(0, 0, maxSize-1, maxSize-1, 0, 0))
+
+	ret := 0
+gl:
+	for {
+		a := heap.Pop(q).(area)
+		x1 := a.x1
+		y1 := a.y1
+		x2 := a.x2
+		y2 := a.y2
+
+		if x1 == x2 && y1 == y2 {
+			ret += state[x1][y1]
+			continue
+		}
+
+		h := areas[a.depth][0]
+		w := areas[a.depth][1]
+
+		for i := x1; i <= x2; i += h {
+			for j := y1; j <= y2; j += w {
+				capacity -= costs[h*w]
+				if capacity <= 0 {
+					break gl
+				}
+				cnt := calcTreasuries(state, i, j, i+h-1, j+w-1)
+				if cnt > 0 {
+					next := NewArea(i, j, i+h-1, j+w-1, cnt, a.depth+1)
+					if next.val > a.val {
+						fmt.Println("better")
+					}
+					heap.Push(q, next)
+				}
+			}
+		}
+	}
+
+	return int64(ret)
 }
 
 func calcTreasuries(state State, x1, y1, x2, y2 int) int {
@@ -473,6 +545,33 @@ func main() {
 	//fmt.Printf("Simulate cascade 31: %d\n", simulate(simulateCascase7(31)))
 	//fmt.Printf("Simulate cascade 63: %d\n", simulate(simulateCascase7(63)))
 	//fmt.Printf("Simulate bin search: %d\n", simulate(simulateBinSearch))
-	fmt.Printf("Simulate recursive sub areas: %d\n", simulate(simulateSubAreas))
+	//fmt.Printf("Simulate recursive sub areas: %d\n", simulate(simulateSubAreas))
+	//fmt.Printf("Simulate sub areas shared queue: %v\n", simulate(simulateSubAreasSharedQueue))
+	rec(maxSize, maxSize, [][]int{})
+	fmt.Println("Best", maxSimulation)
+}
 
+var maxSimulation int64
+
+func rec(h, w int, areas [][]int) {
+	if h == 1 && w == 1 {
+		fmt.Printf("Run simulation: %v\n", areas)
+		ret := simulateSubAreasSharedQueue(areas)
+		if ret > maxSimulation {
+			maxSimulation = ret
+		}
+		fmt.Printf("Simulation: %v best: %v\n", ret, maxSimulation)
+		return
+	}
+	for i := 1; i*i <= h; i++ {
+		if h%i == 0 {
+			for j := 1; j*j <= w; j++ {
+				if w%j == 0 {
+					areas = append(areas, []int{i, j})
+					rec(i, j, areas)
+					areas = areas[0 : len(areas)-1]
+				}
+			}
+		}
+	}
 }

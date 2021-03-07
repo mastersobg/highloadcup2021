@@ -6,4 +6,7 @@ Simulate recursive sub areas: 40578 (28x28, 4x4, 1x1)
 Simulate recursive sub areas: 38285 (28x35, 4x5, 1x1)
 Simulate recursive sub areas: 38303 (20x50, 2x10, 1x1)
 Simulate recursive sub areas: 29759 (20x50, 5x10, 1x1)
-
+Simulate recursive sub areas: 53166 (28x28, 4x1, 1x1)
+Simulate sub areas shared queue: 38727 (20x50, 5x10, 1x1)
+Simulate sub areas shared queue: 63628 (28x28, 4x1, 1x1)
+Simulate sub areas shared queue: 40673 (28x28x, 4x4, 1x1)
