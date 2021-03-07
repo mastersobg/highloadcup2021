@@ -3,6 +3,7 @@ package main
 import (
 	"container/heap"
 	"fmt"
+	"math"
 	"math/rand"
 	"sort"
 	"time"
@@ -401,7 +402,14 @@ func (a *AreaSlice) Len() int {
 func (a *AreaSlice) Less(i, j int) bool {
 	a1 := (*a)[i]
 	a2 := (*a)[j]
-	return a1.val > a2.val
+	if math.Abs(a1.val-a2.val) < 1e-6 {
+		sq1 := (a1.x2 - a1.x1 + 1) * (a1.y2 - a1.y1 + 1)
+		sq2 := (a2.x2 - a2.x1 + 1) * (a2.y2 - a2.y1 + 1)
+		// TODO test different
+		return sq1 < sq2
+	} else {
+		return a1.val > a2.val
+	}
 }
 
 func (a *AreaSlice) Swap(i, j int) {
@@ -421,31 +429,36 @@ func (a *AreaSlice) Pop() interface{} {
 
 func simulateSubAreas() int64 {
 	areas := [][]int{
-		{28, 28},
-		{14, 14},
-		{7, 7},
+		{50, 20},
+		{5, 1},
 		{1, 1},
 	}
 	state := generateState()
 
 	capacity := maxCapacity
 
-	var rec func(x1, y1, x2, y2, dept int) int
-	rec = func(x1, y1, x2, y2, depth int) int {
-		fmt.Println(capacity)
+	var rec func(x1, y1, x2, y2, cnt, dept int) int
+	rec = func(x1, y1, x2, y2, cnt, depth int) int {
+		//fmt.Println(capacity)
 		if x1 == x2 && y1 == y2 {
 			return state[x1][y1]
+		}
+		if capacity <= 0 {
+			return 0
 		}
 		rawQ := make(AreaSlice, 0, 1<<20)
 		q := &rawQ
 		h := areas[depth][0]
 		w := areas[depth][1]
 
+		subCnt := 0
+	global:
 		for i := x1; i <= x2; i += h {
 			for j := y1; j <= y2; j += w {
 				capacity -= costs[h*w]
-				if capacity <= 0 {
-					return 0
+				if capacity <= 0 || cnt-subCnt <= 0 {
+					// TODO fix counting 1x1 regions
+					break global
 				}
 				cnt := calcTreasuries(state, i, j, i+h-1, j+w-1)
 				if cnt > 0 {
@@ -457,13 +470,14 @@ func simulateSubAreas() int64 {
 						cnt: cnt,
 					})
 				}
+				subCnt += cnt
 			}
 		}
 
 		sort.Sort(q)
 		ret := 0
 		for _, v := range *q {
-			ret += rec(v.x1, v.y1, v.x2, v.y2, depth+1)
+			ret += rec(v.x1, v.y1, v.x2, v.y2, v.cnt, depth+1)
 			if capacity <= 0 {
 				break
 			}
@@ -471,19 +485,18 @@ func simulateSubAreas() int64 {
 		return ret
 	}
 
-	return int64(rec(0, 0, maxSize-1, maxSize-1, 0))
+	return int64(rec(0, 0, maxSize-1, maxSize-1, 1<<30, 0))
 }
 
 var state = generateState()
 
 func simulateSubAreasSharedQueue(areas [][]int) int64 {
-
 	capacity := maxCapacity
 
 	rawq := make(AreaSlice, 0, 1<<20)
 	q := &rawq
 	heap.Init(q)
-	heap.Push(q, NewArea(0, 0, maxSize-1, maxSize-1, 0, 0))
+	heap.Push(q, NewArea(0, 0, maxSize-1, maxSize-1, maxSize*maxSize, 0))
 
 	ret := 0
 gl:
@@ -494,14 +507,11 @@ gl:
 		x2 := a.x2
 		y2 := a.y2
 
-		if x1 == x2 && y1 == y2 {
-			ret += state[x1][y1]
-			continue
-		}
-
 		h := areas[a.depth][0]
 		w := areas[a.depth][1]
 
+		foundSubCnt := 0
+	innerLoop:
 		for i := x1; i <= x2; i += h {
 			for j := y1; j <= y2; j += w {
 				capacity -= costs[h*w]
@@ -509,12 +519,18 @@ gl:
 					break gl
 				}
 				cnt := calcTreasuries(state, i, j, i+h-1, j+w-1)
+				foundSubCnt += cnt
 				if cnt > 0 {
-					next := NewArea(i, j, i+h-1, j+w-1, cnt, a.depth+1)
-					if next.val > a.val {
-						fmt.Println("better")
+					if h == 1 && w == 1 {
+						ret += state[i][j]
+					} else {
+						next := NewArea(i, j, i+h-1, j+w-1, cnt, a.depth+1)
+						heap.Push(q, next)
 					}
-					heap.Push(q, next)
+				}
+
+				if a.cnt-foundSubCnt <= 0 {
+					break innerLoop
 				}
 			}
 		}
@@ -535,32 +551,38 @@ func calcTreasuries(state State, x1, y1, x2, y2 int) int {
 
 func main() {
 	generateCosts()
-	//fmt.Printf("Simple random: %v\n", simulate(simulateRandom))
-	//fmt.Printf("Area 7: %v\n", simulate(simulateSeqArea7))
-	//fmt.Printf("Area 15: %v\n", simulate(simulateSeqArea15))
-	//fmt.Printf("Area 15, area 7: %v\n", simulate(simulateSeqArea15Area7))
-	//fmt.Printf("Simulate cascade 3: %d\n", simulate(simulateCascase7(3)))
-	//fmt.Printf("Simulate cascade 7: %d\n", simulate(simulateCascase7(7)))
-	//fmt.Printf("Simulate cascade 15: %d\n", simulate(simulateCascase7(15)))
-	//fmt.Printf("Simulate cascade 31: %d\n", simulate(simulateCascase7(31)))
-	//fmt.Printf("Simulate cascade 63: %d\n", simulate(simulateCascase7(63)))
-	//fmt.Printf("Simulate bin search: %d\n", simulate(simulateBinSearch))
-	//fmt.Printf("Simulate recursive sub areas: %d\n", simulate(simulateSubAreas))
+	fmt.Printf("Simple random: %v\n", simulate(simulateRandom))
+	fmt.Printf("Area 7: %v\n", simulate(simulateSeqArea7))
+	fmt.Printf("Area 15: %v\n", simulate(simulateSeqArea15))
+	fmt.Printf("Area 15, area 7: %v\n", simulate(simulateSeqArea15Area7))
+	fmt.Printf("Simulate cascade 3: %d\n", simulate(simulateCascase7(3)))
+	fmt.Printf("Simulate cascade 7: %d\n", simulate(simulateCascase7(7)))
+	fmt.Printf("Simulate cascade 15: %d\n", simulate(simulateCascase7(15)))
+	fmt.Printf("Simulate cascade 31: %d\n", simulate(simulateCascase7(31)))
+	fmt.Printf("Simulate cascade 63: %d\n", simulate(simulateCascase7(63)))
+	fmt.Printf("Simulate bin search: %d\n", simulate(simulateBinSearch))
+	fmt.Printf("Simulate recursive sub areas: %d\n", simulate(simulateSubAreas))
 	//fmt.Printf("Simulate sub areas shared queue: %v\n", simulate(simulateSubAreasSharedQueue))
 	rec(maxSize, maxSize, [][]int{})
-	fmt.Println("Best", maxSimulation)
+	fmt.Println("Best", maxSimulation, maxAreas)
 }
 
 var maxSimulation int64
+var maxAreas [][]int
 
 func rec(h, w int, areas [][]int) {
 	if h == 1 && w == 1 {
-		fmt.Printf("Run simulation: %v\n", areas)
+		//fmt.Printf("Run simulation: %v\n", areas)
 		ret := simulateSubAreasSharedQueue(areas)
 		if ret > maxSimulation {
+			maxAreas = make([][]int, len(areas))
+			for i, arr := range areas {
+				maxAreas[i] = make([]int, len(arr))
+				copy(maxAreas[i], arr)
+			}
 			maxSimulation = ret
 		}
-		fmt.Printf("Simulation: %v best: %v\n", ret, maxSimulation)
+		//fmt.Printf("Simulation: %v best: %v\n", ret, maxSimulation)
 		return
 	}
 	for i := 1; i*i <= h; i++ {
