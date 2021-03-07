@@ -7,6 +7,7 @@
 #include <chrono>
 #include <array>
 #include "util.h"
+#include <vector>
 
 App app{};
 
@@ -70,13 +71,13 @@ ExpectedVoid App::fireInitRequests() noexcept {
 void App::run() noexcept {
 //    HttpClient client{address_, "8000", "http"};
 
-    constexpr size_t maxArea = 132;
-    std::array<int64_t, maxArea> latencySum{0};
-    std::array<int64_t, maxArea> requestCount{0};
+    constexpr size_t maxArea = 3500;
+    std::vector<int64_t> latencySum(maxArea * maxArea + 1);
+    std::vector<int64_t> requestCount(maxArea * maxArea + 1);
 
     auto sectionStartTime = std::chrono::steady_clock::now();
 
-    const std::chrono::seconds sectionTime(10); //allTimeSeconds / (maxArea - 1);
+    const std::chrono::seconds sectionTime(30); //allTimeSeconds / (maxArea - 1);
     infof("section time: %ds", sectionTime.count());
 
     std::random_device randomDevice_;
@@ -84,17 +85,18 @@ void App::run() noexcept {
     std::uniform_int_distribution<> distribution_{0, 3500 - maxArea};
     int non200ErrorsCnt{0};
 
-    for (auto i = 0; i < 2'000; i++) {
-        auto x = distribution_(rnd_);
-        auto y = distribution_(rnd_);
-        if (auto err = api_.scheduleExplore({(int16_t) x, (int16_t) y, 1, 1}); err.hasError()) {
+    size_t h = maxArea;
+    for (auto i = 0; i < 1; i++) {
+//        auto x = distribution_(rnd_);
+//        auto y = distribution_(rnd_);
+        if (auto err = api_.scheduleExplore({(int16_t) 0, (int16_t) 0, (int16_t) h, (int16_t) h}); err.hasError()) {
             errorf("error occurred: %d", err.error());
             return;
         }
     }
 
-    size_t currentAreaSize = 26;
-    for (; currentAreaSize < maxArea;) {
+//    size_t currentAreaSize = ;
+    for (;;) {
         if (getApp().isStopped()) {
             break;
         }
@@ -109,20 +111,23 @@ void App::run() noexcept {
             continue;
         }
         auto resp = err.get();
-        latencySum[currentAreaSize] += resp.getLatencyMcs().count();
-        requestCount[currentAreaSize]++;
+        latencySum[h * h] += resp.getLatencyMcs().count();
+        requestCount[h * h]++;
 
         auto currentTime = std::chrono::steady_clock::now();
         if (currentTime - sectionStartTime >= sectionTime) {
             sectionStartTime = currentTime;
-            currentAreaSize++;
+            h >>= 1;
+            if (h == 0) {
+                h = 1;
+            }
         }
 
-        auto x = distribution_(rnd_);
-        auto y = distribution_(rnd_);
+//        auto x = distribution_(rnd_);
+//        auto y = distribution_(rnd_);
 
         if (auto scheduleErr = api_.scheduleExplore(
-                    {(int16_t) x, (int16_t) y, (int16_t) currentAreaSize, 1}); scheduleErr.hasError()) {
+                    {(int16_t) 0, (int16_t) 0, (int16_t) h, (int16_t) h}); scheduleErr.hasError()) {
             errorf("error occurred: %d", scheduleErr.error());
             break;
         }
@@ -131,7 +136,7 @@ void App::run() noexcept {
     infof("non 200 errors count: %d", non200ErrorsCnt);
 
     std::string logStr{};
-    for (size_t i = 1; i < maxArea; i++) {
+    for (size_t i = 1; i < requestCount.size(); i++) {
         if (requestCount[i] > 0) {
             auto avgLatency = latencySum[i] / requestCount[i];
             writeIntToString((int64_t) i, logStr);
