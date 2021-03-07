@@ -3,84 +3,102 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"sort"
 	"time"
 )
 
 const maxSize = 3500
-const capacity = 600_000_000
+const maxCapacity = 600_000_000
+
+type State [][]int
 
 var (
-	costs = []int{
-		0,
-		1034,
-		1025,
-		1021,
-		1094,
-		1079,
-		1089,
-		1097,
-		1555,
-		1551,
-		1553,
-		1554,
-		1556,
-		1553,
-		1555,
-		1561,
-		2079,
-		2084,
-		2056,
-		2061,
-		2060,
-		2045,
-		2046,
-		2053,
-		2056,
-		2046,
-		2050,
-		2050,
-		2050,
-		2050,
-		2050,
-		2050,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-		2550,
-	}
+	costs []int
+
+	//costs = []int{
+	//	0,
+	//	1034,
+	//	1025,
+	//	1021,
+	//	1094,
+	//	1079,
+	//	1089,
+	//	1097,
+	//	1555,
+	//	1551,
+	//	1553,
+	//	1554,
+	//	1556,
+	//	1553,
+	//	1555,
+	//	1561,
+	//	2079,
+	//	2084,
+	//	2056,
+	//	2061,
+	//	2060,
+	//	2045,
+	//	2046,
+	//	2053,
+	//	2056,
+	//	2046,
+	//	2050,
+	//	2050,
+	//	2050,
+	//	2050,
+	//	2050,
+	//	2050,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//	2550,
+	//}
 )
+
+func generateCosts() {
+	costs = make([]int, 3500*3500+1)
+	b := 8
+	d := 1000
+	for i := 0; i < len(costs); i++ {
+		if i >= b {
+			d += 500
+			b = b * 2
+		}
+		costs[i] = d
+	}
+}
 
 func simulateRandom() int64 {
 	state := generateState()
-	totalCapacity := capacity
+	totalCapacity := maxCapacity
 	foundTreasuries := int64(0)
 	for totalCapacity > 0 {
 		x := rand.Int31n(maxSize)
@@ -99,7 +117,7 @@ func simulateSeqArea7() int64 {
 	y := 0
 
 	state := generateState()
-	totalCapacity := capacity
+	totalCapacity := maxCapacity
 	foundTreasuries := int64(0)
 	for {
 		if totalCapacity-costs[7] < 0 {
@@ -133,7 +151,7 @@ func simulateSeqArea15() int64 {
 	y := 0
 
 	state := generateState()
-	totalCapacity := capacity
+	totalCapacity := maxCapacity
 	foundTreasuries := int64(0)
 	for {
 		if totalCapacity-costs[15] < 0 {
@@ -167,7 +185,7 @@ func simulateSeqArea15Area7() int64 {
 	y := 0
 
 	state := generateState()
-	totalCapacity := capacity
+	totalCapacity := maxCapacity
 	foundTreasuries := int64(0)
 
 	for {
@@ -217,7 +235,7 @@ func simulateSeqArea15Area7() int64 {
 
 func simulateCascade(area int) int64 {
 	state := generateState()
-	totalCapacity := capacity
+	totalCapacity := maxCapacity
 	foundTreasuries := int64(0)
 
 	var rec func(x, y, area int) (int64, bool)
@@ -279,9 +297,12 @@ func simulateCascase7(area int) func() int64 {
 	}
 }
 
-func generateState() [maxSize][maxSize]int {
+func generateState() State {
 	rand.Seed(time.Now().Unix())
-	var state [maxSize][maxSize]int
+	state := make([][]int, maxSize)
+	for i := 0; i < maxSize; i++ {
+		state[i] = make([]int, maxSize)
+	}
 	totalTreasuries := 490_000
 	for i := 0; i < totalTreasuries; i++ {
 		x := rand.Int31n(maxSize)
@@ -292,7 +313,7 @@ func generateState() [maxSize][maxSize]int {
 }
 
 func simulate(f func() int64) int64 {
-	iterations := int64(10)
+	iterations := int64(1)
 	total := int64(0)
 	for i := 0; i < int(iterations); i++ {
 		total += f()
@@ -300,14 +321,158 @@ func simulate(f func() int64) int64 {
 	return total / iterations
 }
 
+func simulateBinSearch() int64 {
+	state := generateState()
+	capacity := maxCapacity
+
+	var rec func(x1, y1, x2, y2 int) int
+	rec = func(x1, y1, x2, y2 int) int {
+		if capacity <= 0 {
+			return 0
+		}
+		if x1 == x2 && y1 == y2 {
+			return state[x1][y1]
+		}
+		if calcTreasuries(state, x1, y1, x2, y2) < 1 {
+			return 0
+		}
+
+		ret := 0
+		if x2-x1 > y2-y1 {
+			mid := x1 + (x2-x1)/2
+			l := calcTreasuries(state, x1, y1, mid, y2)
+			r := calcTreasuries(state, mid+1, y1, x2, y2)
+			area1 := (mid - x1 + 1) * (y2 - y1 + 1)
+			area2 := (x2 - mid) * (y2 - y1 + 1)
+			capacity = capacity - costs[area1] - costs[area2]
+			if l > r {
+				ret += rec(x1, y1, mid, y2)
+				ret += rec(mid+1, y1, x2, y2)
+			} else {
+				ret += rec(mid+1, y1, x2, y2)
+				ret += rec(x1, y1, mid, y2)
+			}
+		} else {
+			mid := y1 + (y2-y1)/2
+			l := calcTreasuries(state, x1, y1, x2, mid)
+			r := calcTreasuries(state, x1, mid+1, x2, y2)
+			area1 := (x2 - x1 + 1) * (mid - y1 + 1)
+			area2 := (x2 - x1 + 1) * (y2 - mid)
+			capacity = capacity - costs[area1] - costs[area2]
+			if l > r {
+				ret += rec(x1, y1, x2, mid)
+				ret += rec(x1, mid+1, x2, y2)
+			} else {
+				ret += rec(x1, mid+1, x2, y2)
+				ret += rec(x1, y1, x2, mid)
+			}
+		}
+		return ret
+	}
+	return int64(rec(0, 0, maxSize-1, maxSize-1))
+}
+
+type area struct {
+	x1, y1, x2, y2 int
+	cnt            int
+	depth          int
+}
+
+type AreaSlice []area
+
+func (a AreaSlice) Len() int {
+	return len(a)
+}
+
+func (a AreaSlice) Less(i, j int) bool {
+	a1 := a[i]
+	a2 := a[j]
+	val1 := float64(a1.cnt) / float64((a1.x2-a1.x1+1)*(a1.y2-a1.y1+1))
+	val2 := float64(a2.cnt) / float64((a2.x2-a2.x1+1)*(a2.y2-a2.y1+1))
+	return val1 > val2
+}
+
+func (a AreaSlice) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+var _ sort.Interface = AreaSlice{}
+
+func simulateSubAreas() int64 {
+	areas := [][]int{
+		{20, 50},
+		{5, 10},
+		{1, 1},
+	}
+	state := generateState()
+
+	capacity := maxCapacity
+
+	var rec func(x1, y1, x2, y2, dept int) int
+	rec = func(x1, y1, x2, y2, depth int) int {
+		fmt.Println(capacity)
+		if x1 == x2 && y1 == y2 {
+			return state[x1][y1]
+		}
+		q := make(AreaSlice, 0, 1<<20)
+		h := areas[depth][0]
+		w := areas[depth][1]
+
+		for i := x1; i <= x2; i += h {
+			for j := y1; j <= y2; j += w {
+				capacity -= costs[h*w]
+				if capacity <= 0 {
+					return 0
+				}
+				cnt := calcTreasuries(state, i, j, i+h-1, j+w-1)
+				if cnt > 0 {
+					q = append(q, area{
+						x1:  i,
+						y1:  j,
+						x2:  i + h - 1,
+						y2:  j + w - 1,
+						cnt: cnt,
+					})
+				}
+			}
+		}
+
+		sort.Sort(q)
+		ret := 0
+		for _, v := range q {
+			ret += rec(v.x1, v.y1, v.x2, v.y2, depth+1)
+			if capacity <= 0 {
+				break
+			}
+		}
+		return ret
+	}
+
+	return int64(rec(0, 0, maxSize-1, maxSize-1, 0))
+}
+
+func calcTreasuries(state State, x1, y1, x2, y2 int) int {
+	cnt := 0
+	for i := x1; i <= x2; i++ {
+		for j := y1; j <= y2; j++ {
+			cnt += state[i][j]
+		}
+	}
+	return cnt
+}
+
 func main() {
-	fmt.Printf("Simple random: %v\n", simulate(simulateRandom))
-	fmt.Printf("Area 7: %v\n", simulate(simulateSeqArea7))
-	fmt.Printf("Area 15: %v\n", simulate(simulateSeqArea15))
-	fmt.Printf("Area 15, area 7: %v\n", simulate(simulateSeqArea15Area7))
-	fmt.Printf("Simulate cascade 3: %d\n", simulate(simulateCascase7(3)))
-	fmt.Printf("Simulate cascade 7: %d\n", simulate(simulateCascase7(7)))
-	fmt.Printf("Simulate cascade 15: %d\n", simulate(simulateCascase7(15)))
-	fmt.Printf("Simulate cascade 31: %d\n", simulate(simulateCascase7(31)))
-	fmt.Printf("Simulate cascade 63: %d\n", simulate(simulateCascase7(63)))
+	generateCosts()
+	//fmt.Printf("Simple random: %v\n", simulate(simulateRandom))
+	//fmt.Printf("Area 7: %v\n", simulate(simulateSeqArea7))
+	//fmt.Printf("Area 15: %v\n", simulate(simulateSeqArea15))
+	//fmt.Printf("Area 15, area 7: %v\n", simulate(simulateSeqArea15Area7))
+	//fmt.Printf("Simulate cascade 3: %d\n", simulate(simulateCascase7(3)))
+	//fmt.Printf("Simulate cascade 7: %d\n", simulate(simulateCascase7(7)))
+	//fmt.Printf("Simulate cascade 15: %d\n", simulate(simulateCascase7(15)))
+	//fmt.Printf("Simulate cascade 31: %d\n", simulate(simulateCascase7(31)))
+	//fmt.Printf("Simulate cascade 63: %d\n", simulate(simulateCascase7(63)))
+	//fmt.Printf("Simulate bin search: %d\n", simulate(simulateBinSearch))
+	fmt.Printf("Simulate recursive sub areas: %d\n", simulate(simulateSubAreas))
+
 }

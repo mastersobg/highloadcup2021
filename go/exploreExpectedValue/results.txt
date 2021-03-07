@@ -2,4 +2,8 @@ Simple random: 23129
 Area 7: 52184
 Area 15: 32256
 Area 15, area 7: 4859
-4
+Simulate recursive sub areas: 40578 (28x28, 4x4, 1x1)
+Simulate recursive sub areas: 38285 (28x35, 4x5, 1x1)
+Simulate recursive sub areas: 38303 (20x50, 2x10, 1x1)
+Simulate recursive sub areas: 29759 (20x50, 5x10, 1x1)
+
