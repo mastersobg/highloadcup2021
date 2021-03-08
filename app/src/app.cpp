@@ -103,8 +103,8 @@ void App::run() noexcept {
 
         auto err = api_.getAvailableResponse().getExploreResponse();
         if (err.hasError()) {
-            errorf("error occurred: %d", err.error());
             if (err.error() != ErrorCode::kErrCurlTimeout) {
+                errorf("error occurred: %d", err.error());
                 break;
             }
         } else {
@@ -135,25 +135,26 @@ void App::run() noexcept {
             errorf("error occurred: %d", scheduleErr.error());
             break;
         }
-    }
 
-    infof("non 200 errors count: %d", non200ErrorsCnt);
+        infof("non 200 errors count: %d", non200ErrorsCnt);
 
-    std::string logStr{};
-    for (size_t i = 1; i < requestCount.size(); i++) {
-        if (requestCount[i] > 0) {
-            auto avgLatency = latencySum[i] / requestCount[i];
-            writeIntToString((int64_t) i, logStr);
-            logStr += ": ";
-            writeIntToString(avgLatency, logStr);
-            logStr += " mcs (";
-            writeIntToString(requestCount[i], logStr);
-            logStr += " reqs)";
-            logStr += ", ";
+        std::string logStr{};
+        for (size_t i = 1; i < requestCount.size(); i++) {
+            if (requestCount[i] > 0) {
+                auto avgLatency = latencySum[i] / requestCount[i];
+                writeIntToString((int64_t) i, logStr);
+                logStr += ": ";
+                writeIntToString(avgLatency, logStr);
+                logStr += " mcs (";
+                writeIntToString(requestCount[i], logStr);
+                logStr += " reqs)";
+                logStr += ", ";
 
+            }
         }
+        infof("explore latency: %s", logStr.c_str());
     }
-    infof("explore latency: %s", logStr.c_str());
+
 }
 
 ExpectedVoid App::processResponse(Response &resp) noexcept {
