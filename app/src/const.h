@@ -19,6 +19,8 @@ constexpr int64_t kMaxRPS = 1'000'000;
 constexpr size_t kFieldMaxX = 3'500;
 constexpr size_t kFieldMaxY = 3'500;
 
+constexpr long kRequestTimeout = 1000;
+
 constexpr size_t kMaxLicensesCount = 10;
 
 

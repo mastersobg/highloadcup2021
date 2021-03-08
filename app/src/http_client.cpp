@@ -66,6 +66,10 @@ HttpClient::HttpClient(const std::string &address, const std::string &port,
         throw std::runtime_error("failed to set CURLOPT_HTTPHEADER");
     }
 
+    if (curl_easy_setopt(session_, CURLOPT_TIMEOUT_MS, kRequestTimeout) != CURLE_OK) {
+        throw std::runtime_error("failed to set CURLOPT_TIMEOUT_MS");
+    }
+
 //    curl_easy_setopt(session_, CURLOPT_VERBOSE, 1L);
 }
 
@@ -200,7 +204,11 @@ HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
                curl_easy_strerror(reqResult),
                errbuf_);
         getApp().getStats().incCurlErrCnt();
-        return ErrorCode::kErrCurl;
+        if (reqResult == CURLE_OPERATION_TIMEDOUT) {
+            return ErrorCode::kErrCurlTimeout;
+        } else {
+            return ErrorCode::kErrCurl;
+        }
     }
 
     long code;

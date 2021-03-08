@@ -104,15 +104,20 @@ void App::run() noexcept {
         auto err = api_.getAvailableResponse().getExploreResponse();
         if (err.hasError()) {
             errorf("error occurred: %d", err.error());
-            break;
+            if (err.error() != ErrorCode::kErrCurlTimeout) {
+                break;
+            }
+        } else {
+            if (err.get().getHttpCode() != 200) {
+                non200ErrorsCnt++;
+                continue;
+            } else {
+                auto resp = err.get();
+                latencySum[h * h] += resp.getLatencyMcs().count();
+                requestCount[h * h]++;
+            }
         }
-        if (err.get().getHttpCode() != 200) {
-            non200ErrorsCnt++;
-            continue;
-        }
-        auto resp = err.get();
-        latencySum[h * h] += resp.getLatencyMcs().count();
-        requestCount[h * h]++;
+
 
         auto currentTime = std::chrono::steady_clock::now();
         if (currentTime - sectionStartTime >= sectionTime) {
