@@ -110,7 +110,6 @@ void App::run() noexcept {
         } else {
             if (err.get().getHttpCode() != 200) {
                 non200ErrorsCnt++;
-                continue;
             } else {
                 auto resp = err.get();
                 latencySum[h * h] += resp.getLatencyMcs().count();
