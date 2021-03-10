@@ -7,6 +7,7 @@
 #include <memory>
 #include <limits>
 #include <cmath>
+#include "util.h"
 
 App app{};
 
@@ -51,6 +52,11 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
+//    for (size_t i = 0; i < 1; i++) {
+//        if (auto err = api_.scheduleIssueFreeLicense(); err.hasError()) {
+//            return err;
+//        }
+//    }
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX - 1, kFieldMaxY - 1), 0.0, 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
@@ -197,8 +203,9 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
 
     for (; state_.hasMoreExploreAreas();) {
         auto ea = state_.fetchNextExploreArea();
-        auto cnt = std::lround(ea->expectedTreasuriesCnt_);
-        if (cnt >= 1 && ea->area_.getArea() == 1) {
+        if (moreOrEqual(ea->expectedTreasuriesCnt_, 1.0) && ea->area_.getArea() == 1 &&
+            ea->parent_->getNonExploredChildrenCnt() == 1) {
+            auto cnt = std::lround(ea->expectedTreasuriesCnt_);
             getStats().recordTreasuriesCnt((int) cnt);
             state_.setLeftTreasuriesAmount(ea->area_.posX_, ea->area_.posY_, (int32_t) cnt);
             if (auto err = scheduleDigRequest(

@@ -122,6 +122,16 @@ struct ExploreArea {
     void addChild(ExploreAreaPtr child) noexcept {
         children_.push_back(std::move(child));
     }
+
+    [[nodiscard]]int getNonExploredChildrenCnt() const noexcept {
+        int ret = 0;
+        for (const auto &v : children_) {
+            if (!v->explored_) {
+                ret++;
+            }
+        }
+        return ret;
+    }
 };
 
 using ExploreAreaPtr = std::shared_ptr<ExploreArea>;
