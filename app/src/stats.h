@@ -28,6 +28,7 @@ private:
     std::atomic<size_t> coinsAmount_{0};
     std::atomic<int64_t> issuedLicenses_{0};
     std::atomic<int64_t> treasuriesCnt_{0};
+    std::atomic<int64_t> cashSkippedCnt_{0};
 
     std::atomic<int64_t> cashedCoinsSum_{0};
     std::atomic<int64_t> cashedTreasuriesCnt_{0};
@@ -116,8 +117,12 @@ public:
         cashedTreasuriesCnt_++;
     }
 
-    void recordCoinsAmount(size_t amount) {
+    void recordCoinsAmount(size_t amount) noexcept {
         coinsAmount_ = amount;
+    }
+
+    void incCashSkippedCnt() noexcept {
+        cashSkippedCnt_++;
     }
 
     void recordExploreArea(int area, int32_t durationMs) noexcept {

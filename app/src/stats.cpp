@@ -27,6 +27,7 @@ void Stats::print() noexcept {
     infof("Curl errs: %lld", curlErrCnt_.load());
     infof("Time elapsed: %lld ms", timeElapsedMs);
     infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
+    infof("Cash skipped: %lld", cashSkippedCnt_.load());
     infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
     infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
     infof("Total cashed: %lld coins, %lld treasuries, %f avg", cashedCoinsSum_.load(), cashedTreasuriesCnt_.load(),
