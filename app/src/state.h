@@ -80,14 +80,22 @@ public:
     }
 
     void setExpectedTreasuriesCnt(const ExploreAreaPtr &ea, double value) {
-        auto it = exploreQueue_.find(ea);
-        if (it == exploreQueue_.end()) {
+        auto node = exploreQueue_.extract(ea);
+        if (node.empty()) {
             throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
         }
-        exploreQueue_.erase(it);
 
-        ea->expectedTreasuriesCnt_ = value;
-        exploreQueue_.insert(ea);
+        node.value()->expectedTreasuriesCnt_ = value;
+        exploreQueue_.insert(std::move(node));
+//
+//        auto it = exploreQueue_.find(ea);
+//        if (it == exploreQueue_.end()) {
+//            throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
+//        }
+//        exploreQueue_.erase(it);
+//
+//        ea->expectedTreasuriesCnt_ = value;
+//        exploreQueue_.insert(ea);
     }
 
     bool hasMoreExploreAreas() noexcept {
