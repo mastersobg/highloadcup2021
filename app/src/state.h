@@ -11,6 +11,9 @@
 #include <list>
 #include <stdexcept>
 #include <algorithm>
+#include <memory>
+#include <vector>
+#include <set>
 #include <random>
 
 struct DelayedDigRequest {
@@ -19,6 +22,13 @@ struct DelayedDigRequest {
 
     DelayedDigRequest(int16_t x, int16_t y, int8_t depth) :
             x_{x}, y_{y}, depth_{depth} {}
+};
+
+
+struct ExploreAreaCmp {
+    bool operator()(const ExploreAreaPtr &l, const ExploreAreaPtr &r) const noexcept {
+        return l->expectedTreasuriesCnt_ > r->expectedTreasuriesCnt_;
+    }
 };
 
 class State {
@@ -30,6 +40,8 @@ private:
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
     std::list<DelayedDigRequest> digRequests_;
+    std::multiset<ExploreAreaPtr, ExploreAreaCmp> exploreQueue_{};
+    ExploreAreaPtr root_{nullptr};
 
     std::random_device randomDevice_;
     std::default_random_engine rnd_{randomDevice_()};
@@ -47,12 +59,47 @@ public:
 
     State &operator=(State &&s) = delete;
 
-    int16_t &lastX() noexcept {
-        return lastX_;
+    ~State() {
+        cleanExploreAreaPtrs(root_);
+        root_ = nullptr;
     }
 
-    int16_t &lastY() noexcept {
-        return lastY_;
+    void cleanExploreAreaPtrs(const ExploreAreaPtr &node) {
+        for (const auto &child : node->children_) {
+            cleanExploreAreaPtrs(child);
+        }
+        node->children_.resize(0);
+        node->parent_ = nullptr;
+    }
+
+
+    void setRootExploreArea(ExploreAreaPtr r) noexcept {
+        root_ = std::move(r);
+    }
+
+    void addExploreArea(ExploreAreaPtr ea) noexcept {
+        exploreQueue_.insert(std::move(ea));
+    }
+
+    ExploreAreaPtr fetchNextExploreArea() noexcept {
+        auto first = exploreQueue_.begin();
+        auto result = *first;
+        exploreQueue_.erase(first);
+        return result;
+    }
+
+    void setExpectedTreasuriesCnt(const ExploreAreaPtr &ea, double value) {
+        auto node = exploreQueue_.extract(ea);
+        if (node.empty()) {
+            throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
+        }
+
+        node.value()->expectedTreasuriesCnt_ = value;
+        exploreQueue_.insert(std::move(node));
+    }
+
+    bool hasMoreExploreAreas() noexcept {
+        return !exploreQueue_.empty();
     }
 
     std::pair<int16_t, int16_t> nextExploreCoord() {
@@ -70,7 +117,6 @@ public:
 //        lastY_ = y;
 //        return {x, y};
     }
-
     void addLicence(License l) {
         for (auto &v: licenses_) {
             if (v.digAllowed_ == v.digConfirmed_) {

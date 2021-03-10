@@ -22,14 +22,12 @@ class Stats {
 private:
     std::atomic<int64_t> requestsCnt_{0};
     std::atomic<int64_t> curlErrCnt_{0};
-    std::atomic<int64_t> exploreCellTotalAmount_{0};
-    std::atomic<int64_t> exploreCellCount_{0};
-    std::atomic<int64_t> cellsWithTreasuries{0};
     std::atomic<int64_t> wokenWithEmptyRequestsQueue_{0};
     std::atomic<int64_t> inUseLicensesSum_{0};
     std::atomic<int64_t> inUseLicensesCnt_{0};
     std::atomic<size_t> coinsAmount_{0};
     std::atomic<int64_t> issuedLicenses_{0};
+    std::atomic<int64_t> treasuriesCnt_{0};
 
     std::atomic<int64_t> cashedCoinsSum_{0};
     std::atomic<int64_t> cashedTreasuriesCnt_{0};
@@ -109,12 +107,8 @@ public:
 
     void recordEndpointStats(const std::string &endpoint, int32_t httpCode, int64_t durationMcs) noexcept;
 
-    void recordExploreCell(uint32_t amount) noexcept {
-        exploreCellTotalAmount_ += (int64_t) amount;
-        exploreCellCount_++;
-        if (amount > 0) {
-            cellsWithTreasuries++;
-        }
+    void recordTreasuriesCnt(int amount) noexcept {
+        treasuriesCnt_ += amount;
     }
 
     void incCashedCoins(int64_t amount) noexcept {

@@ -38,7 +38,7 @@ class Request {
     int32_t cost_{1};
 public:
     ApiEndpointType type_{0};
-    std::variant<Area, CoinID, DigRequest, CashRequest> request_;
+    std::variant<ExploreAreaPtr, CoinID, DigRequest, CashRequest> request_;
 
     Request() = default;
 
@@ -50,8 +50,8 @@ public:
 
     Request &operator=(Request &&r) = default;
 
-    Area getExploreRequest() const noexcept {
-        return std::get<Area>(request_);
+    ExploreAreaPtr getExploreRequest() const noexcept {
+        return std::get<ExploreAreaPtr>(request_);
     }
 
     int32_t getCost() const noexcept {
@@ -77,7 +77,7 @@ public:
         return r;
     }
 
-    static Request NewExploreRequest(Area area) noexcept {
+    static Request NewExploreRequest(ExploreAreaPtr area) noexcept {
         Request r{};
         r.priority = 1;
         r.type_ = ApiEndpointType::Explore;
@@ -234,7 +234,7 @@ public:
 
     ExpectedVoid scheduleCheckHealth() noexcept;
 
-    ExpectedVoid scheduleExplore(Area area) noexcept;
+    ExpectedVoid scheduleExplore(ExploreAreaPtr area) noexcept;
 
     ExpectedVoid scheduleIssueFreeLicense() noexcept;
 

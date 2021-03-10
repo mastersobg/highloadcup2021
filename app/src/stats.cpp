@@ -26,20 +26,13 @@ void Stats::print() noexcept {
     infof("Tick RPS: %lld", tickRPS);
     infof("Curl errs: %lld", curlErrCnt_.load());
     infof("Time elapsed: %lld ms", timeElapsedMs);
-//    infof("Explored cells: %lld", exploreCellCount_.load());
-//    infof("Explored treasuries amount: %lld", exploreCellTotalAmount_.load());
+//    infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
 //    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
 //    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
 //    infof("Total cashed: %lld coins, %lld treasuries, %f avg", cashedCoinsSum_.load(), cashedTreasuriesCnt_.load(),
 //          (double) cashedCoinsSum_.load() / (double) cashedTreasuriesCnt_.load());
 //    infof("Issued licenses: %lld", issuedLicenses_.load());
 //    infof("Coins amount: %d", coinsAmount_.load());
-//    if (exploreCellCount_.load() > 0) {
-//        infof("Percent of cells with treasuries: %f",
-//              (double) cellsWithTreasuries.load() / (double) exploreCellCount_.load());
-//        infof("Average treasuries per cell: %f",
-//              (double) exploreCellTotalAmount_.load() / (double) cellsWithTreasuries.load());
-//    }
 //
 //    printEndpointsStats();
 //    printDepthHistogram();
