@@ -87,15 +87,6 @@ public:
 
         node.value()->expectedTreasuriesCnt_ = value;
         exploreQueue_.insert(std::move(node));
-//
-//        auto it = exploreQueue_.find(ea);
-//        if (it == exploreQueue_.end()) {
-//            throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
-//        }
-//        exploreQueue_.erase(it);
-//
-//        ea->expectedTreasuriesCnt_ = value;
-//        exploreQueue_.insert(ea);
     }
 
     bool hasMoreExploreAreas() noexcept {
