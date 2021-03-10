@@ -66,8 +66,8 @@ Expected<Response> Api::makeApiRequest(HttpClient &client, Request &r) noexcept 
             return Response(std::move(r), std::move(resp));
         }
         case ApiEndpointType::Explore: {
-            auto area = r.getExploreRequest();
-            return Response(std::move(r), client.explore(area));
+            auto exploreRequest = r.getExploreRequest();
+            return Response(std::move(r), client.explore(exploreRequest->area_));
         }
         case ApiEndpointType::IssueFreeLicense: {
             return Response(std::move(r), client.issueFreeLicense());
@@ -115,8 +115,8 @@ Response Api::getAvailableResponse() noexcept {
     return r;
 }
 
-ExpectedVoid Api::scheduleExplore(Area area) noexcept {
-    return scheduleRequest(Request::NewExploreRequest(area));
+ExpectedVoid Api::scheduleExplore(ExploreAreaPtr area) noexcept {
+    return scheduleRequest(Request::NewExploreRequest(std::move(area)));
 }
 
 ExpectedVoid Api::scheduleIssueFreeLicense() noexcept {

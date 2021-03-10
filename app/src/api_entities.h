@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <memory>
 
 constexpr int32_t ApiErrorCodeUnknown = 1;
 
@@ -32,6 +33,10 @@ struct Area {
 
     Area(int16_t posX, int16_t posY, int16_t sizeX, int16_t sizeY) : posX_{posX}, posY_{posY}, sizeX_{sizeX},
                                                                      sizeY_{sizeY} {}
+
+    [[nodiscard]] size_t getArea() const noexcept {
+        return (size_t) sizeX_ * (size_t) sizeY_;
+    }
 };
 
 struct ExploreResponse {
@@ -88,5 +93,38 @@ struct DigRequest {
             depth_{depth} {}
 
 };
+
+struct ExploreArea {
+    using ExploreAreaPtr = std::shared_ptr<ExploreArea>;
+
+    std::shared_ptr<ExploreArea> parent_;
+    std::vector<ExploreAreaPtr> children_;
+    Area area_;
+    size_t actualTreasuriesCnt_{0};
+    double expectedTreasuriesCnt_{0.0};
+    size_t exploreDepth_{0};
+    bool explored_{false};
+
+    ExploreArea(ExploreAreaPtr parent, Area area, double expectedTreasuriesCnt, size_t exploreDepth,
+                size_t actualTreasuriesCnt) :
+            parent_{std::move(parent)},
+            area_{area},
+            actualTreasuriesCnt_{actualTreasuriesCnt},
+            expectedTreasuriesCnt_{expectedTreasuriesCnt},
+            exploreDepth_{exploreDepth} {}
+
+    static ExploreAreaPtr
+    NewExploreArea(ExploreAreaPtr parent, Area area, double expectedTreasuriesCnt, size_t exploreDepth,
+                   size_t actualTreasuriesCnt) {
+        return std::make_shared<ExploreArea>(parent, area, expectedTreasuriesCnt, exploreDepth, actualTreasuriesCnt);
+    }
+
+    void addChild(ExploreAreaPtr child) noexcept {
+        children_.push_back(std::move(child));
+    }
+};
+
+using ExploreAreaPtr = std::shared_ptr<ExploreArea>;
+
 
 #endif //HIGHLOADCUP2021_API_ENTITIES_H
