@@ -11,6 +11,9 @@
 #include <list>
 #include <stdexcept>
 #include <algorithm>
+#include <memory>
+#include <vector>
+#include <set>
 
 struct DelayedDigRequest {
     int16_t x_, y_;
@@ -20,15 +23,21 @@ struct DelayedDigRequest {
             x_{x}, y_{y}, depth_{depth} {}
 };
 
+
+struct ExploreAreaCmp {
+    bool operator()(const ExploreAreaPtr &l, const ExploreAreaPtr &r) const noexcept {
+        return l->expectedTreasuriesCnt_ > r->expectedTreasuriesCnt_;
+    }
+};
+
 class State {
 private:
-    int16_t lastX_{0};
-    int16_t lastY_{0};
-
     std::array<License, kMaxLicensesCount> licenses_{};
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
     std::list<DelayedDigRequest> digRequests_;
+    std::multiset<ExploreAreaPtr, ExploreAreaCmp> exploreQueue_{};
+    ExploreAreaPtr root_{nullptr};
 
 public:
     State() = default;
@@ -41,25 +50,48 @@ public:
 
     State &operator=(State &&s) = delete;
 
-    int16_t &lastX() noexcept {
-        return lastX_;
+    ~State() {
+        cleanExploreAreaPtrs(root_);
+        root_ = nullptr;
     }
 
-    int16_t &lastY() noexcept {
-        return lastY_;
-    }
-
-    std::pair<int16_t, int16_t> nextExploreCoord() {
-        auto x = lastX_;
-        auto y = (int16_t) (lastY_ + 1);
-        if (y == kFieldMaxY) {
-            x++;
-            y = 0;
+    void cleanExploreAreaPtrs(const ExploreAreaPtr &node) {
+        for (const auto &child : node->children_) {
+            cleanExploreAreaPtrs(child);
         }
+        node->children_.resize(0);
+        node->parent_ = nullptr;
+    }
 
-        lastX_ = x;
-        lastY_ = y;
-        return {x, y};
+
+    void setRootExploreArea(ExploreAreaPtr r) noexcept {
+        root_ = std::move(r);
+    }
+
+    void addExploreArea(ExploreAreaPtr ea) noexcept {
+        exploreQueue_.insert(std::move(ea));
+    }
+
+    ExploreAreaPtr fetchNextExploreArea() noexcept {
+        auto first = exploreQueue_.begin();
+        auto result = *first;
+        exploreQueue_.erase(first);
+        return result;
+    }
+
+    void setExpectedTreasuriesCnt(const ExploreAreaPtr &ea, double value) {
+        auto it = exploreQueue_.find(ea);
+        if (it == exploreQueue_.end()) {
+            throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
+        }
+        exploreQueue_.erase(it);
+
+        ea->expectedTreasuriesCnt_ = value;
+        exploreQueue_.insert(ea);
+    }
+
+    bool hasMoreExploreAreas() noexcept {
+        return !exploreQueue_.empty();
     }
 
     void addLicence(License l) {
