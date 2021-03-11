@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include "util.h"
 
 struct DelayedDigRequest {
     int16_t x_, y_;
@@ -26,7 +27,25 @@ struct DelayedDigRequest {
 
 struct ExploreAreaCmp {
     bool operator()(const ExploreAreaPtr &l, const ExploreAreaPtr &r) const noexcept {
-        return l->expectedTreasuriesCnt_ > r->expectedTreasuriesCnt_;
+        if (!equal(l->expectedTreasuriesCnt_, r->expectedTreasuriesCnt_)) {
+            return l->expectedTreasuriesCnt_ > r->expectedTreasuriesCnt_;
+        }
+
+        const Area &la = l->area_;
+        const Area &ra = r->area_;
+
+        if (la.posX_ != ra.posX_) {
+            return la.posX_ < ra.posX_;
+        }
+        if (la.posY_ != ra.posY_) {
+            return la.posY_ < ra.posY_;
+        }
+
+        if (la.sizeX_ != ra.sizeX_) {
+            return la.sizeX_ < ra.sizeX_;
+        }
+
+        return la.sizeY_ < ra.sizeY_;
     }
 };
 
@@ -68,7 +87,12 @@ public:
         root_ = std::move(r);
     }
 
-    void addExploreArea(ExploreAreaPtr ea) noexcept {
+    void addExploreArea(ExploreAreaPtr ea) {
+#ifdef _HLC_DEBUG
+        if (exploreQueue_.count(ea) > 0) {
+            throw std::runtime_error("addExploreArea: too many matched elements");
+        }
+#endif
         exploreQueue_.insert(std::move(ea));
     }
 
@@ -77,13 +101,18 @@ public:
         auto result = *first;
         exploreQueue_.erase(first);
         return result;
+
     }
 
     void setExpectedTreasuriesCnt(const ExploreAreaPtr &ea, double value) {
+#ifdef _HLC_DEBUG
+        if (exploreQueue_.count(ea) > 1) {
+            throw std::runtime_error("setExpectedTreasuriesCnt: too many matched elements");
+        }
+#endif
         auto node = exploreQueue_.extract(ea);
         if (node.empty()) {
-            return;
-//            throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
+            throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
         }
 
         node.value()->expectedTreasuriesCnt_ = value;

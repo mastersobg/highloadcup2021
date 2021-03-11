@@ -24,7 +24,7 @@ add_definitions("-DCOMMIT_HASH=\"${COMMIT_HASH}\"")
 
 if (BUILD_TYPE STREQUAL "release")
 elseif (BUILD_TYPE STREQUAL "debug")
-    string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fsanitize=address -fsanitize=leak -fsanitize=undefined -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2 -g")
+    string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fsanitize=address -fsanitize=leak -fsanitize=undefined -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2 -D_HLC_DEBUG -g")
 elseif (BUILD_TYPE STREQUAL "debug-thread")
     string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fsanitize=thread -g")
 elseif (BUILD_TYPE STREQUAL "profile-memory")
