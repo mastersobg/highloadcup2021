@@ -82,7 +82,8 @@ public:
     void setExpectedTreasuriesCnt(const ExploreAreaPtr &ea, double value) {
         auto node = exploreQueue_.extract(ea);
         if (node.empty()) {
-            throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
+            return;
+//            throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
         }
 
         node.value()->expectedTreasuriesCnt_ = value;
