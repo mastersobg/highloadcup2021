@@ -74,7 +74,12 @@ ExpectedVoid App::fireInitRequests() noexcept {
         }
     }
 
-    return api_.scheduleExplore(state_.fetchNextExploreArea());
+    for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
+        if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
+            return err;
+        }
+    }
+    return NoErr;
 }
 
 void App::run() noexcept {

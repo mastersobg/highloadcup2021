@@ -36,6 +36,8 @@ constexpr size_t kTreasuriesCount = 490'000;
 
 constexpr size_t kMaxLicensesCount = 10;
 
+constexpr size_t kExploreConcurrentRequestsCnt{1};
+
 constexpr int kCashSkipThreshold = 690'000;
 
 #endif //HIGHLOADCUP2021_CONST_H
