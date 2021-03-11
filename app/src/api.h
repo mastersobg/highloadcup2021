@@ -208,12 +208,14 @@ private:
     std::list<Response> responses_;
     std::condition_variable responsesCondVar_;
 
+    std::atomic<int64_t> inFlightRequestsCnt_{0};
+    std::atomic<int64_t> inFlightExploreRequestsCnt_{0};
 
     std::string address_;
 
     void threadLoop();
 
-    static Expected<Response> makeApiRequest(HttpClient &client, Request &r) noexcept;
+    Expected<Response> makeApiRequest(HttpClient &client, Request &r) noexcept;
 
     void publishResponse(Response &&r) noexcept;
 
@@ -247,6 +249,14 @@ public:
     Response getAvailableResponse() noexcept;
 
     size_t requestsQueueSize() noexcept;
+
+    int64_t getInFlightRequestsCnt() const noexcept {
+        return inFlightRequestsCnt_;
+    }
+
+    int64_t getInFlightExploreRequestsCnt() const noexcept {
+        return inFlightExploreRequestsCnt_;
+    }
 };
 
 #endif //HIGHLOADCUP2021_API_H

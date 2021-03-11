@@ -64,6 +64,10 @@ public:
         return stats_;
     }
 
+    Api &getApi() noexcept {
+        return api_;
+    }
+
     RateLimiter &getRateLimiter() noexcept {
         return rateLimiter_;
     }

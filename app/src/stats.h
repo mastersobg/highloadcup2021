@@ -30,6 +30,12 @@ private:
     std::atomic<int64_t> treasuriesCnt_{0};
     std::atomic<int64_t> cashSkippedCnt_{0};
 
+    std::atomic<int64_t> inFlightRequestsSum_{0};
+    std::atomic<int64_t> inFlightRequestsCnt_{0};
+
+    std::atomic<int64_t> inFlightExploreRequestsSum_{0};
+    std::atomic<int64_t> inFlightExploreRequestsCnt_{0};
+
     std::atomic<int64_t> cashedCoinsSum_{0};
     std::atomic<int64_t> cashedTreasuriesCnt_{0};
 
@@ -88,6 +94,16 @@ public:
     void recordInUseLicenses(int cnt) noexcept {
         inUseLicensesSum_ += cnt;
         inUseLicensesCnt_++;
+    }
+
+    void recordInFlightRequests(int64_t cnt) noexcept {
+        inFlightRequestsCnt_++;
+        inFlightRequestsSum_ += cnt;
+    }
+
+    void recordInFlightExploreRequests(int64_t cnt) noexcept {
+        inFlightExploreRequestsCnt_++;
+        inFlightExploreRequestsSum_ += cnt;
     }
 
     void incIssuedLicenses() noexcept {

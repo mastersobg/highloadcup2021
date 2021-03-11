@@ -37,7 +37,9 @@ void Api::threadLoop() {
 
         getApp().getRateLimiter().acquire(r.getCost());
 
+        inFlightRequestsCnt_++;
         auto ret = makeApiRequest(client, r);
+        inFlightRequestsCnt_--;
         if (ret.hasError()) {
             errorf("Error during making API request: %d", ret.error());
             throw std::runtime_error("Error during making API request");
@@ -67,7 +69,10 @@ Expected<Response> Api::makeApiRequest(HttpClient &client, Request &r) noexcept 
         }
         case ApiEndpointType::Explore: {
             auto exploreRequest = r.getExploreRequest();
-            return Response(std::move(r), client.explore(exploreRequest->area_));
+            inFlightExploreRequestsCnt_++;
+            auto ret = client.explore(exploreRequest->area_);
+            inFlightExploreRequestsCnt_--;
+            return Response(std::move(r), std::move(ret));
         }
         case ApiEndpointType::IssueFreeLicense: {
             return Response(std::move(r), client.issueFreeLicense());

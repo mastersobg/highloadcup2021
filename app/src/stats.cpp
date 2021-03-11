@@ -30,6 +30,9 @@ void Stats::print() noexcept {
     infof("Cash skipped: %lld", cashSkippedCnt_.load());
     infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
     infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
+    infof("Average in flight requests: %f", (double) inFlightRequestsSum_ / (double) inFlightRequestsCnt_);
+    infof("Average in flight explore requests: %f",
+          (double) inFlightExploreRequestsSum_ / (double) inFlightExploreRequestsCnt_);
     infof("Total cashed: %lld coins, %lld treasuries, %f avg", cashedCoinsSum_.load(), cashedTreasuriesCnt_.load(),
           (double) cashedCoinsSum_.load() / (double) cashedTreasuriesCnt_.load());
     infof("Issued licenses: %lld", issuedLicenses_.load());
@@ -158,7 +161,17 @@ void Stats::printExploreAreaHistogram() noexcept {
     infof("explore area count histogram: %s", countStr.c_str());
 }
 
+void recordInFlightRequests() {
+    for (;;) {
+        getApp().getStats().recordInFlightRequests(getApp().getApi().getInFlightRequestsCnt());
+        getApp().getStats().recordInFlightExploreRequests(getApp().getApi().getInFlightExploreRequestsCnt());
+
+//        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+}
+
 void statsPrintLoop() {
+    std::thread t{recordInFlightRequests};
     for (;;) {
         std::this_thread::sleep_for(std::chrono::milliseconds(statsSleepDelayMs));
 
@@ -169,3 +182,4 @@ void statsPrintLoop() {
         }
     }
 }
+
