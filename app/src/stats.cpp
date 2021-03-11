@@ -165,13 +165,11 @@ void recordInFlightRequests() {
     for (;;) {
         getApp().getStats().recordInFlightRequests(getApp().getApi().getInFlightRequestsCnt());
         getApp().getStats().recordInFlightExploreRequests(getApp().getApi().getInFlightExploreRequestsCnt());
-
-//        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
 
 void statsPrintLoop() {
-    std::thread t{recordInFlightRequests};
+//    std::thread t{recordInFlightRequests};
     for (;;) {
         std::this_thread::sleep_for(std::chrono::milliseconds(statsSleepDelayMs));
 
