@@ -39,3 +39,4 @@ Makefile
 Testing
 highloadcup2021.cbp
 build
+cmake-build-debug

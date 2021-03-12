@@ -60,7 +60,7 @@ private:
     std::list<CoinID> coins_;
     std::list<DelayedDigRequest> digRequests_;
     std::multiset<ExploreAreaPtr, ExploreAreaCmp> exploreQueue_{};
-    ExploreAreaPtr root_{nullptr};
+    std::vector<ExploreAreaPtr> rootNodes_;
 
 public:
     State() = default;
@@ -74,8 +74,10 @@ public:
     State &operator=(State &&s) = delete;
 
     ~State() {
-        cleanExploreAreaPtrs(root_);
-        root_ = nullptr;
+        for (const auto &n : rootNodes_) {
+            cleanExploreAreaPtrs(n);
+        }
+        rootNodes_.clear();
     }
 
     void cleanExploreAreaPtrs(const ExploreAreaPtr &node) {
@@ -87,8 +89,8 @@ public:
     }
 
 
-    void setRootExploreArea(ExploreAreaPtr r) noexcept {
-        root_ = std::move(r);
+    void addRootNode(ExploreAreaPtr r) noexcept {
+        rootNodes_.push_back(std::move(r));
     }
 
     void addExploreArea(ExploreAreaPtr ea) noexcept {

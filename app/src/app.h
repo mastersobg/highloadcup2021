@@ -39,7 +39,7 @@ private:
 
     ExpectedVoid scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcept;
 
-    ExpectedVoid processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept;
+    ExpectedVoid processExploredArea(ExploreAreaPtr &exploreArea, int actualTreasuriesCnt) noexcept;
 
 public:
     App();

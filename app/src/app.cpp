@@ -56,19 +56,19 @@ ExpectedVoid App::fireInitRequests() noexcept {
             return err;
         }
     }
-    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX - 1, kFieldMaxY - 1), 0.0, 0,
-                                            kTreasuriesCount);
-    state_.setRootExploreArea(root);
-    for (int i = 0; i < (int16_t) kFieldMaxX; i += kExploreAreas[0].height) {
-        for (int j = 0; j < (int16_t) kFieldMaxY; j += kExploreAreas[0].width) {
+
+    int areaSize{kExploreSubAreaSize};
+
+    for (int i = 0; i < (int16_t) areaSize; i += kExploreAreas[0].height) {
+        for (int j = 0; j < (int16_t) areaSize; j += kExploreAreas[0].width) {
             auto ea = ExploreArea::NewExploreArea(
-                    root,
+                    nullptr,
                     Area((int16_t) i, (int16_t) j, kExploreAreas[0].height, kExploreAreas[0].width),
-                    (double) root->actualTreasuriesCnt_ / (double) (kFieldMaxX * kFieldMaxY),
+                    std::numeric_limits<double>::max(),
                     1,
                     0
             );
-            root->addChild(ea);
+            state_.addRootNode(ea);
             state_.addExploreArea(ea);
         }
     }
@@ -151,14 +151,17 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
     return ErrorCode::kUnknownRequestType;
 }
 
-ExpectedVoid App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept {
+ExpectedVoid App::processExploredArea(ExploreAreaPtr &exploreArea, int actualTreasuriesCnt) noexcept {
     if (exploreArea->explored_) {
         getStats().incDuplicateSetExplored();
         return NoErr;
     }
+
+#ifdef _HLC_DEBUG
+    assert(actualTreasuriesCnt >= 0);
+#endif
     state_.removeExploreAreaFromQueue(exploreArea);
-    getStats().incExploredArea(exploreArea->area_.getArea());
-    exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
+    exploreArea->actualTreasuriesCnt_ = (size_t) actualTreasuriesCnt;
     exploreArea->explored_ = true;
 
     if (exploreArea->actualTreasuriesCnt_ > 0 && exploreArea->area_.getArea() == 1) {
@@ -200,44 +203,48 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     auto successResp = std::move(resp).getResponse();
     auto exploreArea = req.getExploreRequest();
 
-    processExploredArea(exploreArea, successResp.amount_);
+    processExploredArea(exploreArea, (int) successResp.amount_);
 
-    size_t exploredTreasuriesCnt{0};
-    size_t nonExploredAreasCnt{0};
-    size_t nonExploredChildren{0};
-    for (const auto &child : exploreArea->parent_->children_) {
-        if (child->explored_) {
-            exploredTreasuriesCnt += child->actualTreasuriesCnt_;
-        } else {
-            nonExploredChildren++;
-            nonExploredAreasCnt += child->area_.getArea();
+
+    if (exploreArea->parent_ != nullptr) {
+        int exploredTreasuriesCnt{0};
+        size_t nonExploredAreasCnt{0};
+        size_t nonExploredChildren{0};
+        for (const auto &child : exploreArea->parent_->children_) {
+            if (child->explored_) {
+                exploredTreasuriesCnt += (int) child->actualTreasuriesCnt_;
+            } else {
+                nonExploredChildren++;
+                nonExploredAreasCnt += child->area_.getArea();
+            }
         }
-    }
 
-    auto leftTreasuriesCnt = exploreArea->parent_->actualTreasuriesCnt_ - exploredTreasuriesCnt;
-    for (auto &v : exploreArea->parent_->children_) {
-        if (!v->explored_) {
-            auto val = (double) leftTreasuriesCnt / (double) nonExploredAreasCnt;
-            state_.setExpectedTreasuriesCnt(v, val);
+#ifdef _HLC_DEBUG
+        assert((int) exploreArea->parent_->actualTreasuriesCnt_ >= exploredTreasuriesCnt);
+#endif
+        auto leftTreasuriesCnt = (int) exploreArea->parent_->actualTreasuriesCnt_ - exploredTreasuriesCnt;
+        for (auto &v : exploreArea->parent_->children_) {
+            if (!v->explored_) {
+                auto val = (double) leftTreasuriesCnt / (double) nonExploredAreasCnt;
+                state_.setExpectedTreasuriesCnt(v, val);
+            }
         }
-    }
 
-    if (nonExploredChildren == 1) {
-        for (auto &child : exploreArea->parent_->children_) {
-            if (!child->explored_) {
-                processExploredArea(child, leftTreasuriesCnt);
-                break;
+        if (nonExploredChildren == 1) {
+            for (auto &child : exploreArea->parent_->children_) {
+                if (!child->explored_) {
+                    processExploredArea(child, leftTreasuriesCnt);
+                    break;
+                }
             }
         }
     }
 
-#ifdef _HLC_DEBUG
-    assert(state_.hasMoreExploreAreas());
-#endif
-
-
-    auto ea = state_.fetchNextExploreArea();
-    return api_.scheduleExplore(ea);
+    if (state_.hasMoreExploreAreas()) {
+        auto ea = state_.fetchNextExploreArea();
+        return api_.scheduleExplore(ea);
+    }
+    return NoErr;
 }
 
 ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, HttpResponse<License> &resp) noexcept {

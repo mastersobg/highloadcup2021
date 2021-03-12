@@ -136,9 +136,9 @@ struct ExploreArea {
 
     [[nodiscard]] std::string toString() const noexcept {
         std::ostringstream msg;
-        msg << "expectedTreasuriesCnt: " << expectedTreasuriesCnt_ <<
+        msg << std::fixed << "expectedTreasuriesCnt: " << expectedTreasuriesCnt_ <<
             " x: " << area_.posX_ << " y: " << area_.posY_ << " sizeX: " << area_.sizeX_ <<
-            " sizeY: " << area_.sizeY_;
+            " sizeY: " << area_.sizeY_ << " explored: " << (explored_ ? "true" : "false");
         return msg.str();
     }
 };

@@ -19,6 +19,7 @@ constexpr int64_t kMaxRPS = 100'000'000;
 
 constexpr size_t kFieldMaxX = 3'500;
 constexpr size_t kFieldMaxY = 3'500;
+constexpr size_t kExploreSubAreaSize = 1'000;
 
 struct ExploreAreaShift {
     int16_t height;

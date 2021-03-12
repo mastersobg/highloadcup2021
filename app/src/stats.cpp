@@ -26,7 +26,6 @@ void Stats::print() noexcept {
     infof("Tick RPS: %lld", tickRPS);
     infof("Curl errs: %lld", curlErrCnt_.load());
     infof("Time elapsed: %lld ms", timeElapsedMs);
-    infof("Explored area: %lld", exploredArea_.load());
     infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
     infof("Cash skipped: %lld", cashSkippedCnt_.load());
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
