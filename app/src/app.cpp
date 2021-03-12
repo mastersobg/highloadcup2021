@@ -51,11 +51,11 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-//        if (auto err = scheduleIssueLicense(); err.hasError()) {
-//            return err;
-//        }
-//    }
+    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+        if (auto err = scheduleIssueLicense(); err.hasError()) {
+            return err;
+        }
+    }
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX - 1, kFieldMaxY - 1), 0.0, 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
