@@ -157,6 +157,7 @@ ExpectedVoid App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actual
         return NoErr;
     }
     state_.removeExploreAreaFromQueue(exploreArea);
+    getStats().incExploredArea(exploreArea->area_.getArea());
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
 

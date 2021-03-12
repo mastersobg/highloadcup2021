@@ -29,6 +29,7 @@ private:
     std::atomic<int64_t> issuedLicenses_{0};
     std::atomic<int64_t> treasuriesCnt_{0};
     std::atomic<int64_t> cashSkippedCnt_{0};
+    std::atomic<int64_t> exploredArea_{0};
     std::atomic<int64_t> duplicateSetExplored_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
@@ -82,6 +83,10 @@ public:
 
     void incRequestsCnt() noexcept {
         requestsCnt_++;
+    }
+
+    void incExploredArea(size_t area) noexcept {
+        exploredArea_ += (int64_t) area;
     }
 
     void incWokenWithEmptyRequestsQueue() noexcept {
