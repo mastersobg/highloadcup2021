@@ -15,6 +15,7 @@
 #include <vector>
 #include <set>
 #include "util.h"
+#include <cassert>
 
 struct DelayedDigRequest {
     int16_t x_, y_;
@@ -90,11 +91,9 @@ public:
         root_ = std::move(r);
     }
 
-    void addExploreArea(ExploreAreaPtr ea) {
+    void addExploreArea(ExploreAreaPtr ea) noexcept {
 #ifdef _HLC_DEBUG
-        if (exploreQueue_.count(ea) > 0) {
-            throw std::runtime_error("addExploreArea: too many matched elements");
-        }
+        assert(exploreQueue_.count(ea) == 0);
 #endif
         exploreQueue_.insert(std::move(ea));
     }
@@ -107,23 +106,24 @@ public:
 
     }
 
-    void setExpectedTreasuriesCnt(const ExploreAreaPtr &ea, double value) {
+    void setExpectedTreasuriesCnt(const ExploreAreaPtr &ea, double value) noexcept {
 #ifdef _HLC_DEBUG
-        if (exploreQueue_.count(ea) > 1) {
-            throw std::runtime_error("setExpectedTreasuriesCnt: too many matched elements");
-        }
+        assert(exploreQueue_.count(ea) == 1);
 #endif
         auto node = exploreQueue_.extract(ea);
-        if (node.empty()) {
-            throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
-        }
-
         node.value()->expectedTreasuriesCnt_ = value;
         exploreQueue_.insert(std::move(node));
     }
 
     bool hasMoreExploreAreas() noexcept {
         return !exploreQueue_.empty();
+    }
+
+    void removeExploreAreaFromQueue(const ExploreAreaPtr &ea) noexcept {
+#ifdef _HLC_DEBUG
+        assert(exploreQueue_.count(ea) <= 1);
+#endif
+        exploreQueue_.erase(ea);
     }
 
     void addLicence(License l) {

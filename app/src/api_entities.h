@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <sstream>
 
 constexpr int32_t ApiErrorCodeUnknown = 1;
 
@@ -131,6 +132,14 @@ struct ExploreArea {
             }
         }
         return ret;
+    }
+
+    [[nodiscard]] std::string toString() const noexcept {
+        std::ostringstream msg;
+        msg << "expectedTreasuriesCnt: " << expectedTreasuriesCnt_ <<
+            " x: " << area_.posX_ << " y: " << area_.posY_ << " sizeX: " << area_.sizeX_ <<
+            " sizeY: " << area_.sizeY_;
+        return msg.str();
     }
 };
 
