@@ -6,8 +6,7 @@
 #include <chrono>
 #include <memory>
 #include <limits>
-#include <cmath>
-#include "util.h"
+#include <cassert>
 
 App app{};
 
@@ -52,11 +51,11 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-        if (auto err = scheduleIssueLicense(); err.hasError()) {
-            return err;
-        }
-    }
+//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+//        if (auto err = scheduleIssueLicense(); err.hasError()) {
+//            return err;
+//        }
+//    }
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX - 1, kFieldMaxY - 1), 0.0, 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
@@ -152,26 +151,23 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
     return ErrorCode::kUnknownRequestType;
 }
 
-ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreResponse> &resp) noexcept {
-    if (resp.getHttpCode() != 200) {
-        return api_.scheduleExplore(req.getExploreRequest());
-    }
-    auto successResp = std::move(resp).getResponse();
-    auto exploreArea = req.getExploreRequest();
-    if (successResp.amount_ > 0 && exploreArea->area_.sizeX_ == 1 && exploreArea->area_.sizeY_ == 1) {
-        getStats().recordTreasuriesCnt((int) successResp.amount_);
-        state_.setLeftTreasuriesAmount(successResp.area_.posX_, successResp.area_.posY_, (int32_t) successResp.amount_);
-        if (auto err = scheduleDigRequest(successResp.area_.posX_,
-                                          successResp.area_.posY_,
+ExpectedVoid App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept {
+    state_.removeExploreAreaFromQueue(exploreArea);
+    exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
+    exploreArea->explored_ = true;
+
+    if (exploreArea->actualTreasuriesCnt_ > 0 && exploreArea->area_.getArea() == 1) {
+        getStats().recordTreasuriesCnt((int) exploreArea->actualTreasuriesCnt_);
+        state_.setLeftTreasuriesAmount(exploreArea->area_.posX_, exploreArea->area_.posY_,
+                                       (int32_t) exploreArea->actualTreasuriesCnt_);
+        if (auto err = scheduleDigRequest(exploreArea->area_.posX_,
+                                          exploreArea->area_.posY_,
                                           1); err.hasError()) {
             return err.error();
         }
     }
 
-    exploreArea->actualTreasuriesCnt_ = successResp.amount_;
-    exploreArea->explored_ = true;
-
-    if (exploreArea->area_.getArea() > 1) {
+    if (exploreArea->area_.getArea() > 1 && exploreArea->actualTreasuriesCnt_ > 0) {
         auto w = kExploreAreas[exploreArea->exploreDepth_].width;
         auto h = kExploreAreas[exploreArea->exploreDepth_].height;
         for (int i = exploreArea->area_.posX_; i < exploreArea->area_.posX_ + exploreArea->area_.sizeX_; i += h) {
@@ -189,12 +185,26 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
         }
     }
 
+    return NoErr;
+}
+
+ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreResponse> &resp) noexcept {
+    if (resp.getHttpCode() != 200) {
+        return api_.scheduleExplore(req.getExploreRequest());
+    }
+    auto successResp = std::move(resp).getResponse();
+    auto exploreArea = req.getExploreRequest();
+
+    processExploredArea(exploreArea, successResp.amount_);
+
     size_t exploredTreasuriesCnt{0};
     size_t nonExploredAreasCnt{0};
+    size_t nonExploredChildren{0};
     for (const auto &child : exploreArea->parent_->children_) {
         if (child->explored_) {
             exploredTreasuriesCnt += child->actualTreasuriesCnt_;
         } else {
+            nonExploredChildren++;
             nonExploredAreasCnt += child->area_.getArea();
         }
     }
@@ -202,32 +212,27 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     auto leftTreasuriesCnt = exploreArea->parent_->actualTreasuriesCnt_ - exploredTreasuriesCnt;
     for (auto &v : exploreArea->parent_->children_) {
         if (!v->explored_) {
-            state_.setExpectedTreasuriesCnt(v, (double) leftTreasuriesCnt / (double) nonExploredAreasCnt);
+            auto val = (double) leftTreasuriesCnt / (double) nonExploredAreasCnt;
+            state_.setExpectedTreasuriesCnt(v, val);
         }
     }
 
-    for (; state_.hasMoreExploreAreas();) {
-        auto ea = state_.fetchNextExploreArea();
-        if (moreOrEqual(ea->expectedTreasuriesCnt_, 1.0) && ea->area_.getArea() == 1 &&
-            ea->parent_->getNonExploredChildrenCnt() == 1) {
-            auto cnt = std::lround(ea->expectedTreasuriesCnt_);
-            getStats().recordTreasuriesCnt((int) cnt);
-            state_.setLeftTreasuriesAmount(ea->area_.posX_, ea->area_.posY_, (int32_t) cnt);
-            if (auto err = scheduleDigRequest(
-                        ea->area_.posX_,
-                        ea->area_.posY_,
-                        1
-                ); err.hasError()) {
-                return err.error();
+    if (nonExploredChildren == 1) {
+        for (auto &child : exploreArea->parent_->children_) {
+            if (!child->explored_) {
+                processExploredArea(child, leftTreasuriesCnt);
+                break;
             }
-        } else {
-            if (auto err = api_.scheduleExplore(ea); err.hasError()) {
-                return err.error();
-            }
-            break;
-        };
+        }
     }
-    return NoErr;
+
+#ifdef _HLC_DEBUG
+    assert(state_.hasMoreExploreAreas());
+#endif
+
+
+    auto ea = state_.fetchNextExploreArea();
+    return api_.scheduleExplore(ea);
 }
 
 ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, HttpResponse<License> &resp) noexcept {

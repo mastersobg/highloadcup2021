@@ -126,6 +126,15 @@ public:
         return !exploreQueue_.empty();
     }
 
+    void removeExploreAreaFromQueue(const ExploreAreaPtr &ea) {
+#ifdef _HLC_DEBUG
+        if (exploreQueue_.count(ea) > 1) {
+            throw std::runtime_error("removeExploreAreaFromQueue: too many matched elements");
+        }
+#endif
+        exploreQueue_.erase(ea);
+    }
+
     void addLicence(License l) {
         for (auto &v: licenses_) {
             if (v.digAllowed_ == v.digConfirmed_) {
