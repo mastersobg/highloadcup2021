@@ -108,9 +108,12 @@ public:
 
     void setExpectedTreasuriesCnt(const ExploreAreaPtr &ea, double value) noexcept {
 #ifdef _HLC_DEBUG
-        assert(exploreQueue_.count(ea) == 1);
+        assert(exploreQueue_.count(ea) <= 1);
 #endif
         auto node = exploreQueue_.extract(ea);
+        if (node.empty()) {
+            return;
+        }
         node.value()->expectedTreasuriesCnt_ = value;
         exploreQueue_.insert(std::move(node));
     }

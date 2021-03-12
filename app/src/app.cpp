@@ -152,6 +152,10 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
 }
 
 ExpectedVoid App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept {
+    if (exploreArea->explored_) {
+        getStats().incDuplicateSetExplored();
+        return NoErr;
+    }
     state_.removeExploreAreaFromQueue(exploreArea);
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;

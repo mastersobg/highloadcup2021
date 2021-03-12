@@ -28,6 +28,7 @@ void Stats::print() noexcept {
     infof("Time elapsed: %lld ms", timeElapsedMs);
     infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
     infof("Cash skipped: %lld", cashSkippedCnt_.load());
+    infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
     infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
     infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
     infof("Average in flight requests: %f", (double) inFlightRequestsSum_ / (double) inFlightRequestsCnt_);
@@ -169,7 +170,7 @@ void recordInFlightRequests() {
 }
 
 void statsPrintLoop() {
-//    std::thread t{recordInFlightRequests};
+    std::thread t{recordInFlightRequests};
     for (;;) {
         std::this_thread::sleep_for(std::chrono::milliseconds(statsSleepDelayMs));
 
