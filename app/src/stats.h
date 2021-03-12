@@ -29,6 +29,7 @@ private:
     std::atomic<int64_t> issuedLicenses_{0};
     std::atomic<int64_t> treasuriesCnt_{0};
     std::atomic<int64_t> cashSkippedCnt_{0};
+    std::atomic<int64_t> exploredArea_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
