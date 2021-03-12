@@ -83,6 +83,10 @@ public:
         requestsCnt_++;
     }
 
+    void incExploredArea(size_t area) noexcept {
+        exploredArea_ += (int64_t) area;
+    }
+
     void incWokenWithEmptyRequestsQueue() noexcept {
         wokenWithEmptyRequestsQueue_++;
     }
