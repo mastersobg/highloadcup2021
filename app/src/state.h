@@ -26,9 +26,12 @@ struct DelayedDigRequest {
 
 
 struct ExploreAreaCmp {
-    bool operator()(const ExploreAreaPtr &l, const ExploreAreaPtr &r) const noexcept {
-        if (!equal(l->expectedTreasuriesCnt_, r->expectedTreasuriesCnt_)) {
-            return l->expectedTreasuriesCnt_ > r->expectedTreasuriesCnt_;
+    bool operator()(const ExploreAreaPtr &l, const ExploreAreaPtr &r) const {
+        if (l->expectedTreasuriesCnt_ < r->expectedTreasuriesCnt_) {
+            return false;
+        }
+        if (l->expectedTreasuriesCnt_ > r->expectedTreasuriesCnt_) {
+            return true;
         }
 
         const Area &la = l->area_;
