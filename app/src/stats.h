@@ -30,6 +30,7 @@ private:
     std::atomic<int64_t> treasuriesCnt_{0};
     std::atomic<int64_t> cashSkippedCnt_{0};
     std::atomic<int64_t> duplicateSetExplored_{0};
+    std::atomic<size_t> exploreQueueSize_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -90,6 +91,10 @@ public:
 
     void incCurlErrCnt() noexcept {
         curlErrCnt_++;
+    }
+
+    void setExploreQueueSize(size_t size) noexcept {
+        exploreQueueSize_ = size;
     }
 
     void incDuplicateSetExplored() noexcept {

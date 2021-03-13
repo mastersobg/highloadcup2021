@@ -102,6 +102,7 @@ void App::run() noexcept {
 
         getStats().recordInUseLicenses(state_.getInUseLicensesCount());
         getStats().recordCoinsAmount(state_.getCoinsAmount());
+        getStats().setExploreQueueSize(state_.getExploreQueueSize());
     }
 
 }

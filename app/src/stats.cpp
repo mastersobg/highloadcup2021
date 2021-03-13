@@ -27,6 +27,7 @@ void Stats::print() noexcept {
     infof("Curl errs: %lld", curlErrCnt_.load());
     infof("Time elapsed: %lld ms", timeElapsedMs);
     infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
+    infof("Explore queue size: %d", exploreQueueSize_.load());
     infof("Cash skipped: %lld", cashSkippedCnt_.load());
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
     infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());

@@ -124,6 +124,10 @@ public:
         return !exploreQueue_.empty();
     }
 
+    size_t getExploreQueueSize() const noexcept {
+        return exploreQueue_.size();
+    }
+
     void removeExploreAreaFromQueue(const ExploreAreaPtr &ea) noexcept {
 #ifdef _HLC_DEBUG
         assert(exploreQueue_.count(ea) <= 1);
