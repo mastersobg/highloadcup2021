@@ -76,8 +76,9 @@ public:
         assert(!exploreQueue_.empty());
 #endif
         auto it = std::min_element(exploreQueue_.begin(), exploreQueue_.end());
+        auto ret = *it;
         removeFromExploreQueue((size_t) std::distance(exploreQueue_.begin(), it));
-        return *it;
+        return ret;
 
     }
 
