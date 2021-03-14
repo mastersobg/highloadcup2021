@@ -149,6 +149,9 @@ App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
     exploreArea->parent_->updateChildExplored(exploreArea);
+    if (exploreArea->parent_->getLeftTreasuriesCnt() == 0) {
+        state_.removeExploreAreaFromQueue(exploreArea->parent_);
+    }
 
     if (exploreArea->actualTreasuriesCnt_ > 0 && exploreArea->area_.getArea() == 1) {
         getStats().recordTreasuriesCnt((int) exploreArea->actualTreasuriesCnt_);
