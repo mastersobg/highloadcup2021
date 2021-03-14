@@ -200,9 +200,9 @@ HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
     auto reqResult = curl_easy_perform(session_);
     getApp().getStats().incRequestsCnt();
     if (reqResult != CURLE_OK) {
-        errorf("curl_easy_perform failed: %s err code: %d err message: %s errbuf: %s", url.c_str(), reqResult,
-               curl_easy_strerror(reqResult),
-               errbuf_);
+//        errorf("curl_easy_perform failed: %s err code: %d err message: %s errbuf: %s", url.c_str(), reqResult,
+//               curl_easy_strerror(reqResult),
+//               errbuf_);
         getApp().getStats().incCurlErrCnt();
         if (reqResult == CURLE_OPERATION_TIMEDOUT) {
             return ErrorCode::kErrCurlTimeout;

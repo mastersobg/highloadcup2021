@@ -84,8 +84,16 @@ void App::run() noexcept {
 
         auto err = processResponse(response);
         if (err.hasError()) {
-            errorf("error occurred: %d", err.error());
-            break;
+            if (err.error() != ErrorCode::kErrCurlTimeout) {
+                errorf("error occurred: %d", err.error());
+                break;
+            } else {
+                if (auto errInner = api_.scheduleRequest(std::move(response.getRequest())); errInner.hasError()) {
+                    errorf("error occurred: %d", errInner.error());
+                    break;
+                }
+                getStats().incTimeoutCnt();
+            }
         }
 
         getStats().recordInUseLicenses(state_.getInUseLicensesCount());

@@ -219,8 +219,6 @@ private:
 
     void publishResponse(Response &&r) noexcept;
 
-    ExpectedVoid scheduleRequest(Request r) noexcept;
-
 public:
     explicit Api(size_t threadsCount, std::string address);
 
@@ -235,6 +233,8 @@ public:
     ~Api();
 
     ExpectedVoid scheduleCheckHealth() noexcept;
+
+    ExpectedVoid scheduleRequest(Request r) noexcept;
 
     ExpectedVoid scheduleExplore(ExploreAreaPtr area) noexcept;
 

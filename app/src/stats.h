@@ -31,6 +31,7 @@ private:
     std::atomic<int64_t> cashSkippedCnt_{0};
     std::atomic<int64_t> exploredArea_{0};
     std::atomic<int64_t> duplicateSetExplored_{0};
+    std::atomic<int32_t> timeoutCnt_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -83,6 +84,10 @@ public:
 
     void incRequestsCnt() noexcept {
         requestsCnt_++;
+    }
+
+    void incTimeoutCnt() noexcept {
+        timeoutCnt_++;
     }
 
     void incExploredArea(size_t area) noexcept {
