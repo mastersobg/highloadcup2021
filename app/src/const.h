@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <array>
+#include <vector>
 
 using JsonBufferType = char;
 
@@ -24,13 +25,18 @@ struct ExploreAreaShift {
     int16_t height;
     int16_t width;
 };
-constexpr std::array<ExploreAreaShift, 3> kExploreAreas = {
-        {
-                {50, 20},
-                {5, 1},
-                {1, 1}
-        }
-};
+//constexpr std::array<ExploreAreaShift, 2> kExploreAreas = {
+//        {
+//                {50, 1},
+////                {7, 1},
+//                {1, 1}
+//        }
+//};
+
+
+const std::vector<ExploreAreaShift> &getKExploreAreas();
+
+void injectKExploreAreas(std::vector<ExploreAreaShift> v);
 
 constexpr size_t kTreasuriesCount = 490'000;
 
@@ -39,5 +45,7 @@ constexpr size_t kMaxLicensesCount = 10;
 constexpr size_t kExploreConcurrentRequestsCnt{2};
 
 constexpr int kCashSkipThreshold = 690'000;
+
+constexpr int kExploredTreasuriesThreshold = 1'000;
 
 #endif //HIGHLOADCUP2021_CONST_H

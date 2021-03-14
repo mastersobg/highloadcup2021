@@ -12,6 +12,7 @@
 #include <mutex>
 #include <array>
 #include <shared_mutex>
+#include "const.h"
 
 struct EndpointStats {
     std::map<int32_t, int32_t> httpCodes;
@@ -136,6 +137,15 @@ public:
 
     void recordTreasuriesCnt(int amount) noexcept {
         treasuriesCnt_ += amount;
+        if (treasuriesCnt_.load() >= kExploredTreasuriesThreshold) {
+            std::scoped_lock endpointStatsLock(endpointStatsMutex_);
+            int totalReqs{0};
+            for (const auto &[code, count] : endpointStatsMap_["explore"].httpCodes) {
+                totalReqs += count;
+            }
+            debugf("explore requests: %d", totalReqs);
+            std::abort();
+        }
     }
 
     void incCashedCoins(int64_t amount) noexcept {

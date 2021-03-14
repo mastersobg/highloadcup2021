@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.3)
+cmake_minimum_required(VERSION 3.10.0)
 project(highloadcup2021)
 
 set(CMAKE_VERBOSE_MAKEFILE on)
@@ -13,7 +13,7 @@ find_package(RapidJSON REQUIRED)
 include_directories(${RAPIDJSON_INCLUDE_DIRS})
 
 file(GLOB TARGET_SRC src/*.cpp)
-add_executable(highloadcup2021 ${TARGET_SRC})
+add_executable(highloadcup2021 ${TARGET_SRC} src/const.cpp)
 
 # common cxx flags
 set(CMAKE_CXX_FLAGS "-Werror -Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion -Warith-conversion -Wshadow -Wsign-conversion -Wlogical-op -Wdouble-promotion -Wshift-overflow=2  -Wduplicated-cond -Wcast-qual -Wcast-align -O2 -pedantic -pipe")
@@ -38,7 +38,7 @@ elseif (BUILD_TYPE STREQUAL "dump")
 elseif (BUILD_TYPE STREQUAL "lock")
     string(APPEND CMAKE_CXX_FLAGS " -g -fno-omit-frame-pointer -rdynamic")
 elseif (BUILD_TYPE STREQUAL "clang")
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion  -Wshadow -Wsign-conversion  -Wdouble-promotion    -Wcast-qual -Wcast-align -O2 -pedantic -pipe -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_HLC_DEBUG -g")
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion  -Wshadow -Wsign-conversion  -Wdouble-promotion -Wcast-qual -Wcast-align -O2 -pedantic -pipe")
 else ()
     message(FATAL_ERROR "wrong build type " ${BUILD_TYPE})
 endif ()

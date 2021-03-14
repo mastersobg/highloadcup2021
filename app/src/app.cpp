@@ -51,19 +51,29 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-        if (auto err = scheduleIssueLicense(); err.hasError()) {
-            return err;
-        }
-    }
+//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+//        if (auto err = scheduleIssueLicense(); err.hasError()) {
+//            return err;
+//        }
+//    }
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX - 1, kFieldMaxY - 1), 0.0, 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
-    for (int i = 0; i < (int16_t) kFieldMaxX; i += kExploreAreas[0].height) {
-        for (int j = 0; j < (int16_t) kFieldMaxY; j += kExploreAreas[0].width) {
+    for (int i = 0; i < (int16_t) kFieldMaxX; i += getKExploreAreas()[0].height) {
+        for (int j = 0; j < (int16_t) kFieldMaxY; j += getKExploreAreas()[0].width) {
+            auto h = getKExploreAreas()[0].height;
+            auto w = getKExploreAreas()[0].width;
+            if (i + h > (int) kFieldMaxX) {
+//                debugf("here h");
+                h = (int16_t) ((int) kFieldMaxX - i);
+            }
+            if (j + w > (int) kFieldMaxY) {
+//                debugf("here w");
+                w = (int16_t) ((int) kFieldMaxY - j);
+            }
             auto ea = ExploreArea::NewExploreArea(
                     root,
-                    Area((int16_t) i, (int16_t) j, kExploreAreas[0].height, kExploreAreas[0].width),
+                    Area((int16_t) i, (int16_t) j, h, w),
                     (double) root->actualTreasuriesCnt_ / (double) (kFieldMaxX * kFieldMaxY),
                     1,
                     0
@@ -173,13 +183,23 @@ ExpectedVoid App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actual
     }
 
     if (exploreArea->area_.getArea() > 1 && exploreArea->actualTreasuriesCnt_ > 0) {
-        auto w = kExploreAreas[exploreArea->exploreDepth_].width;
-        auto h = kExploreAreas[exploreArea->exploreDepth_].height;
+        auto w = getKExploreAreas()[exploreArea->exploreDepth_].width;
+        auto h = getKExploreAreas()[exploreArea->exploreDepth_].height;
         for (int i = exploreArea->area_.posX_; i < exploreArea->area_.posX_ + exploreArea->area_.sizeX_; i += h) {
             for (int j = exploreArea->area_.posY_; j < exploreArea->area_.posY_ + exploreArea->area_.sizeY_; j += w) {
+                auto ch = getKExploreAreas()[exploreArea->exploreDepth_].height;
+                auto cw = getKExploreAreas()[exploreArea->exploreDepth_].width;
+                if (i + ch > (int) kFieldMaxX) {
+//                    debugf("here 1 h");
+                    ch = (int16_t) ((int) kFieldMaxX - i);
+                }
+                if (j + cw > (int) kFieldMaxY) {
+//                    debugf("here 1 w");
+                    cw = (int16_t) ((int) kFieldMaxY - j);
+                }
                 auto ea = ExploreArea::NewExploreArea(
                         exploreArea,
-                        Area((int16_t) i, (int16_t) j, h, w),
+                        Area((int16_t) i, (int16_t) j, ch, cw),
                         (double) exploreArea->actualTreasuriesCnt_ / (double) (exploreArea->area_.getArea()),
                         exploreArea->exploreDepth_ + 1,
                         0
