@@ -32,6 +32,8 @@ void Stats::print() noexcept {
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
     infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
     infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
+    infof("Queue size: %lld", queueSize_.load());
+    infof("Queue zero elements: %lld", queueZeroElements_.load());
 //    infof("Average in flight requests: %f", (double) inFlightRequestsSum_ / (double) inFlightRequestsCnt_);
 //    infof("Average in flight explore requests: %f",
 //          (double) inFlightExploreRequestsSum_ / (double) inFlightExploreRequestsCnt_);

@@ -31,6 +31,8 @@ private:
     std::atomic<int64_t> cashSkippedCnt_{0};
     std::atomic<int64_t> exploredArea_{0};
     std::atomic<int64_t> duplicateSetExplored_{0};
+    std::atomic<int64_t> queueSize_{0};
+    std::atomic<int64_t> queueZeroElements_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -80,6 +82,14 @@ public:
     Stats &operator=(const Stats &o) = delete;
 
     Stats &operator=(Stats &oo) = delete;
+
+    void setQueueSize(int64_t size) noexcept {
+        queueSize_ = size;
+    }
+
+    void setQueueZeroElements(int64_t cnt) noexcept {
+        queueZeroElements_ = cnt;
+    }
 
     void incRequestsCnt() noexcept {
         requestsCnt_++;
