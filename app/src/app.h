@@ -27,20 +27,20 @@ private:
 
     [[nodiscard]] ExpectedVoid processResponse(Response &r) noexcept;
 
-    ExpectedVoid processExploreResponse(Request &req, HttpResponse<ExploreResponse> &resp) noexcept;
+    [[nodiscard]]ExpectedVoid processExploreResponse(Request &req, HttpResponse<ExploreResponse> &resp) noexcept;
 
-    ExpectedVoid processIssueLicenseResponse(Request &req, HttpResponse<License> &resp) noexcept;
+    [[nodiscard]]ExpectedVoid processIssueLicenseResponse(Request &req, HttpResponse<License> &resp) noexcept;
 
-    ExpectedVoid processDigResponse(Request &req, HttpResponse<std::vector<TreasureID>> &resp) noexcept;
+    [[nodiscard]]ExpectedVoid processDigResponse(Request &req, HttpResponse<std::vector<TreasureID>> &resp) noexcept;
 
-    ExpectedVoid processCashResponse(Request &r, HttpResponse<Wallet> &resp) noexcept;
+    [[nodiscard]]ExpectedVoid processCashResponse(Request &r, HttpResponse<Wallet> &resp) noexcept;
 
-    ExpectedVoid scheduleIssueLicense() noexcept;
+    [[nodiscard]]ExpectedVoid scheduleIssueLicense() noexcept;
 
-    ExpectedVoid scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcept;
+    [[nodiscard]]ExpectedVoid scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcept;
 
-    ExpectedVoid
-    processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt, bool removeFromQueue) noexcept;
+    [[nodiscard]]ExpectedVoid
+    processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept;
 
     void createSubAreas(const ExploreAreaPtr &root) noexcept;
 
