@@ -111,6 +111,7 @@ struct ExploreArea {
     size_t nonExploredChildrenCnt_{0};
     size_t exploreDepth_{0};
     bool explored_{false};
+    int childSwapsCnt_{0};
 
     ExploreArea(ExploreAreaPtr parent, Area area, size_t exploreDepth,
                 size_t actualTreasuriesCnt) :
@@ -156,7 +157,8 @@ struct ExploreArea {
         assert(it != children_.end());
 #endif
         // TODO swap better
-        std::iter_swap(it, children_.end() - 1);
+        std::iter_swap(it, children_.end() - childSwapsCnt_ - 1);
+        childSwapsCnt_++;
     }
 
     [[nodiscard]] size_t getNonExploredChildrenCnt() const noexcept {
