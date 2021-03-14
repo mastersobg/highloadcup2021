@@ -28,8 +28,6 @@ struct DelayedDigRequest {
 
 class State {
 private:
-    int16_t lastX_{0};
-    int16_t lastY_{0};
 
     std::array<License, kMaxLicensesCount> licenses_{};
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
@@ -112,6 +110,7 @@ public:
 //        lastY_ = y;
 //        return {x, y};
     }
+
     void addLicence(License l) {
         for (auto &v: licenses_) {
             if (v.digAllowed_ == v.digConfirmed_) {

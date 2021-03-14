@@ -63,11 +63,11 @@ ExpectedVoid App::fireInitRequests() noexcept {
 //    }
 
     for (size_t i = 0; i < kApiThreadCount * 10; i++) {
-        auto err = api_.scheduleExplore(Area(state_.lastX(), state_.lastY(), 1, 1));
+        auto[x, y] = state_.nextExploreCoord();
+        auto err = api_.scheduleExplore(ExploreArea::NewExploreArea(nullptr, Area(x, y, 1, 1), 0, 0));
         if (err.hasError()) {
             return err;
         }
-        state_.nextExploreCoord();
     }
     return NoErr;
 }
@@ -107,7 +107,8 @@ void App::run() noexcept {
 
         auto w = distribution_(rnd_);
 
-        if (auto err = api_.scheduleExplore({(int16_t) 0, (int16_t) 0, (int16_t) w, (int16_t) 1}); err.hasError()) {
+        if (auto err = api_.scheduleExplore(
+                    ExploreArea::NewExploreArea(nullptr, Area(0, 0, (int16_t) (w), 1), 0, 0)); err.hasError()) {
             errorf("error occurred: %d", err.error());
             return;
         }
