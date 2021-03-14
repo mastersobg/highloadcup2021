@@ -7,17 +7,24 @@
 #include <variant>
 #include "error.h"
 #include "const.h"
+#include <chrono>
 
 template<class T>
 class HttpResponse {
     std::variant<T, ApiError> resp_;
     int32_t httpCode_{0};
-
+    std::chrono::microseconds latencyMcs_;
 public:
 
-    HttpResponse(ApiError &&err, int32_t httpCode) : resp_{std::move(err)}, httpCode_{httpCode} {}
+    HttpResponse(ApiError &&err, int32_t httpCode, std::chrono::microseconds latencyMcs) :
+            resp_{std::move(err)},
+            httpCode_{httpCode},
+            latencyMcs_{latencyMcs} {}
 
-    HttpResponse(T &&r, int32_t httpCode) : resp_{std::move(r)}, httpCode_{httpCode} {}
+    HttpResponse(T &&r, int32_t httpCode, std::chrono::microseconds latencyMcs) :
+            resp_{std::move(r)},
+            httpCode_{httpCode},
+            latencyMcs_{latencyMcs} {}
 
     [[nodiscard]] bool hasError() const noexcept {
         return std::holds_alternative<ApiError>(resp_);
@@ -33,6 +40,10 @@ public:
 
     [[nodiscard]] int32_t getHttpCode() const noexcept {
         return httpCode_;
+    }
+
+    [[nodiscard]] std::chrono::microseconds getLatencyMcs() const noexcept {
+        return latencyMcs_;
     }
 
 };

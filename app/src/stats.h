@@ -15,7 +15,7 @@
 
 struct EndpointStats {
     std::map<int32_t, int32_t> httpCodes;
-    std::vector<int32_t> durations;
+    std::vector<int64_t> durations;
 };
 
 class Stats {
@@ -132,7 +132,7 @@ public:
         depthCoinsHistogram_[(size_t) depth] += coinsCount;
     }
 
-    void recordEndpointStats(const std::string &endpoint, int32_t httpCode, int32_t durationMs) noexcept;
+    void recordEndpointStats(const std::string &endpoint, int32_t httpCode, int64_t durationMcs) noexcept;
 
     void recordTreasuriesCnt(int amount) noexcept {
         treasuriesCnt_ += amount;

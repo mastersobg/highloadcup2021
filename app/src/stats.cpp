@@ -55,12 +55,12 @@ Stats::Stats() {
     ).count();
 }
 
-void Stats::recordEndpointStats(const std::string &endpoint, int32_t httpCode, int32_t durationMs) noexcept {
+void Stats::recordEndpointStats(const std::string &endpoint, int32_t httpCode, int64_t durationMcs) noexcept {
     std::scoped_lock lck{endpointStatsMutex_};
 
     auto &stats = endpointStatsMap_[endpoint];
     stats.httpCodes[httpCode]++;
-    stats.durations.push_back(durationMs);
+    stats.durations.push_back(durationMcs);
 }
 
 void Stats::printEndpointsStats() noexcept {
@@ -76,8 +76,8 @@ void Stats::printEndpointsStats() noexcept {
             logString += " ";
         }
 
-        auto avg = std::accumulate(stats.durations.begin(), stats.durations.end(), 0) /
-                   (int) stats.durations.size();
+        auto avg = std::accumulate(stats.durations.begin(), stats.durations.end(), (int64_t) 0) /
+                   (int64_t) stats.durations.size();
         logString += "\nduration: ";
         logString += "avg: ";
         writeIntToString(avg, logString);
