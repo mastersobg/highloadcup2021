@@ -38,7 +38,7 @@ constexpr long kRequestTimeout = 1000;
 
 constexpr size_t kMaxLicensesCount = 10;
 
-constexpr size_t kExploreConcurrentRequestsCnt{2};
+constexpr size_t kExploreConcurrentRequestsCnt{1};
 
 constexpr int kCashSkipThreshold = 690'000;
 
