@@ -326,7 +326,6 @@ void App::createSubAreas(const ExploreAreaPtr &root) noexcept {
     auto x2 = root->area_.posX_ + root->area_.sizeX_;
     auto y1 = root->area_.posY_;
     auto y2 = root->area_.posY_ + root->area_.sizeY_;
-    state_.addExploreArea(root);
     for (int i = x1; i < x2; i += h) {
         for (int j = y1; j < y2; j += w) {
             auto curH = h;
@@ -346,4 +345,5 @@ void App::createSubAreas(const ExploreAreaPtr &root) noexcept {
             root->addChild(ea);
         }
     }
+    state_.addExploreArea(root);
 }
