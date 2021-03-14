@@ -69,6 +69,11 @@ public:
 
     void addExploreArea(ExploreAreaPtr ea) noexcept {
         exploreQueue_.push_back(std::move(ea));
+        if (exploreQueue_.size() > kExploreAreaQueueMaxSize) {
+            auto it = std::max_element(exploreQueue_.begin(), exploreQueue_.end());
+            std::iter_swap(it, exploreQueue_.end() - 1);
+            exploreQueue_.erase(exploreQueue_.end() - 1, exploreQueue_.end());
+        }
     }
 
     ExploreAreaPtr fetchNextExploreArea() noexcept;
