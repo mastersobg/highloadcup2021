@@ -56,22 +56,10 @@ ExpectedVoid App::fireInitRequests() noexcept {
 //            return err;
 //        }
 //    }
-    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX - 1, kFieldMaxY - 1), 0.0, 0,
+    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0.0, 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
-    for (int i = 0; i < (int16_t) kFieldMaxX; i += kExploreAreas[0].height) {
-        for (int j = 0; j < (int16_t) kFieldMaxY; j += kExploreAreas[0].width) {
-            auto ea = ExploreArea::NewExploreArea(
-                    root,
-                    Area((int16_t) i, (int16_t) j, kExploreAreas[0].height, kExploreAreas[0].width),
-                    (double) root->actualTreasuriesCnt_ / (double) (kFieldMaxX * kFieldMaxY),
-                    1,
-                    0
-            );
-            root->addChild(ea);
-            state_.addExploreArea(ea);
-        }
-    }
+    createSubAreas(root);
 
     for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
         if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
@@ -173,21 +161,7 @@ ExpectedVoid App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actual
     }
 
     if (exploreArea->area_.getArea() > 1 && exploreArea->actualTreasuriesCnt_ > 0) {
-        auto w = kExploreAreas[exploreArea->exploreDepth_].width;
-        auto h = kExploreAreas[exploreArea->exploreDepth_].height;
-        for (int i = exploreArea->area_.posX_; i < exploreArea->area_.posX_ + exploreArea->area_.sizeX_; i += h) {
-            for (int j = exploreArea->area_.posY_; j < exploreArea->area_.posY_ + exploreArea->area_.sizeY_; j += w) {
-                auto ea = ExploreArea::NewExploreArea(
-                        exploreArea,
-                        Area((int16_t) i, (int16_t) j, h, w),
-                        (double) exploreArea->actualTreasuriesCnt_ / (double) (exploreArea->area_.getArea()),
-                        exploreArea->exploreDepth_ + 1,
-                        0
-                );
-                exploreArea->addChild(ea);
-                state_.addExploreArea(ea);
-            }
-        }
+        createSubAreas(exploreArea);
     }
 
     return NoErr;
@@ -359,5 +333,35 @@ ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcep
     } else {
         state_.addDigRequest({x, y, depth});
         return NoErr;
+    }
+}
+
+void App::createSubAreas(const ExploreAreaPtr &root) noexcept {
+    auto h = kExploreAreas[root->exploreDepth_].height;
+    auto w = kExploreAreas[root->exploreDepth_].width;
+    auto x1 = root->area_.posX_;
+    auto x2 = root->area_.posX_ + root->area_.sizeX_;
+    auto y1 = root->area_.posY_;
+    auto y2 = root->area_.posY_ + root->area_.sizeY_;
+    for (int i = x1; i < x2; i += h) {
+        for (int j = y1; j < y2; j += w) {
+            auto curH = h;
+            auto curW = w;
+            if (i + curH > x2) {
+                curH = (int16_t) (x2 - i);
+            }
+            if (j + curW > y2) {
+                curW = (int16_t) (y2 - j);
+            }
+            auto ea = ExploreArea::NewExploreArea(
+                    root,
+                    Area((int16_t) i, (int16_t) j, curH, curW),
+                    (double) root->actualTreasuriesCnt_ / (double) (root->area_.getArea()),
+                    root->exploreDepth_ + 1,
+                    0
+            );
+            root->addChild(ea);
+            state_.addExploreArea(ea);
+        }
     }
 }
