@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.0)
+cmake_minimum_required(VERSION 3.16.3)
 project(highloadcup2021)
 
 set(CMAKE_VERBOSE_MAKEFILE on)
@@ -13,7 +13,7 @@ find_package(RapidJSON REQUIRED)
 include_directories(${RAPIDJSON_INCLUDE_DIRS})
 
 file(GLOB TARGET_SRC src/*.cpp)
-add_executable(highloadcup2021 ${TARGET_SRC} src/const.cpp)
+add_executable(highloadcup2021 ${TARGET_SRC})
 
 # common cxx flags
 set(CMAKE_CXX_FLAGS "-Werror -Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion -Warith-conversion -Wshadow -Wsign-conversion -Wlogical-op -Wdouble-promotion -Wshift-overflow=2  -Wduplicated-cond -Wcast-qual -Wcast-align -O2 -pedantic -pipe")
