@@ -19,36 +19,36 @@ func bruteForce() error {
 	best := int64(math.MaxInt64)
 	var bestArea [][]int
 	//for k := 1500; k > 1000; k-- {
-	for i := 60; i > 40; i-- {
-		for j := 20; j > 1; j-- {
-			if i <= j {
-				continue
-			}
-			areas := [][]int{
-				//{k, 1},
-				{i, 1},
-				{j, 1},
-				{1, 1},
-			}
-			ret, err := run(areas)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			if ret < best {
-				best = ret
-				bestArea = make([][]int, len(areas))
-				for i, v := range areas {
-					bestArea[i] = make([]int, len(v))
-					for j := range v {
-						bestArea[i][j] = v[j]
-					}
+	for i := 60; i > 1; i-- {
+		//for j := 20; j > 1; j-- {
+		//	if i <= j {
+		//		continue
+		//	}
+		areas := [][]int{
+			//{k, 1},
+			{i, 1},
+			//{j, 1},
+			{1, 1},
+		}
+		ret, err := run(areas)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		if ret < best {
+			best = ret
+			bestArea = make([][]int, len(areas))
+			for i, v := range areas {
+				bestArea[i] = make([]int, len(v))
+				for j := range v {
+					bestArea[i][j] = v[j]
 				}
 			}
-			fmt.Printf("best requests: %v\n", best)
-			fmt.Printf("best areas: %v\n", bestArea)
 		}
+		fmt.Printf("best requests: %v\n", best)
+		fmt.Printf("best areas: %v\n", bestArea)
 	}
+	//}
 	//}
 	return nil
 }
