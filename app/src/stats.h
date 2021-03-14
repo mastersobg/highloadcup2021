@@ -28,6 +28,15 @@ private:
     std::atomic<size_t> coinsAmount_{0};
     std::atomic<int64_t> issuedLicenses_{0};
     std::atomic<int64_t> treasuriesCnt_{0};
+    std::atomic<int64_t> cashSkippedCnt_{0};
+    std::atomic<int64_t> exploredArea_{0};
+    std::atomic<int64_t> duplicateSetExplored_{0};
+
+    std::atomic<int64_t> inFlightRequestsSum_{0};
+    std::atomic<int64_t> inFlightRequestsCnt_{0};
+
+    std::atomic<int64_t> inFlightExploreRequestsSum_{0};
+    std::atomic<int64_t> inFlightExploreRequestsCnt_{0};
 
     std::atomic<int64_t> cashedCoinsSum_{0};
     std::atomic<int64_t> cashedTreasuriesCnt_{0};
@@ -76,6 +85,10 @@ public:
         requestsCnt_++;
     }
 
+    void incExploredArea(size_t area) noexcept {
+        exploredArea_ += (int64_t) area;
+    }
+
     void incWokenWithEmptyRequestsQueue() noexcept {
         wokenWithEmptyRequestsQueue_++;
     }
@@ -84,9 +97,23 @@ public:
         curlErrCnt_++;
     }
 
+    void incDuplicateSetExplored() noexcept {
+        duplicateSetExplored_++;
+    }
+
     void recordInUseLicenses(int cnt) noexcept {
         inUseLicensesSum_ += cnt;
         inUseLicensesCnt_++;
+    }
+
+    void recordInFlightRequests(int64_t cnt) noexcept {
+        inFlightRequestsCnt_++;
+        inFlightRequestsSum_ += cnt;
+    }
+
+    void recordInFlightExploreRequests(int64_t cnt) noexcept {
+        inFlightExploreRequestsCnt_++;
+        inFlightExploreRequestsSum_ += cnt;
     }
 
     void incIssuedLicenses() noexcept {
@@ -116,8 +143,12 @@ public:
         cashedTreasuriesCnt_++;
     }
 
-    void recordCoinsAmount(size_t amount) {
+    void recordCoinsAmount(size_t amount) noexcept {
         coinsAmount_ = amount;
+    }
+
+    void incCashSkippedCnt() noexcept {
+        cashSkippedCnt_++;
     }
 
     void recordExploreArea(int area, int32_t durationMs) noexcept {

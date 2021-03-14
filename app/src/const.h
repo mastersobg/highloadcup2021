@@ -26,7 +26,7 @@ struct ExploreAreaShift {
 };
 constexpr std::array<ExploreAreaShift, 3> kExploreAreas = {
         {
-                {50, 20},
+                {50, 1},
                 {5, 1},
                 {1, 1}
         }
@@ -38,5 +38,8 @@ constexpr long kRequestTimeout = 1000;
 
 constexpr size_t kMaxLicensesCount = 10;
 
+constexpr size_t kExploreConcurrentRequestsCnt{2};
+
+constexpr int kCashSkipThreshold = 690'000;
 
 #endif //HIGHLOADCUP2021_CONST_H

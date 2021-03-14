@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
+#include "util.h"
+#include <cassert>
 #include <set>
 #include <random>
 
@@ -24,13 +26,6 @@ struct DelayedDigRequest {
             x_{x}, y_{y}, depth_{depth} {}
 };
 
-
-struct ExploreAreaCmp {
-    bool operator()(const ExploreAreaPtr &l, const ExploreAreaPtr &r) const noexcept {
-        return l->expectedTreasuriesCnt_ > r->expectedTreasuriesCnt_;
-    }
-};
-
 class State {
 private:
     int16_t lastX_{0};
@@ -40,13 +35,18 @@ private:
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
     std::list<DelayedDigRequest> digRequests_;
-    std::multiset<ExploreAreaPtr, ExploreAreaCmp> exploreQueue_{};
+    std::vector<ExploreAreaPtr> exploreQueue_{};
     ExploreAreaPtr root_{nullptr};
 
     std::random_device randomDevice_;
     std::default_random_engine rnd_{randomDevice_()};
     std::uniform_int_distribution<> distribution_{0, 3500 - 1};
 
+
+    void removeFromExploreQueue(size_t pos) noexcept {
+        exploreQueue_[pos] = std::move(exploreQueue_.back());
+        exploreQueue_.pop_back();
+    }
 
 public:
     State() = default;
@@ -78,28 +78,23 @@ public:
     }
 
     void addExploreArea(ExploreAreaPtr ea) noexcept {
-        exploreQueue_.insert(std::move(ea));
+        exploreQueue_.push_back(std::move(ea));
     }
 
-    ExploreAreaPtr fetchNextExploreArea() noexcept {
-        auto first = exploreQueue_.begin();
-        auto result = *first;
-        exploreQueue_.erase(first);
-        return result;
-    }
-
-    void setExpectedTreasuriesCnt(const ExploreAreaPtr &ea, double value) {
-        auto node = exploreQueue_.extract(ea);
-        if (node.empty()) {
-            throw std::runtime_error("setExpectedTreasuriesCnt: element not found");
-        }
-
-        node.value()->expectedTreasuriesCnt_ = value;
-        exploreQueue_.insert(std::move(node));
-    }
+    ExploreAreaPtr fetchNextExploreArea() noexcept;
 
     bool hasMoreExploreAreas() noexcept {
         return !exploreQueue_.empty();
+    }
+
+    void removeExploreAreaFromQueue(const ExploreAreaPtr &ea) noexcept {
+        for (size_t i = 0; i < exploreQueue_.size(); i++) {
+            const auto &v = exploreQueue_[i];
+            if (v == ea) {
+                removeFromExploreQueue(i);
+                break;
+            }
+        }
     }
 
     std::pair<int16_t, int16_t> nextExploreCoord() {

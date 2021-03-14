@@ -3,7 +3,9 @@
 
 #include <string>
 #include <chrono>
+#include <cmath>
 
+constexpr double eps = 1e-6;
 
 void writeIntToString(int64_t n, std::string &s);
 
@@ -26,5 +28,10 @@ public:
     }
 
 };
+
+bool equal(double a, double b) noexcept;
+
+bool moreOrEqual(double a, double b) noexcept;
+
 
 #endif //HIGHLOADCUP2021_UTIL_H

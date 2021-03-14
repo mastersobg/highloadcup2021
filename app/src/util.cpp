@@ -19,3 +19,11 @@ void writeIntToString(int64_t n, std::string &s) {
     } while (n != 0);
 
 }
+
+bool equal(double a, double b) noexcept {
+    return fabs(a - b) < eps;
+}
+
+bool moreOrEqual(double a, double b) noexcept {
+    return a > b || equal(a, b);
+}

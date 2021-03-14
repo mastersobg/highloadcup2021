@@ -157,7 +157,15 @@ void Stats::printExploreAreaHistogram() noexcept {
     infof("explore area count histogram: %s", countStr.c_str());
 }
 
+void recordInFlightRequests() {
+    for (;;) {
+        getApp().getStats().recordInFlightRequests(getApp().getApi().getInFlightRequestsCnt());
+        getApp().getStats().recordInFlightExploreRequests(getApp().getApi().getInFlightExploreRequestsCnt());
+    }
+}
+
 void statsPrintLoop() {
+//    std::thread t{recordInFlightRequests};
     for (;;) {
         std::this_thread::sleep_for(std::chrono::milliseconds(statsSleepDelayMs));
 
@@ -168,3 +176,4 @@ void statsPrintLoop() {
         }
     }
 }
+
