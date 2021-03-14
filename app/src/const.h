@@ -40,6 +40,6 @@ constexpr size_t kExploreConcurrentRequestsCnt{2};
 
 constexpr int kCashSkipThreshold = 690'000;
 
-constexpr size_t kExploreAreaQueueMaxSize = 100;
+constexpr size_t kExploreAreaQueueMaxSize = 1'000;
 
 #endif //HIGHLOADCUP2021_CONST_H
