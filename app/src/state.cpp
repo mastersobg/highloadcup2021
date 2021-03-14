@@ -11,7 +11,7 @@ ExploreAreaPtr State::fetchNextExploreArea() noexcept {
         }
     }
     getApp().getStats().setQueueSize((int64_t) exploreQueue_.size());
-    getApp().getStats().setQueueSize(cnt);
+    getApp().getStats().setQueueZeroElements(cnt);
 #endif
     auto ret = *std::min_element(exploreQueue_.begin(), exploreQueue_.end());
     auto child = ret->getChildForRequest();
