@@ -320,8 +320,8 @@ ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcep
 }
 
 void App::createSubAreas(const ExploreAreaPtr &root) noexcept {
-    auto h = kExploreAreas[root->exploreDepth_].height;
-    auto w = kExploreAreas[root->exploreDepth_].width;
+    auto h = getKExploreAreas()[root->exploreDepth_].height;
+    auto w = getKExploreAreas()[root->exploreDepth_].width;
     auto x1 = root->area_.posX_;
     auto x2 = root->area_.posX_ + root->area_.sizeX_;
     auto y1 = root->area_.posY_;
