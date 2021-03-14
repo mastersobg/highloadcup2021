@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include <set>
 #include "util.h"
 #include <cassert>
 
@@ -25,42 +24,19 @@ struct DelayedDigRequest {
             x_{x}, y_{y}, depth_{depth} {}
 };
 
-
-struct ExploreAreaCmp {
-    bool operator()(const ExploreAreaPtr &l, const ExploreAreaPtr &r) const noexcept {
-        if (l->expectedTreasuriesCnt_ < r->expectedTreasuriesCnt_) {
-            return false;
-        }
-        if (l->expectedTreasuriesCnt_ > r->expectedTreasuriesCnt_) {
-            return true;
-        }
-
-        const Area &la = l->area_;
-        const Area &ra = r->area_;
-
-        if (la.posX_ != ra.posX_) {
-            return la.posX_ < ra.posX_;
-        }
-        if (la.posY_ != ra.posY_) {
-            return la.posY_ < ra.posY_;
-        }
-
-        if (la.sizeX_ != ra.sizeX_) {
-            return la.sizeX_ < ra.sizeX_;
-        }
-
-        return la.sizeY_ < ra.sizeY_;
-    }
-};
-
 class State {
 private:
     std::array<License, kMaxLicensesCount> licenses_{};
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
     std::list<DelayedDigRequest> digRequests_;
-    std::multiset<ExploreAreaPtr, ExploreAreaCmp> exploreQueue_{};
+    std::vector<ExploreAreaPtr> exploreQueue_{};
     ExploreAreaPtr root_{nullptr};
+
+    void removeFromExploreQueue(size_t pos) noexcept {
+        exploreQueue_[pos] = std::move(exploreQueue_.back());
+        exploreQueue_.pop_back();
+    }
 
 public:
     State() = default;
@@ -92,30 +68,17 @@ public:
     }
 
     void addExploreArea(ExploreAreaPtr ea) noexcept {
-#ifdef _HLC_DEBUG
-        assert(exploreQueue_.count(ea) == 0);
-#endif
-        exploreQueue_.insert(std::move(ea));
+        exploreQueue_.push_back(std::move(ea));
     }
 
     ExploreAreaPtr fetchNextExploreArea() noexcept {
-        auto first = exploreQueue_.begin();
-        auto result = *first;
-        exploreQueue_.erase(first);
-        return result;
-
-    }
-
-    void setExpectedTreasuriesCnt(const ExploreAreaPtr &ea, double value) noexcept {
 #ifdef _HLC_DEBUG
-        assert(exploreQueue_.count(ea) <= 1);
+        assert(!exploreQueue_.empty());
 #endif
-        auto node = exploreQueue_.extract(ea);
-        if (node.empty()) {
-            return;
-        }
-        node.value()->expectedTreasuriesCnt_ = value;
-        exploreQueue_.insert(std::move(node));
+        auto it = std::min_element(exploreQueue_.begin(), exploreQueue_.end());
+        removeFromExploreQueue((size_t) std::distance(exploreQueue_.begin(), it));
+        return *it;
+
     }
 
     bool hasMoreExploreAreas() noexcept {
@@ -123,10 +86,13 @@ public:
     }
 
     void removeExploreAreaFromQueue(const ExploreAreaPtr &ea) noexcept {
-#ifdef _HLC_DEBUG
-        assert(exploreQueue_.count(ea) <= 1);
-#endif
-        exploreQueue_.erase(ea);
+        for (size_t i = 0; i < exploreQueue_.size(); i++) {
+            const auto &v = exploreQueue_[i];
+            if (v == ea) {
+                removeFromExploreQueue(i);
+                break;
+            }
+        }
     }
 
     void addLicence(License l) {

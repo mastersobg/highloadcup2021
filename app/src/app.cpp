@@ -139,12 +139,15 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
     return ErrorCode::kUnknownRequestType;
 }
 
-ExpectedVoid App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept {
+ExpectedVoid
+App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt, bool removeFromQueue) noexcept {
     if (exploreArea->explored_) {
         getStats().incDuplicateSetExplored();
         return NoErr;
     }
-    state_.removeExploreAreaFromQueue(exploreArea);
+    if (removeFromQueue) {
+        state_.removeExploreAreaFromQueue(exploreArea);
+    }
     getStats().incExploredArea(exploreArea->area_.getArea());
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
@@ -174,7 +177,7 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     auto successResp = std::move(resp).getResponse();
     auto exploreArea = req.getExploreRequest();
 
-    processExploredArea(exploreArea, successResp.amount_);
+    processExploredArea(exploreArea, successResp.amount_, false);
 
     size_t exploredTreasuriesCnt{0};
     size_t nonExploredAreasCnt{0};
@@ -191,15 +194,14 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     auto leftTreasuriesCnt = exploreArea->parent_->actualTreasuriesCnt_ - exploredTreasuriesCnt;
     for (auto &v : exploreArea->parent_->children_) {
         if (!v->explored_) {
-            auto val = (double) leftTreasuriesCnt / (double) nonExploredAreasCnt;
-            state_.setExpectedTreasuriesCnt(v, val);
+            v->expectedTreasuriesCnt_ = (double) leftTreasuriesCnt / (double) nonExploredAreasCnt;
         }
     }
 
     if (nonExploredChildren == 1) {
         for (auto &child : exploreArea->parent_->children_) {
             if (!child->explored_) {
-                processExploredArea(child, leftTreasuriesCnt);
+                processExploredArea(child, leftTreasuriesCnt, true);
                 break;
             }
         }

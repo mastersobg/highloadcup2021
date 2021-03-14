@@ -145,5 +145,9 @@ struct ExploreArea {
 
 using ExploreAreaPtr = std::shared_ptr<ExploreArea>;
 
+inline bool operator<(const ExploreAreaPtr &l, const ExploreAreaPtr &r) {
+    return l->expectedTreasuriesCnt_ > r->expectedTreasuriesCnt_;
+}
+
 
 #endif //HIGHLOADCUP2021_API_ENTITIES_H
