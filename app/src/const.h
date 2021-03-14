@@ -26,7 +26,7 @@ struct ExploreAreaShift {
 };
 constexpr std::array<ExploreAreaShift, 3> kExploreAreas = {
         {
-                {50, 20},
+                {50, 1},
                 {5, 1},
                 {1, 1}
         }

@@ -42,6 +42,8 @@ private:
     [[nodiscard]]ExpectedVoid
     processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept;
 
+    void createSubAreas(const ExploreAreaPtr &root) noexcept;
+
 public:
     App();
 
