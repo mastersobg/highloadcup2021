@@ -32,6 +32,8 @@ private:
     std::atomic<int64_t> exploredArea_{0};
     std::atomic<int64_t> duplicateSetExplored_{0};
     std::atomic<int32_t> timeoutCnt_{0};
+    std::atomic<int64_t> totalProcessResponseTime_{0};
+    std::atomic<int64_t> totalProcessExploreResponseTime_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -88,6 +90,14 @@ public:
 
     void incTimeoutCnt() noexcept {
         timeoutCnt_++;
+    }
+
+    void addProcessResponseTime(int64_t t) {
+        totalProcessResponseTime_ += t;
+    }
+
+    void addProcessExploreResponseTime(int64_t t) {
+        totalProcessExploreResponseTime_ += t;
     }
 
     void incExploredArea(size_t area) noexcept {

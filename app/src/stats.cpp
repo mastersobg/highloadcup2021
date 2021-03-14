@@ -31,8 +31,10 @@ void Stats::print() noexcept {
     infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
     infof("Cash skipped: %lld", cashSkippedCnt_.load());
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
-    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
-    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
+    infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
+          totalProcessExploreResponseTime_.load());
+//    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
+//    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
 //    infof("Average in flight requests: %f", (double) inFlightRequestsSum_ / (double) inFlightRequestsCnt_);
 //    infof("Average in flight explore requests: %f",
 //          (double) inFlightExploreRequestsSum_ / (double) inFlightExploreRequestsCnt_);

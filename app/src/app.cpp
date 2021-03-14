@@ -82,7 +82,9 @@ void App::run() noexcept {
 
         auto response = api_.getAvailableResponse();
 
+        Measure<std::chrono::nanoseconds> tm;
         auto err = processResponse(response);
+        getStats().addProcessResponseTime(tm.getInt64());
         if (err.hasError()) {
             if (err.error() != ErrorCode::kErrCurlTimeout) {
                 errorf("error occurred: %d", err.error());
@@ -109,7 +111,10 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
                 return resp.getExploreResponse().error();
             }
             auto apiResp = resp.getExploreResponse().get();
-            return processExploreResponse(resp.getRequest(), apiResp);
+            Measure<std::chrono::nanoseconds> tm;
+            auto err = processExploreResponse(resp.getRequest(), apiResp);
+            getStats().addProcessExploreResponseTime(tm.getInt64());
+            return err;
         }
         case ApiEndpointType::IssueFreeLicense: {
             if (resp.getIssueLicenseResponse().hasError()) {
