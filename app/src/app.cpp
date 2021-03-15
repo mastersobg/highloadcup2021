@@ -76,6 +76,8 @@ ExpectedVoid App::fireInitRequests() noexcept {
 }
 
 void App::run() noexcept {
+    auto start = std::chrono::steady_clock::now();
+    const std::chrono::seconds timeDiff(580);
     if (auto err = fireInitRequests(); err.hasError()) {
         errorf("fireInitRequests: error: %d", err.error());
         return;
@@ -87,6 +89,11 @@ void App::run() noexcept {
         }
 
         auto response = api_.getAvailableResponse();
+
+        auto now = std::chrono::steady_clock::now();
+        if (now - start > timeDiff) {
+            break;
+        }
 
         Measure<std::chrono::nanoseconds> tm;
         auto err = processResponse(response);
