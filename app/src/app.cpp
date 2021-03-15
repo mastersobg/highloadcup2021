@@ -127,7 +127,7 @@ void App::run() noexcept {
             break;
         }
     }
-    std::cout << out;
+    std::cout << out << std::endl;
 }
 
 ExpectedVoid App::processResponse(Response &resp) noexcept {
