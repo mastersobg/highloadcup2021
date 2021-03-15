@@ -119,11 +119,13 @@ void App::run() noexcept {
     Cell prev(0, 0);
     std::string out;
     for (const auto &cell : v) {
+//        std::cout << cell.diff(prev);
+//        std::cout << prev.x << "," << prev.y << ";" << cell.x << "," << cell.y << ":" << cell.diff(prev) << std::endl;
         auto diff = cell.diff(prev);
         prev = cell;
         writeIntToString(diff, out);
         out += ",";
-        if (out.size() > 15'000) {
+        if (out.length() > 15'000) {
             break;
         }
     }

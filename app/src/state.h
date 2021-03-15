@@ -29,7 +29,7 @@ struct Cell {
 
     Cell(int a, int b) : x{a}, y{b} {}
 
-    int diff(const Cell &l) const noexcept {
+    [[nodiscard]] int diff(const Cell &l) const noexcept {
         int diff{0};
         int xl = l.x;
         int yl = l.y;
@@ -47,7 +47,6 @@ struct Cell {
         return diff;
     }
 };
-
 
 class State {
 private:
