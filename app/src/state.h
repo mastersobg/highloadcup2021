@@ -24,14 +24,41 @@ struct DelayedDigRequest {
             x_{x}, y_{y}, depth_{depth} {}
 };
 
+struct Cell {
+    int x, y;
+
+    Cell(int a, int b) : x{a}, y{b} {}
+
+    int diff(const Cell &l) const noexcept {
+        int diff{0};
+        int xl = l.x;
+        int yl = l.y;
+        while (true) {
+            if (xl == x && yl == y) {
+                break;
+            }
+            ++diff;
+            yl++;
+            if (yl == kFieldMaxY) {
+                yl = 0;
+                xl++;
+            }
+        }
+        return diff;
+    }
+};
+
+
 class State {
 private:
+    int lastX_{0}, lastY_{0};
     std::array<License, kMaxLicensesCount> licenses_{};
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
     std::list<DelayedDigRequest> digRequests_;
     std::vector<ExploreAreaPtr> exploreQueue_{};
     ExploreAreaPtr root_{nullptr};
+    std::vector<Cell> cellsWithTreasuries_;
 
     void removeFromExploreQueue(size_t pos) noexcept {
         exploreQueue_[pos] = std::move(exploreQueue_.back());
@@ -50,8 +77,30 @@ public:
     State &operator=(State &&s) = delete;
 
     ~State() {
+        if (root_ == nullptr) {
+            return;
+        }
         cleanExploreAreaPtrs(root_);
         root_ = nullptr;
+    }
+
+    std::pair<int, int> getNextCoords() noexcept {
+        int x = lastX_;
+        int y = lastY_;
+        ++lastY_;
+        if (lastY_ == kFieldMaxY) {
+            lastY_ = 0;
+            lastX_++;
+        }
+        return {x, y};
+    }
+
+    std::vector<Cell> &getCellsWithTreasuries() noexcept {
+        return cellsWithTreasuries_;
+    }
+
+    void addCellWithTreasury(int x, int y) noexcept {
+        cellsWithTreasuries_.push_back({x, y});
     }
 
     void cleanExploreAreaPtrs(const ExploreAreaPtr &node) {

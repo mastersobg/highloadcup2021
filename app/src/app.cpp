@@ -7,6 +7,8 @@
 #include <memory>
 #include <limits>
 #include <cassert>
+#include <iostream>
+#include <sstream>
 
 App app{};
 
@@ -19,7 +21,7 @@ void printBuildInfo() {
 #define COMMIT_HASH "unknown"
 #endif
 
-    infof("Build type: %s commit hash: %s", BUILD_TYPE, COMMIT_HASH);
+//    infof("Build type: %s commit hash: %s", BUILD_TYPE, COMMIT_HASH);
 }
 
 App &getApp() {
@@ -51,18 +53,22 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-        if (auto err = scheduleIssueLicense(); err.hasError()) {
-            return err;
-        }
-    }
-    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
-                                            kTreasuriesCount);
-    state_.setRootExploreArea(root);
-    createSubAreas(root);
+//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+//        if (auto err = scheduleIssueLicense(); err.hasError()) {
+//            return err;
+//        }
+//    }
+//    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
+//                                            kTreasuriesCount);
+//    state_.setRootExploreArea(root);
+//    createSubAreas(root);
 
     for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
-        if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
+        auto[x, y] = state_.getNextCoords();
+        auto root = ExploreArea::NewExploreArea(nullptr, Area(static_cast<int16_t>(x), static_cast<int16_t>(y), 1, 1),
+                                                0,
+                                                kTreasuriesCount);
+        if (auto err = api_.scheduleExplore(root); err.hasError()) {
             return err;
         }
     }
@@ -87,7 +93,7 @@ void App::run() noexcept {
         getStats().addProcessResponseTime(tm.getInt64());
         if (err.hasError()) {
             if (err.error() != ErrorCode::kErrCurlTimeout) {
-                errorf("error occurred: %d", err.error());
+//                errorf("error occurred: %d", err.error());
                 break;
             } else {
                 if (auto errInner = api_.scheduleRequest(std::move(response.getRequest())); errInner.hasError()) {
@@ -102,6 +108,19 @@ void App::run() noexcept {
         getStats().recordCoinsAmount(state_.getCoinsAmount());
     }
 
+    const auto &v = state_.getCellsWithTreasuries();
+    Cell prev(0, 0);
+    std::string out;
+    for (const auto &cell : v) {
+        auto diff = cell.diff(prev);
+        prev = cell;
+        writeIntToString(diff, out);
+        out += ",";
+        if (out.size() > 15'000) {
+            break;
+        }
+    }
+    std::cout << out;
 }
 
 ExpectedVoid App::processResponse(Response &resp) noexcept {
@@ -161,10 +180,10 @@ App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt
     getStats().incExploredArea(exploreArea->area_.getArea());
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
-    exploreArea->parent_->updateChildExplored(exploreArea);
-    if (exploreArea->parent_->getLeftTreasuriesCnt() == 0) {
-        state_.removeExploreAreaFromQueue(exploreArea->parent_);
-    }
+//    exploreArea->parent_->updateChildExplored(exploreArea);
+//    if (exploreArea->parent_->getLeftTreasuriesCnt() == 0) {
+//        state_.removeExploreAreaFromQueue(exploreArea->parent_);
+//    }
 
     if (exploreArea->actualTreasuriesCnt_ > 0 && exploreArea->area_.getArea() == 1) {
         getStats().recordTreasuriesCnt((int) exploreArea->actualTreasuriesCnt_);
@@ -177,9 +196,9 @@ App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt
         }
     }
 
-    if (exploreArea->area_.getArea() > 1 && exploreArea->actualTreasuriesCnt_ > 0) {
-        createSubAreas(exploreArea);
-    }
+//    if (exploreArea->area_.getArea() > 1 && exploreArea->actualTreasuriesCnt_ > 0) {
+//        createSubAreas(exploreArea);
+//    }
 
     return NoErr;
 }
@@ -195,19 +214,24 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
         return err.error();
     }
 
-    if (exploreArea->parent_->getNonExploredChildrenCnt() == 1) {
-        auto child = exploreArea->parent_->getLastNonExploredChild();
-        if (auto err = processExploredArea(child, exploreArea->parent_->getLeftTreasuriesCnt()); err.hasError()) {
-            return err.error();
-        }
-        state_.removeExploreAreaFromQueue(exploreArea->parent_);
-    }
+//    if (exploreArea->parent_->getNonExploredChildrenCnt() == 1) {
+//        auto child = exploreArea->parent_->getLastNonExploredChild();
+//        if (auto err = processExploredArea(child, exploreArea->parent_->getLeftTreasuriesCnt()); err.hasError()) {
+//            return err.error();
+//        }
+//        state_.removeExploreAreaFromQueue(exploreArea->parent_);
+//    }
 
-#ifdef _HLC_DEBUG
-    assert(state_.hasMoreExploreAreas());
-#endif
+//#ifdef _HLC_DEBUG
+//    assert(state_.hasMoreExploreAreas());
+//#endif
 
-    return api_.scheduleExplore(state_.fetchNextExploreArea());
+
+    auto[x, y] = state_.getNextCoords();
+    auto root = ExploreArea::NewExploreArea(nullptr, Area(static_cast<int16_t>(x), static_cast<int16_t>(y), 1, 1),
+                                            0,
+                                            kTreasuriesCount);
+    return api_.scheduleExplore(root);
 }
 
 ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, HttpResponse<License> &resp) noexcept {
@@ -319,17 +343,19 @@ ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) no
     return NoErr;
 }
 
-ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcept {
-    if (state_.hasAvailableLicense()) {
-        auto licenseId = state_.reserveAvailableLicenseId();
-        if (licenseId.hasError()) {
-            return licenseId.error();
-        }
-        return api_.scheduleDig({licenseId.get(), x, y, depth});
-    } else {
-        state_.addDigRequest({x, y, depth});
-        return NoErr;
-    }
+ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, [[maybe_unused]]int8_t depth) noexcept {
+    state_.addCellWithTreasury(x, y);
+    return NoErr;
+//    if (state_.hasAvailableLicense()) {
+//        auto licenseId = state_.reserveAvailableLicenseId();
+//        if (licenseId.hasError()) {
+//            return licenseId.error();
+//        }
+//        return api_.scheduleDig({licenseId.get(), x, y, depth});
+//    } else {
+//        state_.addDigRequest({x, y, depth});
+//        return NoErr;
+//    }
 }
 
 void App::createSubAreas(const ExploreAreaPtr &root) noexcept {

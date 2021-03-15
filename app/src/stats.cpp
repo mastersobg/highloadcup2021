@@ -7,7 +7,7 @@
 #include "sys.h"
 #include <numeric>
 
-constexpr int64_t statsSleepDelayMs = 5000;
+constexpr int64_t statsSleepDelayMs = 500;
 
 void Stats::print() noexcept {
     auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -178,7 +178,7 @@ void statsPrintLoop() {
     for (;;) {
         std::this_thread::sleep_for(std::chrono::milliseconds(statsSleepDelayMs));
 
-        getApp().getStats().print();
+//        getApp().getStats().print();
 
         if (getApp().isStopped()) {
             break;
