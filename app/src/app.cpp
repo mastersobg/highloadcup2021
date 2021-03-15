@@ -115,7 +115,8 @@ void App::run() noexcept {
         getStats().recordCoinsAmount(state_.getCoinsAmount());
     }
 
-    const auto &v = state_.getCellsWithTreasuries();
+    auto &v = state_.getCellsWithTreasuries();
+    std::sort(v.begin(), v.end());
     Cell prev(0, 0);
     std::string out;
     for (const auto &cell : v) {

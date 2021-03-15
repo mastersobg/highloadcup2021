@@ -48,6 +48,13 @@ struct Cell {
     }
 };
 
+inline bool operator<(const Cell &l, const Cell &r) {
+    if (l.x != r.x) {
+        return l.x < r.x;
+    }
+    return l.y < r.y;
+}
+
 class State {
 private:
     int lastX_{0}, lastY_{0};
@@ -99,7 +106,7 @@ public:
     }
 
     void addCellWithTreasury(int x, int y) noexcept {
-        cellsWithTreasuries_.push_back({x, y});
+        cellsWithTreasuries_.emplace_back(x, y);
     }
 
     void cleanExploreAreaPtrs(const ExploreAreaPtr &node) {
