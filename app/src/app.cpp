@@ -7,6 +7,9 @@
 #include <memory>
 #include <limits>
 #include <cassert>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 App app{};
 
@@ -66,6 +69,52 @@ ExpectedVoid App::fireInitRequests() noexcept {
             return err;
         }
     }
+
+    std::ifstream file("coords.txt");
+    std::string line;
+    int cnt{0};
+    while (std::getline(file, line)) {
+        std::stringstream coords(line);
+        std::string value{0};
+        std::vector<int> values;
+        while (std::getline(coords, value, ',')) {
+            values.push_back(std::stoi(value));
+        }
+
+        int x = values[0];
+        int y = values[1];
+        getStats().recordTreasuriesCnt(1);
+        ++cnt;
+        state_.setLeftTreasuriesAmount(static_cast<int16_t>(x), static_cast<int16_t>(y), 1);
+        if (auto err = scheduleDigRequest(static_cast<int16_t>(x), static_cast<int16_t>(y), 1); err.hasError()) {
+            return err;
+        }
+
+        for (size_t i = 2; i < values.size() - 2; i++) {
+            if (values[i] == 0) {
+                continue;
+            }
+            for (int j = 0; j < values[i]; j++) {
+                y++;
+                if (y == kFieldMaxY) {
+                    y = 0;
+                    x++;
+                }
+            }
+            getStats().recordTreasuriesCnt(1);
+            state_.setLeftTreasuriesAmount(static_cast<int16_t>(x), static_cast<int16_t>(y), 1);
+            if (auto err = scheduleDigRequest(static_cast<int16_t>(x), static_cast<int16_t>(y),
+                                              1); err.hasError()) {
+                return err;
+            }
+        }
+
+        assert(x == values[values.size() - 2]);
+        assert(y == values[values.size() - 1]);
+    }
+
+    file.close();
+
     return NoErr;
 }
 

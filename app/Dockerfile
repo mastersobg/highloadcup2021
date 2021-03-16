@@ -34,6 +34,7 @@ COPY --from=build /app/highloadcup2021 .
 COPY server-runner.sh .
 COPY server-profile.sh .
 COPY server-dump.sh .
+COPY coords.txt .
 RUN echo "set pagination off" > ~/.gdbinit
 
 ARG build_type
