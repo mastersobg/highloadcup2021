@@ -117,8 +117,12 @@ void App::run() noexcept {
 
     auto &v = state_.getCellsWithTreasuries();
     std::sort(v.begin(), v.end());
-    Cell prev(0, 0);
+    Cell prev(initX, initY);
     std::string out;
+    writeIntToString(prev.x, out);
+    out += ";";
+    writeIntToString(prev.y, out);
+    out += ";";
     for (const auto &cell : v) {
 //        std::cout << cell.diff(prev);
 //        std::cout << prev.x << "," << prev.y << ";" << cell.x << "," << cell.y << ":" << cell.diff(prev) << std::endl;
@@ -126,10 +130,13 @@ void App::run() noexcept {
         prev = cell;
         writeIntToString(diff, out);
         out += ",";
-        if (out.length() > 15'000) {
+        if (out.length() > 15'330) {
             break;
         }
     }
+    writeIntToString(prev.x, out);
+    out += ";";
+    writeIntToString(prev.y, out);
     std::cout << out << std::endl;
 }
 

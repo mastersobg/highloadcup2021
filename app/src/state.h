@@ -55,9 +55,12 @@ inline bool operator<(const Cell &l, const Cell &r) {
     return l.y < r.y;
 }
 
+constexpr int initX{0};
+constexpr int initY{0};
+
 class State {
 private:
-    int lastX_{0}, lastY_{0};
+    int lastX_{initX}, lastY_{initY};
     std::array<License, kMaxLicensesCount> licenses_{};
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
