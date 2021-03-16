@@ -64,11 +64,11 @@ ExpectedVoid App::fireInitRequests() noexcept {
     state_.setRootExploreArea(root);
     createSubAreas(root);
 
-    for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
-        if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
-            return err;
-        }
-    }
+//    for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
+//        if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
+//            return err;
+//        }
+//    }
 
     std::ifstream file("coords.txt");
     std::string line;
