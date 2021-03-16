@@ -130,7 +130,7 @@ void App::run() noexcept {
         prev = cell;
         writeIntToString(diff, out);
         out += ",";
-        if (out.length() > 15'330) {
+        if (out.length() > 14'990) {
             break;
         }
     }
