@@ -34,6 +34,7 @@ private:
     std::atomic<int32_t> timeoutCnt_{0};
     std::atomic<int64_t> totalProcessResponseTime_{0};
     std::atomic<int64_t> totalProcessExploreResponseTime_{0};
+    std::atomic<int32_t> emptyCells_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -129,6 +130,10 @@ public:
     void recordInFlightExploreRequests(int64_t cnt) noexcept {
         inFlightExploreRequestsCnt_++;
         inFlightExploreRequestsSum_ += cnt;
+    }
+
+    void incEmptyCells() noexcept {
+        emptyCells_++;
     }
 
     void incIssuedLicenses() noexcept {
