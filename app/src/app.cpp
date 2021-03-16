@@ -108,6 +108,7 @@ ExpectedVoid App::fireInitRequests() noexcept {
                 }
             }
 
+            pair = std::make_pair(x, y);
             if (cells.count(pair) == 0) {
                 cells.insert(pair);
                 getStats().recordTreasuriesCnt(1);
@@ -379,6 +380,7 @@ ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) no
 }
 
 ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcept {
+//    debugf("schedule: %d %d", x, y);
     if (state_.hasAvailableLicense()) {
         auto licenseId = state_.reserveAvailableLicenseId();
         if (licenseId.hasError()) {
