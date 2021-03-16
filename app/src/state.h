@@ -55,8 +55,8 @@ inline bool operator<(const Cell &l, const Cell &r) {
     return l.y < r.y;
 }
 
-constexpr int initX{241};
-constexpr int initY{353};
+constexpr int initX{281};
+constexpr int initY{1234};
 
 class State {
 private:
