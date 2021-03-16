@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <set>
 
 App app{};
 
@@ -73,6 +74,7 @@ ExpectedVoid App::fireInitRequests() noexcept {
     std::ifstream file("coords.txt");
     std::string line;
     int cnt{0};
+    std::set<std::pair<int, int>> cells;
     while (std::getline(file, line)) {
         std::stringstream coords(line);
         std::string value{0};
@@ -83,11 +85,15 @@ ExpectedVoid App::fireInitRequests() noexcept {
 
         int x = values[0];
         int y = values[1];
-        getStats().recordTreasuriesCnt(1);
-        ++cnt;
-        state_.setLeftTreasuriesAmount(static_cast<int16_t>(x), static_cast<int16_t>(y), 1);
-        if (auto err = scheduleDigRequest(static_cast<int16_t>(x), static_cast<int16_t>(y), 1); err.hasError()) {
-            return err;
+        auto pair = std::make_pair(x, y);
+        if (cells.count(pair) == 0) {
+            cells.insert(pair);
+            getStats().recordTreasuriesCnt(1);
+            ++cnt;
+            state_.setLeftTreasuriesAmount(static_cast<int16_t>(x), static_cast<int16_t>(y), 1);
+            if (auto err = scheduleDigRequest(static_cast<int16_t>(x), static_cast<int16_t>(y), 1); err.hasError()) {
+                return err;
+            }
         }
 
         for (size_t i = 2; i < values.size() - 2; i++) {
@@ -101,11 +107,15 @@ ExpectedVoid App::fireInitRequests() noexcept {
                     x++;
                 }
             }
-            getStats().recordTreasuriesCnt(1);
-            state_.setLeftTreasuriesAmount(static_cast<int16_t>(x), static_cast<int16_t>(y), 1);
-            if (auto err = scheduleDigRequest(static_cast<int16_t>(x), static_cast<int16_t>(y),
-                                              1); err.hasError()) {
-                return err;
+
+            if (cells.count(pair) == 0) {
+                cells.insert(pair);
+                getStats().recordTreasuriesCnt(1);
+                state_.setLeftTreasuriesAmount(static_cast<int16_t>(x), static_cast<int16_t>(y), 1);
+                if (auto err = scheduleDigRequest(static_cast<int16_t>(x), static_cast<int16_t>(y),
+                                                  1); err.hasError()) {
+                    return err;
+                }
             }
         }
 
