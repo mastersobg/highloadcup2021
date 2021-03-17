@@ -11,19 +11,19 @@ Api::Api(size_t threadsCount, std::string address) : address_{std::move(address)
         std::thread t(&Api::threadLoop, this, ApiEndpointType::Cash);
         threads_.push_back(std::move(t));
     }
-
-    {
-        std::thread t(&Api::threadLoop, this, ApiEndpointType::IssueFreeLicense);
-        threads_.push_back(std::move(t));
-    }
-    {
-        std::thread t(&Api::threadLoop, this, ApiEndpointType::IssuePaidLicense);
-        threads_.push_back(std::move(t));
-    }
-
     for (size_t i = 0; i < threadsCount; i++) {
-        std::thread t(&Api::threadLoop, this, ApiEndpointType::Dig);
-        threads_.push_back(std::move(t));
+        {
+            std::thread t(&Api::threadLoop, this, ApiEndpointType::Dig);
+            threads_.push_back(std::move(t));
+        }
+        {
+            std::thread t(&Api::threadLoop, this, ApiEndpointType::IssueFreeLicense);
+            threads_.push_back(std::move(t));
+        }
+        {
+            std::thread t(&Api::threadLoop, this, ApiEndpointType::IssuePaidLicense);
+            threads_.push_back(std::move(t));
+        }
     }
 }
 
