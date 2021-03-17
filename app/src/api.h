@@ -213,7 +213,7 @@ private:
 
     std::string address_;
 
-    void threadLoop();
+    void threadLoop(ApiEndpointType type);
 
     Expected<Response> makeApiRequest(HttpClient &client, Request &r) noexcept;
 
