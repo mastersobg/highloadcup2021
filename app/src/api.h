@@ -118,7 +118,13 @@ public:
     }
 
     bool operator<(const Request &r2) const {
-        return priority > r2.priority;
+        if (priority != r2.priority) {
+            return priority > r2.priority;
+        }
+        if (type_ == r2.type_ && type_ == ApiEndpointType::Cash) {
+            return getCashRequest().depth_ > r2.getCashRequest().depth_;
+        }
+        return false;
     }
 
 };
