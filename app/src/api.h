@@ -225,7 +225,7 @@ private:
 
     std::string address_;
 
-    void threadLoop(ApiEndpointType type);
+    void threadLoop();
 
     Expected<Response> makeApiRequest(HttpClient &client, Request &r) noexcept;
 
