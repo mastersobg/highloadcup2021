@@ -54,6 +54,7 @@ void Api::threadLoop(ApiEndpointType type) {
                 getApp().getRateLimiter().acquire(r.getCost());
 
                 inFlightRequestsCnt_++;
+                r.setRequestStartTime(std::chrono::steady_clock::now());
                 auto ret = makeApiRequest(client, r);
                 inFlightRequestsCnt_--;
                 if (ret.hasError()) {

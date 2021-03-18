@@ -16,6 +16,7 @@
 #include <atomic>
 #include "api_entities.h"
 #include <set>
+#include <chrono>
 
 enum class ApiEndpointType : int {
     CheckHealth = 0,
@@ -36,11 +37,13 @@ struct CashRequest {
 class Request {
     int8_t priority{0};
     int32_t cost_{1};
+    std::chrono::time_point<std::chrono::steady_clock> requestStartTime_{};
+    std::chrono::time_point<std::chrono::steady_clock> requestPublishTime_{};
 public:
     ApiEndpointType type_{0};
     std::variant<ExploreAreaPtr, CoinID, DigRequest, CashRequest> request_;
 
-    Request() = default;
+    Request() : requestPublishTime_{std::chrono::steady_clock::now()} {}
 
     Request(const Request &r) = delete;
 
@@ -54,6 +57,11 @@ public:
         return std::get<ExploreAreaPtr>(request_);
     }
 
+    [[nodiscard]] int64_t getRequestDelayMcs() const noexcept {
+        return std::chrono::duration_cast<std::chrono::microseconds>(
+                requestStartTime_ - requestPublishTime_).count();
+    }
+
     int32_t getCost() const noexcept {
         return cost_;
     }
@@ -64,6 +72,10 @@ public:
 
     DigRequest getDigRequest() const noexcept {
         return std::get<DigRequest>(request_);
+    }
+
+    void setRequestStartTime(std::chrono::time_point<std::chrono::steady_clock> t) noexcept {
+        requestStartTime_ = t;
     }
 
     [[nodiscard]] const CashRequest &getCashRequest() const noexcept {

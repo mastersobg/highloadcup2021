@@ -18,6 +18,18 @@ struct EndpointStats {
     std::vector<int64_t> durations;
 };
 
+struct CashDelayMoney {
+    int coinsCnt_;
+    int requestDelayMcs_;
+
+    CashDelayMoney(int coinsCnt, int requestDelayMcs) : coinsCnt_(coinsCnt),
+                                                        requestDelayMcs_(requestDelayMcs) {}
+
+    inline bool operator<(const CashDelayMoney &r) const noexcept {
+        return requestDelayMcs_ < r.requestDelayMcs_;
+    }
+};
+
 class Stats {
 private:
     std::atomic<int64_t> requestsCnt_{0};
@@ -56,6 +68,7 @@ private:
 
     std::shared_mutex depthCoinsHistogramMutex_;
     std::array<int64_t, 11> depthCoinsHistogram_{0,};
+    std::array<std::vector<CashDelayMoney>, 11> cashDelayMoney_;
 
     std::shared_mutex exploreAreaHistogramMutex_;
     std::array<int64_t, 10> exploreAreaHistogramCount_{0,};
@@ -151,10 +164,11 @@ public:
         depthHistogram_[(size_t) depth] += count;
     }
 
-    void recordCoinsDepth(int depth, int coinsCount) noexcept {
+    void recordCoinsDepth(int depth, int coinsCount, int64_t delayMcs) noexcept {
         std::scoped_lock lock(depthCoinsHistogramMutex_);
 
         depthCoinsHistogram_[(size_t) depth] += coinsCount;
+        cashDelayMoney_[(size_t) depth].emplace_back(coinsCount, delayMcs);
     }
 
     void recordEndpointStats(const std::string &endpoint, int32_t httpCode, int64_t durationMcs) noexcept;

@@ -376,7 +376,8 @@ ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) no
     auto successResp = std::move(resp).getResponse();
     state_.addCoins(successResp);
     getStats().incCashedCoins((int64_t) successResp.coins.size());
-    getStats().recordCoinsDepth(r.getCashRequest().depth_, (int) successResp.coins.size());
+    getStats().recordCoinsDepth(r.getCashRequest().depth_, (int) successResp.coins.size(),
+                                r.getRequestDelayMcs());
     return NoErr;
 }
 

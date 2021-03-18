@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "sys.h"
 #include <numeric>
+#include <limits>
 
 constexpr int64_t statsSleepDelayMs = 5000;
 
@@ -49,7 +50,7 @@ void Stats::print() noexcept {
     printDepthHistogram();
     printCoinsDepthHistogram();
 //    printExploreAreaHistogram();
-    printCpuStat();
+//    printCpuStat();
 
     lastTickRequestsCnt_ = requestsCnt_.load();
 }
@@ -125,9 +126,58 @@ void Stats::printCoinsDepthHistogram() noexcept {
         logString += ", ";
 
         totalDigs += (int64_t) i * depthCoinsHistogram_[i];
+
+        std::sort(cashDelayMoney_[i].begin(), cashDelayMoney_[i].end());
+        constexpr int splitCnt{5};
+        if (cashDelayMoney_[i].size() >= splitCnt) {
+            int shift = (int) cashDelayMoney_[i].size() / (int) splitCnt;
+            if (cashDelayMoney_[i].size() % splitCnt != 0) {
+                ++shift;
+            }
+            std::string cashLatencyDistr;
+            cashLatencyDistr += "depth: ";
+            writeIntToString(static_cast<int64_t>(i), cashLatencyDistr);
+            cashLatencyDistr += ": ";
+            for (size_t j = 0; j < cashDelayMoney_[i].size(); j += (size_t) shift) {
+                int max = std::numeric_limits<int>::min();
+                int min = std::numeric_limits<int>::max();
+                int avg{0};
+                int total{0};
+                int firstLatency{-1};
+                int lastLatency{0};
+                for (size_t k = j; k < j + (size_t) shift && k < cashDelayMoney_[i].size(); k++) {
+                    if (firstLatency == -1) {
+                        firstLatency = cashDelayMoney_[i][k].requestDelayMcs_;
+                    }
+                    lastLatency = cashDelayMoney_[i][k].requestDelayMcs_;
+                    if (cashDelayMoney_[i][k].coinsCnt_ > max) {
+                        max = cashDelayMoney_[i][k].coinsCnt_;
+                    }
+                    if (cashDelayMoney_[i][k].coinsCnt_ < min) {
+                        min = cashDelayMoney_[i][k].coinsCnt_;
+                    }
+                    avg += cashDelayMoney_[i][k].coinsCnt_;
+                    total++;
+                }
+
+                writeIntToString(firstLatency, cashLatencyDistr);
+                cashLatencyDistr += "-";
+                writeIntToString(lastLatency, cashLatencyDistr);
+                cashLatencyDistr += "mcs: [";
+                writeIntToString(min, cashLatencyDistr);
+                cashLatencyDistr += "/";
+                writeIntToString(max, cashLatencyDistr);
+                cashLatencyDistr += "/";
+                writeIntToString(avg / total, cashLatencyDistr);
+                cashLatencyDistr += "] ";
+            }
+            debugf("%s", cashLatencyDistr.c_str());
+        }
     }
 
-    infof("coin avg dig count: %f", (double) totalDigs / (double) cashedCoinsSum_.load());
+    if (cashedCoinsSum_.load() > 0) {
+        infof("coin avg dig count: %f", (double) totalDigs / (double) cashedCoinsSum_.load());
+    }
     infof("depth coins histogram: %s", logString.c_str());
 }
 
