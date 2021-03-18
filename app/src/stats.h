@@ -35,6 +35,7 @@ private:
     std::atomic<int64_t> totalProcessResponseTime_{0};
     std::atomic<int64_t> totalProcessExploreResponseTime_{0};
     std::atomic<int32_t> emptyCells_{0};
+    std::atomic<int64_t> diggedTreasuriesAmount_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -91,6 +92,10 @@ public:
 
     void incTimeoutCnt() noexcept {
         timeoutCnt_++;
+    }
+
+    void incDiggedTreasuriesAmount(int64_t amount) {
+        diggedTreasuriesAmount_ += amount;
     }
 
     void addProcessResponseTime(int64_t t) {

@@ -326,6 +326,7 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
         case 200: {
             auto treasuries = std::move(resp).getResponse();
             getStats().recordTreasureDepth(digRequest.depth_, (int) treasuries.size());
+            getStats().incDiggedTreasuriesAmount(static_cast<int64_t>(treasuries.size()));
             for (const auto &id : treasuries) {
                 if (state_.getCoinsAmount() > kCashSkipThreshold) {
                     getStats().incCashSkippedCnt();

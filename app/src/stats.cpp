@@ -29,6 +29,7 @@ void Stats::print() noexcept {
     infof("Timeouts: %d", timeoutCnt_.load());
     infof("Explored area: %lld", exploredArea_.load());
     infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
+    infof("Digged treasuries amount: %lld", diggedTreasuriesAmount_.load());
     infof("Empty cells: %d", emptyCells_.load());
     infof("Cash skipped: %lld", cashSkippedCnt_.load());
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
