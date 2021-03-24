@@ -8,26 +8,12 @@
 
 Api::Api(size_t threadsCount, std::string address) : address_{std::move(address)} {
     for (size_t i = 0; i < threadsCount; i++) {
-        {
-            std::thread t(&Api::threadLoop, this, ApiEndpointType::Cash);
-            threads_.push_back(std::move(t));
-        }
-        {
-            std::thread t(&Api::threadLoop, this, ApiEndpointType::Dig);
-            threads_.push_back(std::move(t));
-        }
-        {
-            std::thread t(&Api::threadLoop, this, ApiEndpointType::IssueFreeLicense);
-            threads_.push_back(std::move(t));
-        }
-        {
-            std::thread t(&Api::threadLoop, this, ApiEndpointType::IssuePaidLicense);
-            threads_.push_back(std::move(t));
-        }
+        std::thread t(&Api::threadLoop, this);
+        threads_.push_back(std::move(t));
     }
 }
 
-void Api::threadLoop(ApiEndpointType type) {
+void Api::threadLoop() {
     HttpClient client{address_, "8000", "http"};
     for (;;) {
         std::unique_lock lock(requestsMu_);
@@ -45,28 +31,22 @@ void Api::threadLoop(ApiEndpointType type) {
             continue;
         }
 
-        for (auto it = requests_.begin(); it != requests_.end(); it++) {
-            if (it->type_ == type) {
-                Request r = std::move(requests_.extract(it).value());
+        Request r = std::move(requests_.extract(requests_.begin()).value());
 
-                lock.unlock();
+        lock.unlock();
 
-                getApp().getRateLimiter().acquire(r.getCost());
+        getApp().getRateLimiter().acquire(r.getCost());
 
-                inFlightRequestsCnt_++;
-                r.setRequestStartTime(std::chrono::steady_clock::now());
-                auto ret = makeApiRequest(client, r);
-                inFlightRequestsCnt_--;
-                if (ret.hasError()) {
-                    errorf("Error during making API request: %d", ret.error());
-                    throw std::runtime_error("Error during making API request");
-                }
-
-                publishResponse(std::move(ret).get());
-
-                break;
-            }
+        inFlightRequestsCnt_++;
+        r.setRequestStartTime(std::chrono::steady_clock::now());
+        auto ret = makeApiRequest(client, r);
+        inFlightRequestsCnt_--;
+        if (ret.hasError()) {
+            errorf("Error during making API request: %d", ret.error());
+            throw std::runtime_error("Error during making API request");
         }
+
+        publishResponse(std::move(ret).get());
     }
 }
 
@@ -172,7 +152,7 @@ ExpectedVoid Api::scheduleRequest(Request r) noexcept {
     requests_.insert(std::move(r));
 
     lock.unlock();
-    requestCondVar_.notify_all();
+    requestCondVar_.notify_one();
     return NoErr;
 }
 
