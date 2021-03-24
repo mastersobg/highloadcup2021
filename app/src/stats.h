@@ -48,6 +48,7 @@ private:
     std::atomic<int64_t> totalProcessExploreResponseTime_{0};
     std::atomic<int32_t> emptyCells_{0};
     std::atomic<int64_t> diggedTreasuriesAmount_{0};
+    std::atomic<int64_t> maxTickRps_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};

@@ -21,10 +21,14 @@ void Stats::print() noexcept {
         rps = requestsCnt_.load() * 1000L / timeElapsedMs;
     }
     int64_t tickRPS = (requestsCnt_.load() - lastTickRequestsCnt_.load()) * 1000L / statsSleepDelayMs;
+    if (tickRPS > maxTickRps_) {
+        maxTickRps_ = tickRPS;
+    }
 
     infof("Requests count: %lld", requestsCnt_.load());
     infof("RPS: %lld", rps);
     infof("Tick RPS: %lld", tickRPS);
+    infof("Max tick RPS: %lld", maxTickRps_.load());
     infof("Curl errs: %lld", curlErrCnt_.load());
     infof("Time elapsed: %lld ms", timeElapsedMs);
     infof("Timeouts: %d", timeoutCnt_.load());
