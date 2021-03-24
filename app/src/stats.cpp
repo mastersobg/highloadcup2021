@@ -29,6 +29,7 @@ void Stats::print() noexcept {
     infof("RPS: %lld", rps);
     infof("Tick RPS: %lld", tickRPS);
     infof("Max tick RPS: %lld", maxTickRps_.load());
+    infof("Throttling: %lld", throttling_.load());
     infof("Curl errs: %lld", curlErrCnt_.load());
     infof("Time elapsed: %lld ms", timeElapsedMs);
     infof("Timeouts: %d", timeoutCnt_.load());

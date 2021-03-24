@@ -1,6 +1,7 @@
 #include "rate_limiter.h"
 #include "log.h"
 #include <thread>
+#include "app.h"
 
 
 const std::chrono::seconds Second(1);
@@ -27,6 +28,7 @@ void RateLimiter::acquire(int32_t cost) {
             sum += request.cost_;
             if (totalCost_ - sum + cost <= maxRps_) {
                 auto d = request.ts_ + Second - now;
+                getApp().getStats().incThrottling();
                 std::this_thread::sleep_for(d);
                 break;
             }
