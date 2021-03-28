@@ -40,6 +40,6 @@ constexpr size_t kMaxLicensesCount = 10;
 
 constexpr size_t kExploreConcurrentRequestsCnt{2};
 
-constexpr int kCashSkipThreshold = 690'000'00;
+constexpr int kCashSkipThreshold = 690'000'000;
 
 #endif //HIGHLOADCUP2021_CONST_H
