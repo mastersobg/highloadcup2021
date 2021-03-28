@@ -16,6 +16,6 @@ git tag $tag
 git push
 git push origin --tags
 
-docker tag highloadcup-app stor.highloadcup.ru/rally/beaver_climber
-docker push stor.highloadcup.ru/rally/beaver_climber
+docker tag highloadcup-app stor.highloadcup.ru/rally/white_quetzal
+docker push stor.highloadcup.ru/rally/white_quetzal
 
