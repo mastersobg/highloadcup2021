@@ -58,14 +58,7 @@ void Stats::print() noexcept {
 void Stats::printRPSPerSecond() noexcept {
     std::scoped_lock lck{endpointStatsMutex_};
     std::string logStr{};
-    int64_t prevKey{0};
     for (const auto &[key, value] : rpsPerSecond_) {
-#if _HLC_DEBUG
-        if (key < prevKey) {
-            assert(false);
-        }
-#endif
-        prevKey = key;
         writeIntToString(value, logStr);
         logStr += ",";
     }
