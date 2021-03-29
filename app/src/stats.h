@@ -47,6 +47,7 @@ private:
 
     std::mutex endpointStatsMutex_;
     std::unordered_map<std::string, EndpointStats> endpointStatsMap_;
+    std::atomic<int64_t> totalRequestsDuration_{0};
 
     std::shared_mutex depthHistogramMutex_;
     std::array<int, 11> depthHistogram_{0,};
