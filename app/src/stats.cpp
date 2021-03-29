@@ -33,6 +33,7 @@ void Stats::print() noexcept {
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
     infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
           totalProcessExploreResponseTime_.load());
+    infof("Total requests duration: %lld", totalRequestsDuration_.load());
 //    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
 //    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
 //    infof("Average in flight requests: %f", (double) inFlightRequestsSum_ / (double) inFlightRequestsCnt_);
@@ -64,6 +65,7 @@ void Stats::recordEndpointStats(const std::string &endpoint, int32_t httpCode, i
     auto &stats = endpointStatsMap_[endpoint];
     stats.httpCodes[httpCode]++;
     stats.durations.push_back(durationMcs);
+    totalRequestsDuration_ += durationMcs;
 }
 
 void Stats::printEndpointsStats() noexcept {
