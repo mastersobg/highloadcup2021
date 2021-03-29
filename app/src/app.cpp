@@ -267,8 +267,10 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
             auto treasuries = std::move(resp).getResponse();
             getStats().recordTreasureDepth(digRequest.depth_, (int) treasuries.size());
             for (const auto &id : treasuries) {
-                if (auto err = api_.scheduleCash(id, digRequest.depth_); err.hasError()) {
-                    return err.error();
+                if (digRequest.depth_ >= minDepthToCash) {
+                    if (auto err = api_.scheduleCash(id, digRequest.depth_); err.hasError()) {
+                        return err.error();
+                    }
                 }
             }
 
