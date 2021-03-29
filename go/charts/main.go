@@ -49,22 +49,6 @@ func buildChart(url string, title string) (*charts.Line, error) {
 	if len(response.Data.Result) == 0 {
 		return nil, errors.New(fmt.Sprintf("%s:%s", url, string(data)))
 	}
-	var values []Value
-	for _, v := range response.Data.Result[0].Values {
-		ts := time.Unix((int64)(v[0].(float64)), 0)
-		val, err := strconv.ParseFloat(v[1].(string), 64)
-		if err != nil {
-			return nil, err
-		}
-		values = append(values, Value{
-			Timestamp: ts,
-			Value:     val,
-		})
-	}
-
-	sort.Slice(values, func(i, j int) bool {
-		return values[i].Timestamp.Unix() < values[j].Timestamp.Unix()
-	})
 
 	line := charts.NewLine()
 	line.SetGlobalOptions(
@@ -74,20 +58,38 @@ func buildChart(url string, title string) (*charts.Line, error) {
 		charts.WithLegendOpts(opts.Legend{Show: true}),
 		charts.WithTooltipOpts(opts.Tooltip{Show: true}),
 	)
-
-	var xAxis []string
-	var yAxis []opts.LineData
-	for i, v := range values {
-		xAxis = append(xAxis, v.Timestamp.Format("15:04:05"))
-		if i == 0 {
-			yAxis = append(yAxis, opts.LineData{Value: v.Value})
-		} else {
-			yAxis = append(yAxis, opts.LineData{Value: v.Value - values[i-1].Value})
+	for _, result := range response.Data.Result {
+		var values []Value
+		for _, v := range result.Values {
+			ts := time.Unix((int64)(v[0].(float64)), 0)
+			val, err := strconv.ParseFloat(v[1].(string), 64)
+			if err != nil {
+				return nil, err
+			}
+			values = append(values, Value{
+				Timestamp: ts,
+				Value:     val,
+			})
 		}
+
+		sort.Slice(values, func(i, j int) bool {
+			return values[i].Timestamp.Unix() < values[j].Timestamp.Unix()
+		})
+
+		var xAxis []string
+		var yAxis []opts.LineData
+		for i, v := range values {
+			xAxis = append(xAxis, v.Timestamp.Format("15:04:05"))
+			if i == 0 {
+				yAxis = append(yAxis, opts.LineData{Value: v.Value})
+			} else {
+				yAxis = append(yAxis, opts.LineData{Value: v.Value - values[i-1].Value})
+			}
+		}
+
+		line.SetXAxis(xAxis).AddSeries(fmt.Sprintf("Failed=%v", result.Metric.Failed), yAxis)
 	}
-	// Put data into instance
-	line.SetXAxis(xAxis).
-		AddSeries(title, yAxis)
+
 	return line, nil
 }
 func httpserver(w http.ResponseWriter, r *http.Request) {
@@ -186,7 +188,12 @@ type Data struct {
 }
 
 type Result struct {
+	Metric Metric          `json:"metric"`
 	Values [][]interface{} `json:"values"`
+}
+
+type Metric struct {
+	Failed string `json:"failed"`
 }
 
 type Value struct {
