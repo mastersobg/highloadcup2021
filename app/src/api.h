@@ -73,6 +73,7 @@ public:
     static Request NewCheckHealthRequest() noexcept {
         Request r{};
         r.priority = 0;
+        r.cost_ = 1;
         r.type_ = ApiEndpointType::CheckHealth;
         return r;
     }
@@ -80,6 +81,7 @@ public:
     static Request NewExploreRequest(ExploreAreaPtr area) noexcept {
         Request r{};
         r.priority = 1;
+        r.cost_ = 4;
         r.type_ = ApiEndpointType::Explore;
         r.request_ = area;
         return r;
@@ -88,6 +90,7 @@ public:
     static Request NewIssuePaidLicenseRequest(CoinID coinId) noexcept {
         Request r{};
         r.priority = 3;
+        r.cost_ = 60;
         r.type_ = ApiEndpointType::IssuePaidLicense;
         r.request_ = coinId;
         return r;
@@ -96,6 +99,7 @@ public:
     static Request NewDigRequest(DigRequest digRequest) noexcept {
         Request r{};
         r.priority = 2;
+        r.cost_ = 2;
         r.type_ = ApiEndpointType::Dig;
         r.request_ = digRequest;
         return r;
@@ -104,6 +108,7 @@ public:
     static Request NewCashRequest(TreasureID id, int8_t depth) noexcept {
         Request r{};
         r.priority = 4;
+        r.cost_ = 9;
         r.type_ = ApiEndpointType::Cash;
         r.request_ = CashRequest(std::move(id), depth);
         return r;
@@ -113,6 +118,7 @@ public:
     static Request NewIssueFreeLicenseRequest() noexcept {
         Request r{};
         r.priority = 3;
+        r.cost_ = 60;
         r.type_ = ApiEndpointType::IssueFreeLicense;
         return r;
     }
