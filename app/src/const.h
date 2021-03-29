@@ -40,6 +40,6 @@ constexpr size_t kMaxLicensesCount = 10;
 
 constexpr size_t kExploreConcurrentRequestsCnt{2};
 
-constexpr int minDepthToCash{5};
+constexpr int minDepthToCash{6};
 
 #endif //HIGHLOADCUP2021_CONST_H
