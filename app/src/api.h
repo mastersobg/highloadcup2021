@@ -79,7 +79,7 @@ public:
 
     static Request NewExploreRequest(ExploreAreaPtr area) noexcept {
         Request r{};
-        r.priority = 1;
+        r.priority = 100;
         r.type_ = ApiEndpointType::Explore;
         r.request_ = area;
         return r;
