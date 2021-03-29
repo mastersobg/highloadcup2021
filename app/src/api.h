@@ -35,7 +35,7 @@ struct CashRequest {
 
 class Request {
     int8_t priority{0};
-    int32_t cost_{1};
+    int32_t cost_{100};
 public:
     ApiEndpointType type_{0};
     std::variant<ExploreAreaPtr, CoinID, DigRequest, CashRequest> request_;
