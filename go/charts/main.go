@@ -26,7 +26,7 @@ func generateLineItems() []opts.LineData {
 }
 
 func createGrafanaQuery(metricType, sessionId, resource, from, to string) string {
-	return fmt.Sprintf(`https://grafana.cups.online/api/datasources/proxy/1/api/v1/query_range?query=%s%%7BtankId%%3D%%22%s%%22%%2C%%20resource%%3D%%22%s%%22%%7D&start=%v&end=%s&step=15`,
+	return fmt.Sprintf(`https://grafana.cups.online/api/datasources/proxy/1/api/v1/query_range?query=%s%%7BtankId%%3D%%22%s%%22%%2C%%20resource%%3D%%22%s%%22%%7D&start=%v&end=%s&step=10`,
 		metricType, sessionId,
 		resource, from[:len(from)-3], to[:len(to)-3],
 	)
