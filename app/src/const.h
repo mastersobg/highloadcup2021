@@ -14,7 +14,7 @@ constexpr size_t kJsonParseBufferSize = kJsonParseBufferCap * kJsonBufferTypeSiz
 
 constexpr size_t kMaxApiRequestsQueueSize = 10'000'000;
 
-constexpr size_t kApiThreadCount = 5;
+constexpr size_t kApiThreadCount = 10;
 constexpr int64_t kMaxRPS = 1'000;
 
 constexpr size_t kFieldMaxX = 3'500;
@@ -38,6 +38,6 @@ constexpr long kRequestTimeout = 1000;
 
 constexpr size_t kMaxLicensesCount = 10;
 
-constexpr size_t kExploreConcurrentRequestsCnt{5};
+constexpr size_t kExploreConcurrentRequestsCnt{2};
 
 #endif //HIGHLOADCUP2021_CONST_H
