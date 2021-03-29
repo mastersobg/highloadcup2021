@@ -6,7 +6,7 @@
 const std::chrono::seconds Second(1);
 const std::chrono::microseconds lastRequestDelay(50000);
 const std::chrono::microseconds minLastRequestDelaySleep(500);
-const std::chrono::milliseconds sleepMs(100);
+const std::chrono::milliseconds sleepMs(10);
 
 RateLimiter::RateLimiter(int32_t rps) : maxRps_{rps}, totalCost_{0} {}
 
