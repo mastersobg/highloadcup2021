@@ -32,8 +32,63 @@ func createGrafanaQuery(metricType, sessionId, resource, from, to string) string
 	)
 }
 
+func buildSecondsSumChart(responses []*Response) (*charts.Line, error) {
+
+	line := charts.NewLine()
+	line.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{
+			Title: "All sum seconds",
+		}),
+		charts.WithLegendOpts(opts.Legend{Show: true}),
+		charts.WithTooltipOpts(opts.Tooltip{Show: true}),
+	)
+
+	dataMap := make(map[time.Time]float64)
+	for _, r := range responses {
+		if r != nil && len(r.Data.Result) > 0 {
+			for it := range r.Data.Result {
+				result := r.Data.Result[it]
+				for i := range result.Values {
+					v := result.Values[i]
+					ts := time.Unix((int64)(v[0].(float64)), 0)
+					val, err := strconv.ParseFloat(v[1].(string), 64)
+					if err != nil {
+						return nil, err
+					}
+					dataMap[ts] += val
+				}
+			}
+		}
+	}
+	var values []Value
+	for k, v := range dataMap {
+		values = append(values, Value{
+			Timestamp: k,
+			Value:     v,
+		})
+	}
+
+	sort.Slice(values, func(i, j int) bool {
+		return values[i].Timestamp.Unix() < values[j].Timestamp.Unix()
+	})
+
+	var xAxis []string
+	var yAxis []opts.LineData
+	for i, v := range values {
+		xAxis = append(xAxis, v.Timestamp.Format("15:04:05"))
+		if i == 0 {
+			yAxis = append(yAxis, opts.LineData{Value: v.Value})
+		} else {
+			yAxis = append(yAxis, opts.LineData{Value: v.Value - values[i-1].Value})
+		}
+	}
+
+	line.SetXAxis(xAxis).AddSeries("Sum", yAxis)
+	return line, nil
+}
+
 func buildRequestLatencyChart(title string, count, seconds *Response) (*charts.Line, error) {
-	if len(count.Data.Result) == 0 {
+	if count == nil || len(count.Data.Result) == 0 {
 		return nil, errors.New("%s empty data")
 	}
 
@@ -250,6 +305,13 @@ func httpserver(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	} else {
 		page.AddCharts(cashLatencyChart)
+	}
+
+	totalSecondsSum, err := buildSecondsSumChart([]*Response{exploreSecondsResponse, digSecondsResponse, cashSecondsResponse, licencesSecondsResponse})
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		page.AddCharts(totalSecondsSum)
 	}
 
 	if err := page.Render(w); err != nil {
