@@ -34,7 +34,7 @@ constexpr std::array<ExploreAreaShift, 3> kExploreAreas = {
 
 constexpr size_t kTreasuriesCount = 490'000;
 
-constexpr long kRequestTimeout = 1000;
+constexpr long kRequestTimeout = 1'000'000;
 
 constexpr size_t kMaxLicensesCount = 10;
 

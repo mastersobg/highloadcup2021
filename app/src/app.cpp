@@ -51,21 +51,32 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-//        if (auto err = scheduleIssueLicense(); err.hasError()) {
-//            return err;
-//        }
-//    }
+    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+        if (auto err = scheduleIssueLicense(); err.hasError()) {
+            return err;
+        }
+    }
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
     createSubAreas(root);
 
-    for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
-        if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
-            return err;
+    auto x = 0, y = 0;
+    for (auto it = 0; it < 600'000; it++) {
+        if (auto err = scheduleDigRequest(static_cast<int16_t>(x), static_cast<int16_t>(y), 1); err.hasError()) {
+            return err.error();
         }
-    }
+        y++;
+        if (y == kFieldMaxY) {
+            y = 0;
+            x++;
+        }
+    };
+//    for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
+//        if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
+//            return err;
+//        }
+//    }
     return NoErr;
 }
 
@@ -264,23 +275,23 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
     }
     switch (resp.getHttpCode()) {
         case 200: {
-            auto treasuries = std::move(resp).getResponse();
-            getStats().recordTreasureDepth(digRequest.depth_, (int) treasuries.size());
-            for (const auto &id : treasuries) {
-                if (auto err = api_.scheduleCash(id, digRequest.depth_); err.hasError()) {
-                    return err.error();
-                }
-            }
-
-            auto leftCount = state_.getLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_);
-            state_.setLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_, leftCount - (int32_t) treasuries.size());
-            leftCount = state_.getLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_);
-            if (leftCount < 0) {
-                return ErrorCode::kTreasuriesLeftInconsistency;
-            }
-            if (leftCount > 0) {
-                return scheduleDigRequest(digRequest.posX_, digRequest.posY_, (int8_t) (digRequest.depth_ + 1));
-            }
+//            auto treasuries = std::move(resp).getResponse();
+//            getStats().recordTreasureDepth(digRequest.depth_, (int) treasuries.size());
+//            for (const auto &id : treasuries) {
+//                if (auto err = api_.scheduleCash(id, digRequest.depth_); err.hasError()) {
+//                    return err.error();
+//                }
+//            }
+//
+//            auto leftCount = state_.getLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_);
+//            state_.setLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_, leftCount - (int32_t) treasuries.size());
+//            leftCount = state_.getLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_);
+//            if (leftCount < 0) {
+//                return ErrorCode::kTreasuriesLeftInconsistency;
+//            }
+//            if (leftCount > 0) {
+            return scheduleDigRequest(digRequest.posX_, digRequest.posY_, (int8_t) (digRequest.depth_ + 1));
+//            }
 
             return NoErr;
         }
@@ -316,6 +327,9 @@ ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) no
 }
 
 ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcept {
+    if (depth > 10) {
+        return NoErr;
+    }
     if (state_.hasAvailableLicense()) {
         auto licenseId = state_.reserveAvailableLicenseId();
         if (licenseId.hasError()) {

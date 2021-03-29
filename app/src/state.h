@@ -106,6 +106,8 @@ public:
         for (auto &v : licenses_) {
             if (v.digAllowed_ - v.digUsed_ > 0) {
                 v.digUsed_++;
+//                debugf("reversed license: %d dig allowed: %d dig used: %d dig confirmed: %d", v.id_,
+//                       v.digAllowed_, v.digUsed_, v.digConfirmed_);
                 return v.id_;
             }
         }
