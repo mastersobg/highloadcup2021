@@ -34,6 +34,7 @@ private:
     std::atomic<int32_t> timeoutCnt_{0};
     std::atomic<int64_t> totalProcessResponseTime_{0};
     std::atomic<int64_t> totalProcessExploreResponseTime_{0};
+    std::map<int64_t, int64_t> rpsPerSecond_;
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -72,6 +73,8 @@ private:
     void printExploreAreaHistogram() noexcept;
 
     void printCpuStat() noexcept;
+
+    void printRPSPerSecond() noexcept;
 
 public:
 

@@ -49,8 +49,27 @@ void Stats::print() noexcept {
     printCoinsDepthHistogram();
 //    printExploreAreaHistogram();
     printCpuStat();
+    printRPSPerSecond();
+
 
     lastTickRequestsCnt_ = requestsCnt_.load();
+}
+
+void Stats::printRPSPerSecond() noexcept {
+    std::scoped_lock lck{endpointStatsMutex_};
+    std::string logStr{};
+    int64_t prevKey{0};
+    for (const auto &[key, value] : rpsPerSecond_) {
+#if _HLC_DEBUG
+        if (key < prevKey) {
+            assert(false);
+        }
+#endif
+        prevKey = key;
+        writeIntToString(value, logStr);
+        logStr += ",";
+    }
+    infof("rps: %s", logStr.c_str());
 }
 
 Stats::Stats() {
@@ -61,6 +80,10 @@ Stats::Stats() {
 
 void Stats::recordEndpointStats(const std::string &endpoint, int32_t httpCode, int64_t durationMcs) noexcept {
     std::scoped_lock lck{endpointStatsMutex_};
+
+    auto now = std::chrono::steady_clock::now();
+    auto second = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+    rpsPerSecond_[second]++;
 
     auto &stats = endpointStatsMap_[endpoint];
     stats.httpCodes[httpCode]++;
