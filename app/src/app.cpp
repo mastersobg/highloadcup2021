@@ -51,11 +51,11 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-//        if (auto err = scheduleIssueLicense(); err.hasError()) {
-//            return err;
-//        }
-//    }
+    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+        if (auto err = scheduleIssueLicense(); err.hasError()) {
+            return err;
+        }
+    }
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
@@ -266,11 +266,11 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
         case 200: {
             auto treasuries = std::move(resp).getResponse();
             getStats().recordTreasureDepth(digRequest.depth_, (int) treasuries.size());
-            for (const auto &id : treasuries) {
-                if (auto err = api_.scheduleCash(id, digRequest.depth_); err.hasError()) {
-                    return err.error();
-                }
-            }
+//            for (const auto &id : treasuries) {
+//                if (auto err = api_.scheduleCash(id, digRequest.depth_); err.hasError()) {
+//                    return err.error();
+//                }
+//            }
 
             auto leftCount = state_.getLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_);
             state_.setLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_, leftCount - (int32_t) treasuries.size());
@@ -279,13 +279,13 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
                 return ErrorCode::kTreasuriesLeftInconsistency;
             }
             if (leftCount > 0) {
-                return scheduleDigRequest(digRequest.posX_, digRequest.posY_, (int8_t) (digRequest.depth_ + 1));
+                return scheduleDigRequest(digRequest.posX_, digRequest.posY_, (int8_t)(digRequest.depth_ + 1));
             }
 
             return NoErr;
         }
         case 404: {
-            return scheduleDigRequest(digRequest.posX_, digRequest.posY_, (int8_t) (digRequest.depth_ + 1));
+            return scheduleDigRequest(digRequest.posX_, digRequest.posY_, (int8_t)(digRequest.depth_ + 1));
         }
         default: {
             auto httpCode = resp.getHttpCode();
