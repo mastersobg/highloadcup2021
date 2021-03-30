@@ -318,7 +318,7 @@ ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) no
 }
 
 ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcept {
-    if (depth > 9) {
+    if (depth > 8) {
         return NoErr;
     }
     if (state_.hasAvailableLicense()) {
