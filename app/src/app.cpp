@@ -51,11 +51,11 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-//        if (auto err = scheduleIssueLicense(); err.hasError()) {
-//            return err;
-//        }
-//    }
+    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+        if (auto err = scheduleIssueLicense(); err.hasError()) {
+            return err;
+        }
+    }
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
@@ -70,6 +70,8 @@ ExpectedVoid App::fireInitRequests() noexcept {
 }
 
 void App::run() noexcept {
+    auto startTime = std::chrono::steady_clock::now();
+    constexpr std::chrono::seconds kElapsedSeconds(360);
     if (auto err = fireInitRequests(); err.hasError()) {
         errorf("fireInitRequests: error: %d", err.error());
         return;
@@ -101,7 +103,9 @@ void App::run() noexcept {
         getStats().recordInUseLicenses(state_.getInUseLicensesCount());
         getStats().recordCoinsAmount(state_.getCoinsAmount());
 
-        if (!state_.hasQueuedDigRequests()) {
+
+        auto now = std::chrono::steady_clock::now();
+        if (now - startTime > kElapsedSeconds) {
             while (state_.hasQueuedCashRequests()) {
                 auto r = state_.getNextCashRequest();
                 if (auto err1 = api_.scheduleCash(r.treasureId_, r.depth_); err1.hasError()) {
@@ -217,17 +221,7 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     assert(state_.hasMoreExploreAreas());
 #endif
 
-    if (getStats().getExploredTreasuriesCnt() <= maxExploredTreasuriesCnt) {
-        return api_.scheduleExplore(state_.fetchNextExploreArea());
-    } else if (!state_.isLicensesRequested()) {
-        for (size_t i = 0; i < kMaxLicensesCount; i++) {
-            if (auto err = scheduleIssueLicense(); err.hasError()) {
-                return err.error();
-            }
-        }
-    }
-
-    return NoErr;
+    return api_.scheduleExplore(state_.fetchNextExploreArea());
 }
 
 ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, HttpResponse<License> &resp) noexcept {
