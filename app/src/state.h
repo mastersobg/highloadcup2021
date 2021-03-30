@@ -15,6 +15,7 @@
 #include <vector>
 #include "util.h"
 #include <cassert>
+#include <set>
 
 struct DelayedDigRequest {
     int16_t x_, y_;
@@ -22,6 +23,10 @@ struct DelayedDigRequest {
 
     DelayedDigRequest(int16_t x, int16_t y, int8_t depth) :
             x_{x}, y_{y}, depth_{depth} {}
+
+    bool operator<(const DelayedDigRequest &r2) const noexcept {
+        return depth_ > r2.depth_;
+    }
 };
 
 class State {
@@ -29,7 +34,7 @@ private:
     std::array<License, kMaxLicensesCount> licenses_{};
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
-    std::list<DelayedDigRequest> digRequests_;
+    std::multiset<DelayedDigRequest> digRequests_;
     std::vector<ExploreAreaPtr> exploreQueue_{};
     ExploreAreaPtr root_{nullptr};
 
@@ -169,7 +174,7 @@ public:
     }
 
     void addDigRequest(DelayedDigRequest r) noexcept {
-        digRequests_.push_back(r);
+        digRequests_.insert(r);
     }
 
     bool hasQueuedDigRequests() noexcept {
@@ -177,8 +182,14 @@ public:
     }
 
     DelayedDigRequest getNextDigRequest() noexcept {
-        auto r = digRequests_.front();
-        digRequests_.pop_front();
+        auto r = digRequests_.extract(digRequests_.begin()).value();
+#ifdef _HLC_DEBUG
+        for (const auto &it : digRequests_) {
+            if (it.depth_ > r.depth_) {
+                assert(false);
+            }
+        }
+#endif
         return r;
     }
 };
