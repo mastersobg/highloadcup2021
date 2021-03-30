@@ -42,6 +42,6 @@ constexpr size_t kExploreConcurrentRequestsCnt{2};
 
 constexpr int minDepthToCash{2};
 
-constexpr int64_t maxExploredTreasuriesCnt{25000};
+constexpr int64_t maxExploredTreasuriesCnt{30000};
 
 #endif //HIGHLOADCUP2021_CONST_H
