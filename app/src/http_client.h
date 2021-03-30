@@ -92,7 +92,7 @@ public:
 
     [[nodiscard]] Expected<HttpResponse<std::vector<TreasureID>>> dig(DigRequest request) noexcept;
 
-    [[nodiscard]] Expected<HttpResponse<License>> issueLicense(CoinID coinId) noexcept;
+    [[nodiscard]] Expected<HttpResponse<License>> issueLicense(const std::vector<CoinID> &coinIds) noexcept;
 
     [[nodiscard]] Expected<HttpResponse<License>> issueFreeLicense() noexcept;
 };

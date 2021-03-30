@@ -98,8 +98,8 @@ Expected<Response> Api::makeApiRequest(HttpClient &client, Request &r) noexcept 
             return Response(std::move(r), client.cash(cashRequest.treasureId_));
         }
         case ApiEndpointType::IssuePaidLicense: {
-            auto coinId = r.getIssueLicenseRequest();
-            return Response(std::move(r), client.issueLicense(coinId));
+            auto coinIds = r.getIssueLicenseRequest();
+            return Response(std::move(r), client.issueLicense(coinIds));
         }
         default: {
             errorf("Unsupported request type: %d", r.type_);
@@ -140,8 +140,8 @@ ExpectedVoid Api::scheduleIssueFreeLicense() noexcept {
     return scheduleRequest(Request::NewIssueFreeLicenseRequest());
 }
 
-ExpectedVoid Api::scheduleIssuePaidLicense(CoinID coinId) noexcept {
-    return scheduleRequest(Request::NewIssuePaidLicenseRequest(coinId));
+ExpectedVoid Api::scheduleIssuePaidLicense(std::vector<CoinID> coinIds) noexcept {
+    return scheduleRequest(Request::NewIssuePaidLicenseRequest(std::move(coinIds)));
 }
 
 ExpectedVoid Api::scheduleDig(DigRequest r) noexcept {

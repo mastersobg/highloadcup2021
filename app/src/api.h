@@ -34,12 +34,18 @@ struct CashRequest {
     CashRequest(TreasureID treasureId, int8_t depth) : treasureId_(std::move(treasureId)), depth_(depth) {}
 };
 
+struct IssuePaidLicenseRequest {
+    std::vector<CoinID> coinIds_;
+
+    IssuePaidLicenseRequest(std::vector<CoinID> coinIds) : coinIds_{std::move(coinIds)} {}
+};
+
 class Request {
     int8_t priority{0};
     int32_t cost_{1};
 public:
     ApiEndpointType type_{0};
-    std::variant<ExploreAreaPtr, CoinID, DigRequest, CashRequest> request_;
+    std::variant<ExploreAreaPtr, IssuePaidLicenseRequest, DigRequest, CashRequest> request_;
 
     Request() = default;
 
@@ -59,8 +65,8 @@ public:
         return cost_;
     }
 
-    CoinID getIssueLicenseRequest() const noexcept {
-        return std::get<CoinID>(request_);
+    std::vector<CoinID> getIssueLicenseRequest() const noexcept {
+        return std::get<IssuePaidLicenseRequest>(request_).coinIds_;
     }
 
     DigRequest getDigRequest() const noexcept {
@@ -86,11 +92,11 @@ public:
         return r;
     }
 
-    static Request NewIssuePaidLicenseRequest(CoinID coinId) noexcept {
+    static Request NewIssuePaidLicenseRequest(std::vector<CoinID> coinIds) noexcept {
         Request r{};
         r.priority = 3;
         r.type_ = ApiEndpointType::IssuePaidLicense;
-        r.request_ = coinId;
+        r.request_ = IssuePaidLicenseRequest(std::move(coinIds));
         return r;
     }
 
@@ -250,7 +256,7 @@ public:
 
     ExpectedVoid scheduleIssueFreeLicense() noexcept;
 
-    ExpectedVoid scheduleIssuePaidLicense(CoinID coinId) noexcept;
+    ExpectedVoid scheduleIssuePaidLicense(std::vector<CoinID> coinIds) noexcept;
 
     ExpectedVoid scheduleDig(DigRequest r) noexcept;
 

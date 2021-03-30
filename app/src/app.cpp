@@ -234,6 +234,7 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
     auto license = std::move(resp).getResponse();
     state_.addLicence(license);
     getStats().incIssuedLicenses();
+    getStats().recordLicenseDigAllowed((int) license.digAllowed_);
 
     for (; state_.hasQueuedDigRequests();) {
         if (!state_.hasAvailableLicense()) {
@@ -249,8 +250,8 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
 }
 
 ExpectedVoid App::scheduleIssueLicense() noexcept {
-    if (state_.hasCoins()) {
-        if (auto err = api_.scheduleIssuePaidLicense(state_.borrowCoin()); err.hasError()) {
+    if (state_.hasCoins(kLicensePrice)) {
+        if (auto err = api_.scheduleIssuePaidLicense(state_.borrowCoins(kLicensePrice)); err.hasError()) {
             return err.error();
         }
     } else {

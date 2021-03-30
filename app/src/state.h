@@ -140,14 +140,20 @@ public:
         }
     }
 
-    bool hasCoins() {
-        return !coins_.empty();
+    bool hasCoins(int count) {
+        return (int) coins_.size() >= count;
     }
 
-    CoinID borrowCoin() {
-        auto ret = coins_.front();
-        coins_.pop_front();
-        return ret;
+    std::vector<CoinID> borrowCoins(int count) {
+#ifdef _HLC_DEBUG
+        assert(hasCoins(count));
+#endif
+        std::vector<CoinID> result;
+        for (int i = 0; i < count; i++) {
+            result.push_back(coins_.front());
+            coins_.pop_front();
+        }
+        return result;
     }
 
     size_t getCoinsAmount() {

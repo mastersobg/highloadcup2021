@@ -44,4 +44,6 @@ constexpr int minDepthToCash{2};
 
 constexpr int64_t maxExploredTreasuriesCnt{30000};
 
+constexpr int kLicensePrice{20};
+
 #endif //HIGHLOADCUP2021_CONST_H

@@ -33,6 +33,9 @@ void Stats::print() noexcept {
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
     infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
           totalProcessExploreResponseTime_.load());
+    if (totalLisenceDigAllowedCnt_ > 0) {
+        infof("Avg license dig allowed: %f", (double) totalLicenseDigAllowed_ / (double) totalLisenceDigAllowedCnt_);
+    }
     infof("Total requests duration: %lld", totalRequestsDuration_.load());
 //    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
 //    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);

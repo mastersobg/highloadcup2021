@@ -34,6 +34,8 @@ private:
     std::atomic<int32_t> timeoutCnt_{0};
     std::atomic<int64_t> totalProcessResponseTime_{0};
     std::atomic<int64_t> totalProcessExploreResponseTime_{0};
+    std::atomic<int64_t> totalLicenseDigAllowed_{0};
+    std::atomic<int64_t> totalLisenceDigAllowedCnt_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -120,6 +122,11 @@ public:
     void recordInUseLicenses(int cnt) noexcept {
         inUseLicensesSum_ += cnt;
         inUseLicensesCnt_++;
+    }
+
+    void recordLicenseDigAllowed(int cnt) noexcept {
+        totalLisenceDigAllowedCnt_++;
+        totalLicenseDigAllowed_ += cnt;
     }
 
     void recordInFlightRequests(int64_t cnt) noexcept {

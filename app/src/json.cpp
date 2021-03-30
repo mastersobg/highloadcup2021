@@ -64,11 +64,16 @@ void marshalFreeIssueLicenseRequest(std::string &buffer) noexcept {
     buffer += "]";
 }
 
-void marshalIssueLicenseRequest(CoinID coinId, std::string &buffer) noexcept {
+void marshalIssueLicenseRequest(const std::vector<CoinID> &coinIds, std::string &buffer) noexcept {
     buffer.clear();
 
     buffer += "[";
-    writeIntToString(coinId, buffer);
+    for (size_t i = 0; i < coinIds.size(); i++) {
+        if (i > 0) {
+            buffer += ",";
+        }
+        writeIntToString(coinIds[i], buffer);
+    }
     buffer += "]";
 }
 
