@@ -110,7 +110,7 @@ public:
 
     static Request NewCashRequest(TreasureID id, int8_t depth) noexcept {
         Request r{};
-        r.priority = 1;
+        r.priority = 4;
         r.type_ = ApiEndpointType::Cash;
         r.request_ = CashRequest(std::move(id), depth);
         return r;

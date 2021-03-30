@@ -100,6 +100,16 @@ void App::run() noexcept {
 
         getStats().recordInUseLicenses(state_.getInUseLicensesCount());
         getStats().recordCoinsAmount(state_.getCoinsAmount());
+
+        if (!state_.hasQueuedDigRequests()) {
+            while (state_.hasQueuedCashRequests()) {
+                auto r = state_.getNextCashRequest();
+                if (auto err1 = api_.scheduleCash(r.treasureId_, r.depth_); err1.hasError()) {
+                    errorf("error occurred while queueing cash request: %d", err.error());
+                    break;
+                }
+            }
+        }
     }
 
 }
@@ -260,6 +270,12 @@ ExpectedVoid App::scheduleIssueLicense() noexcept {
         }
     }
     state_.setLicensesRequested();
+    if (state_.getCoinsAmount() == 0 && state_.hasQueuedCashRequests()) {
+        auto r = state_.getNextCashRequest();
+        if (auto err = api_.scheduleCash(r.treasureId_, r.depth_); err.hasError()) {
+            return err.error();
+        }
+    }
     return NoErr;
 }
 
@@ -280,9 +296,7 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
             getStats().recordTreasureDepth(digRequest.depth_, (int) treasuries.size());
             for (const auto &id : treasuries) {
                 if (digRequest.depth_ >= minDepthToCash) {
-                    if (auto err = api_.scheduleCash(id, digRequest.depth_); err.hasError()) {
-                        return err.error();
-                    }
+                    state_.addCashRequest(DelayedCashRequest(id, digRequest.depth_));
                 }
             }
 

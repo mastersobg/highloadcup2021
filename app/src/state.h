@@ -29,12 +29,25 @@ struct DelayedDigRequest {
     }
 };
 
+struct DelayedCashRequest {
+    TreasureID treasureId_;
+    int8_t depth_;
+
+    DelayedCashRequest(TreasureID treasureId, int8_t depth) : treasureId_(std::move(treasureId)),
+                                                              depth_(depth) {}
+
+    bool operator<(const DelayedCashRequest &rhs) const {
+        return depth_ > rhs.depth_;
+    }
+};
+
 class State {
 private:
     std::array<License, kMaxLicensesCount> licenses_{};
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
     std::multiset<DelayedDigRequest> digRequests_;
+    std::multiset<DelayedCashRequest> cashRequests_;
     std::vector<ExploreAreaPtr> exploreQueue_{};
     ExploreAreaPtr root_{nullptr};
     bool licensesRequested_{false};
@@ -200,6 +213,26 @@ public:
         auto r = digRequests_.extract(digRequests_.begin()).value();
 #ifdef _HLC_DEBUG
         for (const auto &it : digRequests_) {
+            if (it.depth_ > r.depth_) {
+                assert(false);
+            }
+        }
+#endif
+        return r;
+    }
+
+    void addCashRequest(DelayedCashRequest r) noexcept {
+        cashRequests_.insert(std::move(r));
+    }
+
+    [[nodiscard]] bool hasQueuedCashRequests() const noexcept {
+        return !cashRequests_.empty();
+    }
+
+    DelayedCashRequest getNextCashRequest() noexcept {
+        auto r = cashRequests_.extract(cashRequests_.begin()).value();
+#ifdef _HLC_DEBUG
+        for (const auto &it : cashRequests_) {
             if (it.depth_ > r.depth_) {
                 assert(false);
             }
