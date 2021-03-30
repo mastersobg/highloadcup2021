@@ -32,12 +32,61 @@ func createGrafanaQuery(metricType, sessionId, resource, from, to string) string
 	)
 }
 
-func buildSecondsSumChart(responses []*Response) (*charts.Line, error) {
-
+func buildTotalRequestsCount(responses []*Response) (*charts.Line, error) {
 	line := charts.NewLine()
 	line.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
-			Title: "All sum seconds",
+			Title: "Total requests count",
+		}),
+		charts.WithLegendOpts(opts.Legend{Show: true}),
+		charts.WithTooltipOpts(opts.Tooltip{Show: true}),
+	)
+
+	dataMap := make(map[time.Time]float64)
+	for _, r := range responses {
+		if r != nil && len(r.Data.Result) > 0 {
+			for it := range r.Data.Result {
+				result := r.Data.Result[it]
+				for i := range result.Values {
+					v := result.Values[i]
+					ts := time.Unix((int64)(v[0].(float64)), 0)
+					val, err := strconv.ParseFloat(v[1].(string), 64)
+					if err != nil {
+						return nil, err
+					}
+					dataMap[ts] += val
+				}
+			}
+		}
+	}
+	var values []Value
+	for k, v := range dataMap {
+		values = append(values, Value{
+			Timestamp: k,
+			Value:     v,
+		})
+	}
+
+	sort.Slice(values, func(i, j int) bool {
+		return values[i].Timestamp.Unix() < values[j].Timestamp.Unix()
+	})
+
+	var xAxis []string
+	var yAxis []opts.LineData
+	for _, v := range values {
+		xAxis = append(xAxis, v.Timestamp.Format("15:04:05"))
+		yAxis = append(yAxis, opts.LineData{Value: v.Value})
+	}
+
+	line.SetXAxis(xAxis).AddSeries("Cum RPS", yAxis)
+	return line, nil
+
+}
+func buildSecondsSumChart(responses []*Response) (*charts.Line, error) {
+	line := charts.NewLine()
+	line.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{
+			Title: "Total RPS",
 		}),
 		charts.WithLegendOpts(opts.Legend{Show: true}),
 		charts.WithTooltipOpts(opts.Tooltip{Show: true}),
@@ -224,6 +273,7 @@ func httpserver(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := components.NewPage()
+	page.PageTitle = sessionId[0]
 	exploreCount, exploreCountResponse, err := buildChart(createGrafanaQuery("task_openapi_http_request_duration_seconds_count", sessionId[0], "explore", from[0], to[0]), "Explore count")
 	if err != nil {
 		fmt.Println(err)
@@ -314,6 +364,12 @@ func httpserver(w http.ResponseWriter, r *http.Request) {
 		page.AddCharts(totalSecondsSum)
 	}
 
+	totalRPS, err := buildTotalRequestsCount([]*Response{exploreCountResponse, digCountResponse, cashCountResponse, licensesCountResponse})
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		page.AddCharts(totalRPS)
+	}
 	if err := page.Render(w); err != nil {
 		panic(err)
 	}
