@@ -51,11 +51,11 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-        if (auto err = scheduleIssueLicense(); err.hasError()) {
-            return err;
-        }
-    }
+//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+//        if (auto err = scheduleIssueLicense(); err.hasError()) {
+//            return err;
+//        }
+//    }
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
@@ -207,7 +207,17 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     assert(state_.hasMoreExploreAreas());
 #endif
 
-    return api_.scheduleExplore(state_.fetchNextExploreArea());
+    if (getStats().getExploredTreasuriesCnt() <= maxExploredTreasuriesCnt) {
+        return api_.scheduleExplore(state_.fetchNextExploreArea());
+    } else if (!state_.isLicensesRequested()) {
+        for (size_t i = 0; i < kMaxLicensesCount; i++) {
+            if (auto err = scheduleIssueLicense(); err.hasError()) {
+                return err.error();
+            }
+        }
+    }
+
+    return NoErr;
 }
 
 ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, HttpResponse<License> &resp) noexcept {
@@ -248,6 +258,7 @@ ExpectedVoid App::scheduleIssueLicense() noexcept {
             return err.error();
         }
     }
+    state_.setLicensesRequested();
     return NoErr;
 }
 

@@ -154,6 +154,10 @@ public:
         treasuriesCnt_ += amount;
     }
 
+    int64_t getExploredTreasuriesCnt() const noexcept {
+        return treasuriesCnt_.load();
+    }
+
     void incCashedCoins(int64_t amount) noexcept {
         cashedCoinsSum_ += amount;
         cashedTreasuriesCnt_++;

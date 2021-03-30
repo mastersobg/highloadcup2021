@@ -37,6 +37,7 @@ private:
     std::multiset<DelayedDigRequest> digRequests_;
     std::vector<ExploreAreaPtr> exploreQueue_{};
     ExploreAreaPtr root_{nullptr};
+    bool licensesRequested_{false};
 
     void removeFromExploreQueue(size_t pos) noexcept {
         exploreQueue_[pos] = std::move(exploreQueue_.back());
@@ -57,6 +58,14 @@ public:
     ~State() {
         cleanExploreAreaPtrs(root_);
         root_ = nullptr;
+    }
+
+    bool isLicensesRequested() const noexcept {
+        return licensesRequested_;
+    }
+
+    void setLicensesRequested() noexcept {
+        licensesRequested_ = true;
     }
 
     void cleanExploreAreaPtrs(const ExploreAreaPtr &node) {
