@@ -36,7 +36,7 @@ constexpr size_t kTreasuriesCount = 490'000;
 
 constexpr long kRequestTimeout = 1'000'000;
 
-constexpr size_t kMaxLicensesCount = 3;
+constexpr size_t kMaxLicensesCount = 4;
 
 constexpr size_t kExploreConcurrentRequestsCnt{2};
 
