@@ -14,7 +14,7 @@ constexpr size_t kJsonParseBufferSize = kJsonParseBufferCap * kJsonBufferTypeSiz
 
 constexpr size_t kMaxApiRequestsQueueSize = 10'000'000;
 
-constexpr size_t kApiThreadCount = 10;
+constexpr size_t kApiThreadCount = 13;
 constexpr int64_t kMaxRPS = 1'000;
 
 constexpr size_t kFieldMaxX = 3'500;
@@ -34,10 +34,12 @@ constexpr std::array<ExploreAreaShift, 3> kExploreAreas = {
 
 constexpr size_t kTreasuriesCount = 490'000;
 
-constexpr long kRequestTimeout = 1000;
+constexpr long kRequestTimeout = 1'000'000;
 
 constexpr size_t kMaxLicensesCount = 10;
 
 constexpr size_t kExploreConcurrentRequestsCnt{2};
+
+constexpr int minDepthToCash{2};
 
 #endif //HIGHLOADCUP2021_CONST_H
