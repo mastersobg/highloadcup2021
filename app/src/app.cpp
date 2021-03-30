@@ -71,7 +71,7 @@ ExpectedVoid App::fireInitRequests() noexcept {
 
 void App::run() noexcept {
     auto startTime = std::chrono::steady_clock::now();
-    constexpr std::chrono::seconds kElapsedSeconds(480);
+    constexpr std::chrono::seconds kElapsedSeconds(420);
     if (auto err = fireInitRequests(); err.hasError()) {
         errorf("fireInitRequests: error: %d", err.error());
         return;
