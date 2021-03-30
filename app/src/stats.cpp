@@ -47,7 +47,7 @@ void Stats::print() noexcept {
     infof("Issued licenses: %lld", issuedLicenses_.load());
 //    infof("Coins amount: %d", coinsAmount_.load());
 
-//    printEndpointsStats();
+    printEndpointsStats();
     printDepthHistogram();
 //    printCoinsDepthHistogram();
 //    printExploreAreaHistogram();
