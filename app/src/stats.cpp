@@ -15,28 +15,28 @@ void Stats::print() noexcept {
     ).count();
 
     auto timeElapsedMs = currentTime - startTime_.load();
-    int64_t rps{0};
-    if (timeElapsedMs > 0) {
-        rps = requestsCnt_.load() * 1000L / timeElapsedMs;
-    }
-    int64_t tickRPS = (requestsCnt_.load() - lastTickRequestsCnt_.load()) * 1000L / statsSleepDelayMs;
+//    int64_t rps{0};
+//    if (timeElapsedMs > 0) {
+//        rps = requestsCnt_.load() * 1000L / timeElapsedMs;
+//    }
+//    int64_t tickRPS = (requestsCnt_.load() - lastTickRequestsCnt_.load()) * 1000L / statsSleepDelayMs;
 
     infof("Requests count: %lld", requestsCnt_.load());
-    infof("RPS: %lld", rps);
-    infof("Tick RPS: %lld", tickRPS);
-    infof("Curl errs: %lld", curlErrCnt_.load());
+//    infof("RPS: %lld", rps);
+//    infof("Tick RPS: %lld", tickRPS);
+//    infof("Curl errs: %lld", curlErrCnt_.load());
     infof("Time elapsed: %lld ms", timeElapsedMs);
-    infof("Timeouts: %d", timeoutCnt_.load());
-    infof("Explored area: %lld", exploredArea_.load());
+//    infof("Timeouts: %d", timeoutCnt_.load());
+//    infof("Explored area: %lld", exploredArea_.load());
     infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
-    infof("Cash skipped: %lld", cashSkippedCnt_.load());
-    infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
-    infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
-          totalProcessExploreResponseTime_.load());
-    if (totalLisenceDigAllowedCnt_ > 0) {
-        infof("Avg license dig allowed: %f", (double) totalLicenseDigAllowed_ / (double) totalLisenceDigAllowedCnt_);
-    }
-    infof("Total requests duration: %lld", totalRequestsDuration_.load());
+//    infof("Cash skipped: %lld", cashSkippedCnt_.load());
+//    infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
+//    infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
+//          totalProcessExploreResponseTime_.load());
+//    if (totalLisenceDigAllowedCnt_ > 0) {
+//        infof("Avg license dig allowed: %f", (double) totalLicenseDigAllowed_ / (double) totalLisenceDigAllowedCnt_);
+//    }
+//    infof("Total requests duration: %lld", totalRequestsDuration_.load());
 //    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
 //    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
 //    infof("Average in flight requests: %f", (double) inFlightRequestsSum_ / (double) inFlightRequestsCnt_);
@@ -45,13 +45,13 @@ void Stats::print() noexcept {
     infof("Total cashed: %lld coins, %lld treasuries, %f avg", cashedCoinsSum_.load(), cashedTreasuriesCnt_.load(),
           (double) cashedCoinsSum_.load() / (double) cashedTreasuriesCnt_.load());
     infof("Issued licenses: %lld", issuedLicenses_.load());
-    infof("Coins amount: %d", coinsAmount_.load());
+//    infof("Coins amount: %d", coinsAmount_.load());
 
-    printEndpointsStats();
+//    printEndpointsStats();
     printDepthHistogram();
-    printCoinsDepthHistogram();
+//    printCoinsDepthHistogram();
 //    printExploreAreaHistogram();
-    printCpuStat();
+//    printCpuStat();
 
     lastTickRequestsCnt_ = requestsCnt_.load();
 }
@@ -111,12 +111,16 @@ void Stats::printEndpointsStats() noexcept {
 void Stats::printDepthHistogram() noexcept {
     std::shared_lock lock(depthHistogramMutex_);
 
-    std::string logString{};
-    for (size_t i = 0; i <= 10; i++) {
-        writeIntToString(depthHistogram_[i], logString);
-        logString += ", ";
+//    std::string logString{};
+//    for (size_t i = 0; i <= 10; i++) {
+//        writeIntToString(depthHistogram_[i], logString);
+//        logString += ", ";
+//    }
+    int treasuriesDiggedCnt{0};
+    for (const auto val : depthHistogram_) {
+        treasuriesDiggedCnt += val;
     }
-    infof("depth histogram: %s", logString.c_str());
+    infof("treasuries digged count: %d", treasuriesDiggedCnt);
 }
 
 void Stats::printCoinsDepthHistogram() noexcept {
