@@ -1,6 +1,7 @@
 #ifndef HIGHLOADCUP2021_API_H
 #define HIGHLOADCUP2021_API_H
 
+#include "log.h"
 #include <list>
 #include <thread>
 #include <utility>
@@ -118,7 +119,13 @@ public:
     }
 
     bool operator<(const Request &r2) const {
-        return priority > r2.priority;
+        if (priority != r2.priority) {
+            return priority > r2.priority;
+        }
+        if (type_ == ApiEndpointType::Dig) {
+            return getDigRequest().depth_ > r2.getDigRequest().depth_;
+        }
+        return false;
     }
 
 };

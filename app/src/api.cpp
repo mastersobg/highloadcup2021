@@ -32,6 +32,18 @@ void Api::threadLoop() {
         }
 
         Request r = std::move(requests_.extract(requests_.begin()).value());
+#ifdef _HLC_DEBUG
+        if (r.type_ == ApiEndpointType::Dig) {
+            for (const auto &it : requests_) {
+                if (it.type_ == ApiEndpointType::Dig) {
+                    const auto &req = it.getDigRequest();
+                    if (req.depth_ > r.getDigRequest().depth_) {
+                        assert(false);
+                    }
+                }
+            }
+        }
+#endif
 
         lock.unlock();
 
