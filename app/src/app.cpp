@@ -264,7 +264,7 @@ ExpectedVoid App::scheduleIssueLicense() noexcept {
         }
     }
     state_.setLicensesRequested();
-    if (state_.getCoinsAmount() == 0 && state_.hasQueuedCashRequests()) {
+    if (state_.getCoinsAmount() < kLicensePrice && state_.hasQueuedCashRequests()) {
         auto r = state_.getNextCashRequest();
         if (auto err = api_.scheduleCash(r.treasureId_, r.depth_); err.hasError()) {
             return err.error();

@@ -42,6 +42,6 @@ constexpr size_t kExploreConcurrentRequestsCnt{2};
 
 constexpr int minDepthToCash{2};
 
-constexpr int kLicensePrice{1};
+constexpr int kLicensePrice{20};
 
 #endif //HIGHLOADCUP2021_CONST_H
