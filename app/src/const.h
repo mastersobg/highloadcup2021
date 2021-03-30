@@ -14,7 +14,7 @@ constexpr size_t kJsonParseBufferSize = kJsonParseBufferCap * kJsonBufferTypeSiz
 
 constexpr size_t kMaxApiRequestsQueueSize = 10'000'000;
 
-constexpr size_t kApiThreadCount = 8;
+constexpr size_t kApiThreadCount = 14;
 constexpr int64_t kMaxRPS = 1'000;
 
 constexpr size_t kFieldMaxX = 3'500;
