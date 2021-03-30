@@ -125,6 +125,9 @@ public:
         if (type_ == ApiEndpointType::Dig) {
             return getDigRequest().depth_ > r2.getDigRequest().depth_;
         }
+        if (type_ == ApiEndpointType::Cash) {
+            return getCashRequest().depth_ > r2.getCashRequest().depth_;
+        }
         return false;
     }
 
