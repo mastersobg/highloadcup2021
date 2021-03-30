@@ -38,7 +38,7 @@ constexpr long kRequestTimeout = 1'000'000;
 
 constexpr size_t kMaxLicensesCount = 10;
 
-constexpr size_t kExploreConcurrentRequestsCnt{2};
+constexpr size_t kExploreConcurrentRequestsCnt{6};
 
 constexpr int minDepthToCash{2};
 
