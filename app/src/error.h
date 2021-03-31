@@ -14,6 +14,7 @@ enum class ErrorCode : int {
     kTreasuriesLeftInconsistency = 7,
     kUnexpectedCashResponse = 8,
     kErrCurlTimeout = 9,
+    kFireInitFailed = 10,
 };
 
 template<class T>

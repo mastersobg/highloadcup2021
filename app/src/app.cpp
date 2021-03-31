@@ -51,13 +51,24 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-        if (auto err = scheduleIssueLicense(); err.hasError()) {
-            return err;
-        }
+    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, 1000, 1000), 0, 0);
+    if (auto err = api_.scheduleExplore(
+                ExploreArea::NewExploreArea(nullptr, Area(0, 0, 1000, 1000), 0, 0)); err.hasError()) {
+        return err.error();
     }
-    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
-                                            kTreasuriesCount);
+    Measure<std::chrono::microseconds> tm;
+    auto resp = api_.getAvailableResponse();
+    if (resp.getExploreResponse().hasError()) {
+        return resp.getExploreResponse().error();
+    }
+    auto apiResp = resp.getExploreResponse().get();
+    if (apiResp.getHttpCode() != 200) {
+        return ErrorCode::kFireInitFailed;
+    }
+    auto successResp = std::move(apiResp).getResponse();
+    root->actualTreasuriesCnt_ = successResp.amount_;
+
+    infof("Found %d treasuries in %lld mcs", root->actualTreasuriesCnt_, tm.getInt64());
     state_.setRootExploreArea(root);
     createSubAreas(root);
 
@@ -66,6 +77,12 @@ ExpectedVoid App::fireInitRequests() noexcept {
             return err;
         }
     }
+    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+        if (auto err = scheduleIssueLicense(); err.hasError()) {
+            return err;
+        }
+    }
+
     return NoErr;
 }
 
