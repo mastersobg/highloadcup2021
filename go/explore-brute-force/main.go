@@ -19,13 +19,15 @@ func bruteForce() error {
 	best := int64(math.MaxInt64)
 	var bestArea [][]int
 	//for k := 1500; k > 1000; k-- {
-	for i := 128; i > 1; i-- {
-		for j := 32; j > 1; j-- {
+	for i := 51; i > 1; i-- {
+		for j := 6; j > 1; j-- {
 			if i <= j {
 				continue
 			}
 			areas := [][]int{
+				{3500, 1},
 				//{k, 1},
+				{500, 1},
 				{i, 1},
 				{j, 1},
 				{1, 1},
