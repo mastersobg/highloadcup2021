@@ -55,12 +55,12 @@ ExpectedVoid App::fireInitRequests() noexcept {
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
     createSubAreas(root);
-    for (const auto &child : root->children_) {
-        if (auto err = api_.scheduleExplore(child); err.hasError()) {
+    size_t childrenCnt = 2;
+    for (size_t i = 0; i < childrenCnt; i++) {
+        if (auto err = api_.scheduleExplore(root->children_[i]); err.hasError()) {
             return err.error();
         }
     }
-    auto childrenCnt = root->getNonExploredChildrenCnt();
     for (size_t i = 0; i < childrenCnt; i++) {
         auto resp = api_.getAvailableResponse();
 
