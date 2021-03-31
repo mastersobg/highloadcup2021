@@ -33,6 +33,10 @@ void Stats::print() noexcept {
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
     infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
           totalProcessExploreResponseTime_.load());
+    if (treasuriesCnt_.load() > 0) {
+        infof("Avg explore request per treasure: %f",
+              (double) exploreRequestsCnt_.load() / (double) treasuriesCnt_.load());
+    }
     infof("Total requests duration: %lld", totalRequestsDuration_.load());
 //    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
 //    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
