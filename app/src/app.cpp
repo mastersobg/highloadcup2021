@@ -82,10 +82,20 @@ void App::run() noexcept {
 
         auto response = api_.getAvailableResponse();
 
+        Measure<std::chrono::nanoseconds> tm;
         auto err = processResponse(response);
+        getStats().addProcessResponseTime(tm.getInt64());
         if (err.hasError()) {
-            errorf("error occurred: %d", err.error());
-            break;
+            if (err.error() != ErrorCode::kErrCurlTimeout) {
+                errorf("error occurred: %d", err.error());
+                break;
+            } else {
+                if (auto errInner = api_.scheduleRequest(std::move(response.getRequest())); errInner.hasError()) {
+                    errorf("error occurred: %d", errInner.error());
+                    break;
+                }
+                getStats().incTimeoutCnt();
+            }
         }
 
         getStats().recordInUseLicenses(state_.getInUseLicensesCount());
@@ -101,7 +111,10 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
                 return resp.getExploreResponse().error();
             }
             auto apiResp = resp.getExploreResponse().get();
-            return processExploreResponse(resp.getRequest(), apiResp);
+            Measure<std::chrono::nanoseconds> tm;
+            auto err = processExploreResponse(resp.getRequest(), apiResp);
+            getStats().addProcessExploreResponseTime(tm.getInt64());
+            return err;
         }
         case ApiEndpointType::IssueFreeLicense: {
             if (resp.getIssueLicenseResponse().hasError()) {
@@ -254,12 +267,10 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
             auto treasuries = std::move(resp).getResponse();
             getStats().recordTreasureDepth(digRequest.depth_, (int) treasuries.size());
             for (const auto &id : treasuries) {
-                if (state_.getCoinsAmount() > kCashSkipThreshold) {
-                    getStats().incCashSkippedCnt();
-                    continue;
-                }
-                if (auto err = api_.scheduleCash(id, digRequest.depth_); err.hasError()) {
-                    return err.error();
+                if (digRequest.depth_ >= minDepthToCash) {
+                    if (auto err = api_.scheduleCash(id, digRequest.depth_); err.hasError()) {
+                        return err.error();
+                    }
                 }
             }
 

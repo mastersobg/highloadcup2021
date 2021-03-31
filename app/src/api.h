@@ -1,6 +1,7 @@
 #ifndef HIGHLOADCUP2021_API_H
 #define HIGHLOADCUP2021_API_H
 
+#include "log.h"
 #include <list>
 #include <thread>
 #include <utility>
@@ -118,7 +119,16 @@ public:
     }
 
     bool operator<(const Request &r2) const {
-        return priority > r2.priority;
+        if (priority != r2.priority) {
+            return priority > r2.priority;
+        }
+        if (type_ == ApiEndpointType::Dig) {
+            return getDigRequest().depth_ > r2.getDigRequest().depth_;
+        }
+        if (type_ == ApiEndpointType::Cash) {
+            return getCashRequest().depth_ > r2.getCashRequest().depth_;
+        }
+        return false;
     }
 
 };
@@ -219,8 +229,6 @@ private:
 
     void publishResponse(Response &&r) noexcept;
 
-    ExpectedVoid scheduleRequest(Request r) noexcept;
-
 public:
     explicit Api(size_t threadsCount, std::string address);
 
@@ -235,6 +243,8 @@ public:
     ~Api();
 
     ExpectedVoid scheduleCheckHealth() noexcept;
+
+    ExpectedVoid scheduleRequest(Request r) noexcept;
 
     ExpectedVoid scheduleExplore(ExploreAreaPtr area) noexcept;
 

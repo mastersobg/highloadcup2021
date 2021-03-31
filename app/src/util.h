@@ -23,6 +23,10 @@ public:
         return (int32_t) getInt64();
     }
 
+    T getDuration() {
+        return std::chrono::duration_cast<T>(std::chrono::steady_clock::now() - start_);
+    }
+
 };
 
 bool equal(double a, double b) noexcept;

@@ -16,7 +16,7 @@
 
 struct EndpointStats {
     std::map<int32_t, int32_t> httpCodes;
-    std::vector<int32_t> durations;
+    std::vector<int64_t> durations;
 };
 
 class Stats {
@@ -32,6 +32,9 @@ private:
     std::atomic<int64_t> cashSkippedCnt_{0};
     std::atomic<int64_t> exploredArea_{0};
     std::atomic<int64_t> duplicateSetExplored_{0};
+    std::atomic<int32_t> timeoutCnt_{0};
+    std::atomic<int64_t> totalProcessResponseTime_{0};
+    std::atomic<int64_t> totalProcessExploreResponseTime_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -45,6 +48,7 @@ private:
 
     std::mutex endpointStatsMutex_;
     std::unordered_map<std::string, EndpointStats> endpointStatsMap_;
+    std::atomic<int64_t> totalRequestsDuration_{0};
 
     std::shared_mutex depthHistogramMutex_;
     std::array<int, 11> depthHistogram_{0,};
@@ -84,6 +88,18 @@ public:
 
     void incRequestsCnt() noexcept {
         requestsCnt_++;
+    }
+
+    void incTimeoutCnt() noexcept {
+        timeoutCnt_++;
+    }
+
+    void addProcessResponseTime(int64_t t) {
+        totalProcessResponseTime_ += t;
+    }
+
+    void addProcessExploreResponseTime(int64_t t) {
+        totalProcessExploreResponseTime_ += t;
     }
 
     void incExploredArea(size_t area) noexcept {
@@ -133,7 +149,7 @@ public:
         depthCoinsHistogram_[(size_t) depth] += coinsCount;
     }
 
-    void recordEndpointStats(const std::string &endpoint, int32_t httpCode, int32_t durationMs) noexcept;
+    void recordEndpointStats(const std::string &endpoint, int32_t httpCode, int64_t durationMcs) noexcept;
 
     void recordTreasuriesCnt(int amount) noexcept {
         treasuriesCnt_ += amount;

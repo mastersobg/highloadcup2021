@@ -26,12 +26,16 @@ void Stats::print() noexcept {
     infof("Tick RPS: %lld", tickRPS);
     infof("Curl errs: %lld", curlErrCnt_.load());
     infof("Time elapsed: %lld ms", timeElapsedMs);
+    infof("Timeouts: %d", timeoutCnt_.load());
     infof("Explored area: %lld", exploredArea_.load());
     infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
     infof("Cash skipped: %lld", cashSkippedCnt_.load());
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
-    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
-    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
+    infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
+          totalProcessExploreResponseTime_.load());
+    infof("Total requests duration: %lld", totalRequestsDuration_.load());
+//    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
+//    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
 //    infof("Average in flight requests: %f", (double) inFlightRequestsSum_ / (double) inFlightRequestsCnt_);
 //    infof("Average in flight explore requests: %f",
 //          (double) inFlightExploreRequestsSum_ / (double) inFlightExploreRequestsCnt_);
@@ -55,12 +59,13 @@ Stats::Stats() {
     ).count();
 }
 
-void Stats::recordEndpointStats(const std::string &endpoint, int32_t httpCode, int32_t durationMs) noexcept {
+void Stats::recordEndpointStats(const std::string &endpoint, int32_t httpCode, int64_t durationMcs) noexcept {
     std::scoped_lock lck{endpointStatsMutex_};
 
     auto &stats = endpointStatsMap_[endpoint];
     stats.httpCodes[httpCode]++;
-    stats.durations.push_back(durationMs);
+    stats.durations.push_back(durationMcs);
+    totalRequestsDuration_ += durationMcs;
 }
 
 void Stats::printEndpointsStats() noexcept {
@@ -76,8 +81,8 @@ void Stats::printEndpointsStats() noexcept {
             logString += " ";
         }
 
-        auto avg = std::accumulate(stats.durations.begin(), stats.durations.end(), 0) /
-                   (int) stats.durations.size();
+        auto avg = std::accumulate(stats.durations.begin(), stats.durations.end(), (int64_t) 0) /
+                   (int64_t) stats.durations.size();
         logString += "\nduration: ";
         logString += "avg: ";
         writeIntToString(avg, logString);

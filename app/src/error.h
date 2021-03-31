@@ -13,6 +13,7 @@ enum class ErrorCode : int {
     kUnexpectedDigResponse = 6,
     kTreasuriesLeftInconsistency = 7,
     kUnexpectedCashResponse = 8,
+    kErrCurlTimeout = 9,
 };
 
 template<class T>

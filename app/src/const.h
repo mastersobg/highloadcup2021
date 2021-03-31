@@ -15,8 +15,8 @@ constexpr size_t kJsonParseBufferSize = kJsonParseBufferCap * kJsonBufferTypeSiz
 
 constexpr size_t kMaxApiRequestsQueueSize = 10'000'000;
 
-constexpr size_t kApiThreadCount = 10;
-constexpr int64_t kMaxRPS = 100'000'000;
+constexpr size_t kApiThreadCount = 13;
+constexpr int64_t kMaxRPS = 1'000;
 
 constexpr size_t kFieldMaxX = 3'500;
 constexpr size_t kFieldMaxY = 3'500;
@@ -40,11 +40,13 @@ void injectKExploreAreas(std::vector<ExploreAreaShift> v);
 
 constexpr size_t kTreasuriesCount = 490'000;
 
+constexpr long kRequestTimeout = 1'000'000;
+
 constexpr size_t kMaxLicensesCount = 10;
 
 constexpr size_t kExploreConcurrentRequestsCnt{2};
 
-constexpr int kCashSkipThreshold = 690'000;
+constexpr int minDepthToCash{2};
 
 constexpr int kExploredTreasuriesThreshold = 1'000;
 
