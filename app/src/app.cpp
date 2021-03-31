@@ -51,15 +51,40 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
+    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
+                                            kTreasuriesCount);
+    state_.setRootExploreArea(root);
+    createSubAreas(root);
+    for (const auto &child : root->children_) {
+        if (auto err = api_.scheduleExplore(child); err.hasError()) {
+            return err.error();
+        }
+    }
+    auto childrenCnt = root->getNonExploredChildrenCnt();
+    for (size_t i = 0; i < childrenCnt; i++) {
+        auto resp = api_.getAvailableResponse();
+
+        if (resp.getExploreResponse().hasError()) {
+            return resp.getExploreResponse().error();
+        }
+        auto apiResp = resp.getExploreResponse().get();
+        if (apiResp.getHttpCode() != 200) {
+            return ErrorCode::kExploreInitErr;
+        }
+        auto exploreResponse = std::move(apiResp).getResponse();
+
+        auto req = resp.getRequest().getExploreRequest();
+        if (auto err = processExploredArea(req, exploreResponse.amount_, "actual"); err.hasError()) {
+            return err.error();
+        }
+    }
+
+    state_.removeExploreAreaFromQueue(root);
 //    for (size_t i = 0; i < kMaxLicensesCount; i++) {
 //        if (auto err = scheduleIssueLicense(); err.hasError()) {
 //            return err;
 //        }
 //    }
-    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
-                                            kTreasuriesCount);
-    state_.setRootExploreArea(root);
-    createSubAreas(root);
 
     for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
         if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
@@ -167,23 +192,20 @@ App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt
         state_.removeExploreAreaFromQueue(exploreArea->parent_);
     }
 
-    if (title == "guess") {
-        auto client = HttpClient{address_, "8000", "http"};
-        auto resp = client.explore(exploreArea->area_);
-        if (resp.hasError()) {
-            return resp.error();
-        }
-        auto apiResp = resp.get().getResponse();
-        if (apiResp.amount_ != actualTreasuriesCnt) {
-            int k = 1;
-        }
-    }
+//    if (title == "guess") {
+//        auto client = HttpClient{address_, "8000", "http"};
+//        auto resp = client.explore(exploreArea->area_);
+//        if (resp.hasError()) {
+//            return resp.error();
+//        }
+//        auto apiResp = resp.get().getResponse();
+//        if (apiResp.amount_ != actualTreasuriesCnt) {
+//            assert(false);
+//       }
+//    }
     if (exploreArea->actualTreasuriesCnt_ > 0 && exploreArea->area_.getArea() == 1) {
-        if (actualTreasuriesCnt > 10) {
-            int k = 1;
-        }
-        debugf("found: %s %d %d %d", title.c_str(), actualTreasuriesCnt, exploreArea.get()->area_.posX_,
-               exploreArea.get()->area_.posY_);
+//        debugf("found: %s %d %d %d", title.c_str(), actualTreasuriesCnt, exploreArea.get()->area_.posX_,
+//               exploreArea.get()->area_.posY_);
         getStats().recordTreasuriesCnt((int) exploreArea->actualTreasuriesCnt_);
         state_.setLeftTreasuriesAmount(exploreArea->area_.posX_, exploreArea->area_.posY_,
                                        (int32_t) exploreArea->actualTreasuriesCnt_);

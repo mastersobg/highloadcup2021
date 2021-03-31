@@ -196,7 +196,7 @@ HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
         }
     }
 
-    debugf("making request: %s data: %s", url.c_str(), data);
+//    debugf("making request: %s data: %s", url.c_str(), data);
     auto reqResult = curl_easy_perform(session_);
     getApp().getStats().incRequestsCnt();
     if (reqResult != CURLE_OK) {
