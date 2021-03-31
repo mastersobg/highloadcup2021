@@ -59,7 +59,9 @@ ExpectedVoid App::fireInitRequests() noexcept {
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
-    createSubAreas(root);
+    if (auto err = createSubAreas(root); err.hasError()) {
+        return err.error();
+    }
 
     for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
         if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
@@ -185,7 +187,9 @@ App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt)
     }
 
     if (exploreArea->area_.getArea() > 1 && exploreArea->actualTreasuriesCnt_ > 0) {
-        createSubAreas(exploreArea);
+        if (auto err = createSubAreas(exploreArea); err.hasError()) {
+            return err.error();
+        }
     }
 
     return NoErr;
@@ -337,7 +341,7 @@ ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcep
     }
 }
 
-void App::createSubAreas(const ExploreAreaPtr &root) noexcept {
+ExpectedVoid App::createSubAreas(const ExploreAreaPtr &root) noexcept {
     auto h = kExploreAreas[root->exploreDepth_].height;
     auto w = kExploreAreas[root->exploreDepth_].width;
     auto x1 = root->area_.posX_;
@@ -363,5 +367,13 @@ void App::createSubAreas(const ExploreAreaPtr &root) noexcept {
             root->addChild(ea);
         }
     }
-    state_.addExploreArea(root);
+    if (root->getNonExploredChildrenCnt() == 1) {
+        auto child = root->getLastNonExploredChild();
+        if (auto err = processExploredArea(child, root->getLeftTreasuriesCnt()); err.hasError()) {
+            return err.error();
+        }
+    } else {
+        state_.addExploreArea(root);
+    }
+    return NoErr;
 }
