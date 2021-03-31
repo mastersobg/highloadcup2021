@@ -55,26 +55,20 @@ ExpectedVoid App::fireInitRequests() noexcept {
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
     createSubAreas(root);
-    size_t childrenCnt = 2;
+    size_t childrenCnt = root->getNonExploredChildrenCnt();
+    HttpClient client{address_, "8000", "http"};
     for (size_t i = 0; i < childrenCnt; i++) {
-        if (auto err = api_.scheduleExplore(root->children_[i]); err.hasError()) {
-            return err.error();
+        auto resp = client.explore(root->children_[i]->area_);
+        if (resp.hasError()) {
+            return resp.error();
         }
-    }
-    for (size_t i = 0; i < childrenCnt; i++) {
-        auto resp = api_.getAvailableResponse();
-
-        if (resp.getExploreResponse().hasError()) {
-            return resp.getExploreResponse().error();
-        }
-        auto apiResp = resp.getExploreResponse().get();
+        auto apiResp = resp.get();
         if (apiResp.getHttpCode() != 200) {
             return ErrorCode::kExploreInitErr;
         }
         auto exploreResponse = std::move(apiResp).getResponse();
 
-        auto req = resp.getRequest().getExploreRequest();
-        if (auto err = processExploredArea(req, exploreResponse.amount_); err.hasError()) {
+        if (auto err = processExploredArea(root->children_[i], exploreResponse.amount_); err.hasError()) {
             return err.error();
         }
     }
@@ -178,7 +172,11 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
 }
 
 ExpectedVoid
-App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept {
+App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt) noexcept {
+#ifdef _HLC_DEBUG
+    auto xBefore = exploreArea->area_.posX_;
+    auto yBefore = exploreArea->area_.posY_;
+#endif
     if (exploreArea->explored_) {
         getStats().incDuplicateSetExplored();
         return NoErr;
@@ -187,6 +185,9 @@ App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
     exploreArea->parent_->updateChildExplored(exploreArea);
+#ifdef _HLC_DEBUG
+    assert(exploreArea->area_.posX_ == xBefore && exploreArea->area_.posY_ == yBefore);
+#endif
     if (exploreArea->parent_->getLeftTreasuriesCnt() == 0) {
         state_.removeExploreAreaFromQueue(exploreArea->parent_);
     }
