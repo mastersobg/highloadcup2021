@@ -51,9 +51,8 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, 1000, 1000), 0, 0);
-    if (auto err = api_.scheduleExplore(
-                ExploreArea::NewExploreArea(nullptr, Area(0, 0, 1000, 1000), 0, 0)); err.hasError()) {
+    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, 500, 500), 0, 0);
+    if (auto err = api_.scheduleExplore(root); err.hasError()) {
         return err.error();
     }
     Measure<std::chrono::microseconds> tm;
