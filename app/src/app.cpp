@@ -74,17 +74,17 @@ ExpectedVoid App::fireInitRequests() noexcept {
         auto exploreResponse = std::move(apiResp).getResponse();
 
         auto req = resp.getRequest().getExploreRequest();
-        if (auto err = processExploredArea(req, exploreResponse.amount_, "actual"); err.hasError()) {
+        if (auto err = processExploredArea(req, exploreResponse.amount_); err.hasError()) {
             return err.error();
         }
     }
 
     state_.removeExploreAreaFromQueue(root);
-//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-//        if (auto err = scheduleIssueLicense(); err.hasError()) {
-//            return err;
-//        }
-//    }
+    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+        if (auto err = scheduleIssueLicense(); err.hasError()) {
+            return err;
+        }
+    }
 
     for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
         if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
