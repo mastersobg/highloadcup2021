@@ -51,40 +51,15 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
-                                            kTreasuriesCount);
-    state_.setRootExploreArea(root);
-    createSubAreas(root);
-    for (const auto &child : root->children_) {
-        if (auto err = api_.scheduleExplore(child); err.hasError()) {
-            return err.error();
-        }
-    }
-    auto childrenCnt = root->getNonExploredChildrenCnt();
-    for (size_t i = 0; i < childrenCnt; i++) {
-        auto resp = api_.getAvailableResponse();
-
-        if (resp.getExploreResponse().hasError()) {
-            return resp.getExploreResponse().error();
-        }
-        auto apiResp = resp.getExploreResponse().get();
-        if (apiResp.getHttpCode() != 200) {
-            return ErrorCode::kExploreInitErr;
-        }
-        auto exploreResponse = std::move(apiResp).getResponse();
-
-        auto req = resp.getRequest().getExploreRequest();
-        if (auto err = processExploredArea(req, exploreResponse.amount_); err.hasError()) {
-            return err.error();
-        }
-    }
-
-    state_.removeExploreAreaFromQueue(root);
 //    for (size_t i = 0; i < kMaxLicensesCount; i++) {
 //        if (auto err = scheduleIssueLicense(); err.hasError()) {
 //            return err;
 //        }
 //    }
+    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
+                                            kTreasuriesCount);
+    state_.setRootExploreArea(root);
+    createSubAreas(root);
 
     for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
         if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
@@ -178,7 +153,11 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
 }
 
 ExpectedVoid
-App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept {
+App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt) noexcept {
+#ifdef _HLC_DEBUG
+    auto xBefore = exploreArea->area_.posX_;
+    auto yBefore = exploreArea->area_.posY_;
+#endif
     if (exploreArea->explored_) {
         getStats().incDuplicateSetExplored();
         return NoErr;
@@ -187,6 +166,9 @@ App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
     exploreArea->parent_->updateChildExplored(exploreArea);
+#ifdef _HLC_DEBUG
+    assert(exploreArea->area_.posX_ == xBefore && exploreArea->area_.posY_ == yBefore);
+#endif
     if (exploreArea->parent_->getLeftTreasuriesCnt() == 0) {
         state_.removeExploreAreaFromQueue(exploreArea->parent_);
     }
