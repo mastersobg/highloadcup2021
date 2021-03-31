@@ -51,34 +51,15 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
-                                            kTreasuriesCount);
-    state_.setRootExploreArea(root);
-    createSubAreas(root);
-    size_t childrenCnt = root->getNonExploredChildrenCnt();
-    HttpClient client{address_, "8000", "http"};
-    for (size_t i = 0; i < childrenCnt; i++) {
-        auto resp = client.explore(root->children_[i]->area_);
-        if (resp.hasError()) {
-            return resp.error();
-        }
-        auto apiResp = resp.get();
-        if (apiResp.getHttpCode() != 200) {
-            return ErrorCode::kExploreInitErr;
-        }
-        auto exploreResponse = std::move(apiResp).getResponse();
-
-        if (auto err = processExploredArea(root->children_[i], exploreResponse.amount_); err.hasError()) {
-            return err.error();
-        }
-    }
-
-    state_.removeExploreAreaFromQueue(root);
     for (size_t i = 0; i < kMaxLicensesCount; i++) {
         if (auto err = scheduleIssueLicense(); err.hasError()) {
             return err;
         }
     }
+    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
+                                            kTreasuriesCount);
+    state_.setRootExploreArea(root);
+    createSubAreas(root);
 
     for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
         if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
