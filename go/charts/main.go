@@ -82,11 +82,11 @@ func buildTotalRequestsCount(responses []*Response) (*charts.Line, error) {
 	return line, nil
 
 }
-func buildSecondsSumChart(responses []*Response) (*charts.Line, error) {
+func buildSecondsSumChart(title string, responses []*Response) (*charts.Line, error) {
 	line := charts.NewLine()
 	line.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
-			Title: "Total RPS",
+			Title: title,
 		}),
 		charts.WithLegendOpts(opts.Legend{Show: true}),
 		charts.WithTooltipOpts(opts.Tooltip{Show: true}),
@@ -357,11 +357,20 @@ func httpserver(w http.ResponseWriter, r *http.Request) {
 		page.AddCharts(cashLatencyChart)
 	}
 
-	totalSecondsSum, err := buildSecondsSumChart([]*Response{exploreSecondsResponse, digSecondsResponse, cashSecondsResponse, licencesSecondsResponse})
+	secondsSumChart, err := buildSecondsSumChart("Seconds sum for all requests", []*Response{exploreSecondsResponse, digSecondsResponse, cashSecondsResponse, licencesSecondsResponse})
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		page.AddCharts(totalSecondsSum)
+		page.AddCharts(secondsSumChart)
+	}
+
+	requestsSumChart, err := buildSecondsSumChart("Requests sum for all requests", []*Response{
+		exploreCountResponse, digCountResponse, cashCountResponse, licensesCountResponse,
+	})
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		page.AddCharts(requestsSumChart)
 	}
 
 	totalRPS, err := buildTotalRequestsCount([]*Response{exploreCountResponse, digCountResponse, cashCountResponse, licensesCountResponse})
