@@ -34,6 +34,11 @@ COPY --from=build /app/highloadcup2021 .
 COPY server-runner.sh .
 COPY server-profile.sh .
 COPY server-dump.sh .
+COPY build.sh .
+COPY Dockerfile .
+COPY CMakeLists.txt .
+COPY src ./src
+
 RUN echo "set pagination off" > ~/.gdbinit
 
 ARG build_type
