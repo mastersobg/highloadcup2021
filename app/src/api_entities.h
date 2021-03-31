@@ -111,7 +111,6 @@ struct ExploreArea {
     size_t nonExploredChildrenCnt_{0};
     size_t exploreDepth_{0};
     bool explored_{false};
-    std::string guessed_{""};
     int childSwapsCnt_{0};
 
     ExploreArea(ExploreAreaPtr parent, Area area, size_t exploreDepth,

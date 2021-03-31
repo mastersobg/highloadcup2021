@@ -74,17 +74,17 @@ ExpectedVoid App::fireInitRequests() noexcept {
         auto exploreResponse = std::move(apiResp).getResponse();
 
         auto req = resp.getRequest().getExploreRequest();
-        if (auto err = processExploredArea(req, exploreResponse.amount_, "actual"); err.hasError()) {
+        if (auto err = processExploredArea(req, exploreResponse.amount_); err.hasError()) {
             return err.error();
         }
     }
 
     state_.removeExploreAreaFromQueue(root);
-//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-//        if (auto err = scheduleIssueLicense(); err.hasError()) {
-//            return err;
-//        }
-//    }
+    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+        if (auto err = scheduleIssueLicense(); err.hasError()) {
+            return err;
+        }
+    }
 
     for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
         if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
@@ -178,7 +178,7 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
 }
 
 ExpectedVoid
-App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt, const std::string &title) noexcept {
+App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept {
     if (exploreArea->explored_) {
         getStats().incDuplicateSetExplored();
         return NoErr;
@@ -186,26 +186,12 @@ App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt
     getStats().incExploredArea(exploreArea->area_.getArea());
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
-    exploreArea->guessed_ = title;
     exploreArea->parent_->updateChildExplored(exploreArea);
     if (exploreArea->parent_->getLeftTreasuriesCnt() == 0) {
         state_.removeExploreAreaFromQueue(exploreArea->parent_);
     }
 
-//    if (title == "guess") {
-//        auto client = HttpClient{address_, "8000", "http"};
-//        auto resp = client.explore(exploreArea->area_);
-//        if (resp.hasError()) {
-//            return resp.error();
-//        }
-//        auto apiResp = resp.get().getResponse();
-//        if (apiResp.amount_ != actualTreasuriesCnt) {
-//            assert(false);
-//       }
-//    }
     if (exploreArea->actualTreasuriesCnt_ > 0 && exploreArea->area_.getArea() == 1) {
-//        debugf("found: %s %d %d %d", title.c_str(), actualTreasuriesCnt, exploreArea.get()->area_.posX_,
-//               exploreArea.get()->area_.posY_);
         getStats().recordTreasuriesCnt((int) exploreArea->actualTreasuriesCnt_);
         state_.setLeftTreasuriesAmount(exploreArea->area_.posX_, exploreArea->area_.posY_,
                                        (int32_t) exploreArea->actualTreasuriesCnt_);
@@ -230,14 +216,13 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     auto successResp = std::move(resp).getResponse();
     auto exploreArea = req.getExploreRequest();
 
-    if (auto err = processExploredArea(exploreArea, successResp.amount_, "actual"); err.hasError()) {
+    if (auto err = processExploredArea(exploreArea, successResp.amount_); err.hasError()) {
         return err.error();
     }
 
     if (exploreArea->parent_->getNonExploredChildrenCnt() == 1) {
         auto child = exploreArea->parent_->getLastNonExploredChild();
-        if (auto err = processExploredArea(child, exploreArea->parent_->getLeftTreasuriesCnt(),
-                                           "guess"); err.hasError()) {
+        if (auto err = processExploredArea(child, exploreArea->parent_->getLeftTreasuriesCnt()); err.hasError()) {
             return err.error();
         }
         state_.removeExploreAreaFromQueue(exploreArea->parent_);
