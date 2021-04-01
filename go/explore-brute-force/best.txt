@@ -62,3 +62,11 @@ INFO  Avg explore request per treasure: 4.374541
 best requests: 4434
 best areas: [[512 1] [256 1] [128 1] [64 1] [32 1] [16 1] [8 1] [4 1] [2 1] [1 1]]
 
+INFO  Avg explore request per treasure: 4.329060
+best requests: 4309
+best areas: [[2048 4] [2048 2] [2048 1] [1024 1] [512 1] [256 1] [128 1] [64 1] [32 1] [16 1] [8 1] [4 1] [2 1] [1 1]]
+
+
+INFO  Build type: release commit hash: c16506ed5310896233d3aedf1ed45353ef945da8
+INFO  Avg explore request per treasure: 4.336196
+
