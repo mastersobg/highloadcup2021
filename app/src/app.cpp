@@ -167,12 +167,10 @@ App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt)
     getStats().incExploredArea(exploreArea->area_.getArea());
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
+    state_.removeExploreAreaFromQueue(exploreArea->parent_);
     exploreArea->parent_->updateChildExplored(exploreArea);
-#ifdef _HLC_DEBUG
-    assert(exploreArea->area_.posX_ == xBefore && exploreArea->area_.posY_ == yBefore);
-#endif
-    if (exploreArea->parent_->getLeftTreasuriesCnt() == 0) {
-        state_.removeExploreAreaFromQueue(exploreArea->parent_);
+    if (exploreArea->parent_->getLeftTreasuriesCnt() > 0) {
+        state_.addExploreArea(exploreArea->parent_);
     }
 #ifdef _HLC_DEBUG
     assert(exploreArea->area_.posX_ == xBefore && exploreArea->area_.posY_ == yBefore);

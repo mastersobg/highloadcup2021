@@ -211,26 +211,26 @@ struct ExploreArea {
             " sizeY: " << area_.sizeY_;
         return msg.str();
     }
+
 };
+
 
 using ExploreAreaPtr = std::shared_ptr<ExploreArea>;
 
-inline bool operator<(const ExploreAreaPtr &l, const ExploreAreaPtr &r) {
+inline bool operator<(const ExploreAreaPtr &l, const ExploreAreaPtr &r) noexcept {
     return l->expectedChildTreasuriesCnt_ > r->expectedChildTreasuriesCnt_;
 }
 
-inline bool operator<=(const ExploreAreaPtr &l, const ExploreAreaPtr &r) {
-    if (l->expectedChildTreasuriesCnt_ > r->expectedChildTreasuriesCnt_) {
-        return true;
-    }
-    if (l->exploredChildrenTreasuriesCnt_ < r->exploredChildrenTreasuriesCnt_) {
-        return false;
-    }
-    return true;
+inline bool operator<=(const ExploreAreaPtr &l, const ExploreAreaPtr &r) noexcept {
+    return !(r < l);
 }
 
-inline bool operator>(const ExploreAreaPtr &l, const ExploreAreaPtr &r) {
-    return l->expectedChildTreasuriesCnt_ < r->expectedChildTreasuriesCnt_;
+inline bool operator>=(const ExploreAreaPtr &l, const ExploreAreaPtr &r) noexcept {
+    return !(l < r);
+}
+
+inline bool operator>(const ExploreAreaPtr &l, const ExploreAreaPtr &r) noexcept {
+    return r < l;
 }
 
 
