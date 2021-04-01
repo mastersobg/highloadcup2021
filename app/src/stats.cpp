@@ -57,7 +57,7 @@ void Stats::print() noexcept {
 //    printDepthHistogram();
     printTreasuriesDiggedCount();
 
-//    printCoinsDepthHistogram();
+    printCoinsDepthHistogram();
 //    printExploreAreaHistogram();
 //    printCpuStat();
 

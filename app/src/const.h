@@ -46,6 +46,6 @@ constexpr int minDepthToCash{1};
 
 constexpr int kLicensePrice{1};
 
-constexpr int kMinCashRequestsToStartCashing{5000};
+constexpr int kMinCashRequestsToStartCashing{2500};
 
 #endif //HIGHLOADCUP2021_CONST_H
