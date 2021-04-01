@@ -219,8 +219,19 @@ inline bool operator<(const ExploreAreaPtr &l, const ExploreAreaPtr &r) {
     return l->expectedChildTreasuriesCnt_ > r->expectedChildTreasuriesCnt_;
 }
 
+inline bool operator<=(const ExploreAreaPtr &l, const ExploreAreaPtr &r) {
+    if (l->expectedChildTreasuriesCnt_ > r->expectedChildTreasuriesCnt_) {
+        return true;
+    }
+    if (l->exploredChildrenTreasuriesCnt_ < r->exploredChildrenTreasuriesCnt_) {
+        return false;
+    }
+    return true;
+}
+
 inline bool operator>(const ExploreAreaPtr &l, const ExploreAreaPtr &r) {
     return l->expectedChildTreasuriesCnt_ < r->expectedChildTreasuriesCnt_;
 }
+
 
 #endif //HIGHLOADCUP2021_API_ENTITIES_H
