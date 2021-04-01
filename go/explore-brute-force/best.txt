@@ -70,3 +70,75 @@ best areas: [[2048 4] [2048 2] [2048 1] [1024 1] [512 1] [256 1] [128 1] [64 1] 
 INFO  Build type: release commit hash: c16506ed5310896233d3aedf1ed45353ef945da8
 INFO  Avg explore request per treasure: 4.336196
 
+
+
+baseline:
+INFO  Avg explore request cost: 1351.554943
+INFO  Avg explore request per treasure: 5.444305
+INFO  Avg explored area per treasure: 390.551940
+INFO  Avg cost per treasure: 7358.277847
+best requests: 5442
+best areas: [[500 10] [500 1] [50 1] [5 1] [1 1]]
+
+best:
+INFO  Avg explore request cost: 1315.235329
+INFO  Avg explore request per treasure: 5.148036
+INFO  Avg explored area per treasure: 34.451662
+best requests: 5224
+best areas: [[16 1] [8 1] [4 1] [2 1] [1 1]]
+
+
+INFO  Avg explore request cost: 1562.519371
+INFO  Avg explore request per treasure: 4.619974
+INFO  Avg explored area per treasure: 60.028534
+best requests: 4632
+best areas: [[64 1] [32 1] [16 1] [8 1] [4 1] [2 1] [1 1]]
+
+INFO  Avg explore request cost: 1562.956823
+INFO  Avg explore request per treasure: 4.620690
+INFO  Avg explored area per treasure: 60.176108
+best requests: 4642
+best areas: [[128 1] [64 1] [32 1] [16 1] [8 1] [4 1] [2 1] [1 1]]
+
+
+INFO  Avg explore request cost: 1564.315776
+INFO  Avg explore request per treasure: 4.619221
+INFO  Avg explored area per treasure: 60.369830
+best requests: 4641
+best areas: [[128 1] [64 1] [32 1] [16 1] [8 1] [4 1] [2 1] [1 1]]
+
+INFO  Avg explore request cost: 1664.695477
+INFO  Avg explore request per treasure: 4.489569
+INFO  Avg explored area per treasure: 116.303199
+best requests: 4476
+best areas: [[256 1] [128 1] [64 1] [32 1] [16 1] [8 1] [4 1] [2 1] [1 1]]
+
+
+INFO  Avg explore request cost: 1502.483321
+INFO  Avg explore request per treasure: 5.053232
+INFO  Avg explored area per treasure: 92.906210
+best requests: 5077
+best areas: [[243 1] [81 1] [27 1] [9 1] [3 1] [1 1]]
+
+
+INFO  Avg explore request cost: 1517.573441
+INFO  Avg explore request per treasure: 4.939130
+INFO  Avg explored area per treasure: 182.872050
+INFO  Avg cost per treasure: 7495.493168
+best requests: 4902
+best areas: [[729 1] [729 1] [243 1] [81 1] [27 1] [9 1] [3 1] [1 1]]
+
+INFO  Avg explore request cost: 1526.916497
+INFO  Avg explore request per treasure: 4.924069
+INFO  Avg explored area per treasure: 408.796562
+INFO  Avg cost per treasure: 7518.641834
+best requests: 4884
+best areas: [[2187 3] [2187 1] [729 1] [243 1] [81 1] [27 1] [9 1] [3 1] [1 1]]
+
+
+INFO  Avg explore request cost: 1535.148148
+INFO  Avg explore request per treasure: 5.003497
+INFO  Avg explored area per treasure: 224.012821
+INFO  Avg cost per treasure: 7681.108392
+best requests: 4934
+best areas: [[3500 1] [512 1] [64 1] [32 1] [16 1] [8 1] [4 1] [1 1]]
