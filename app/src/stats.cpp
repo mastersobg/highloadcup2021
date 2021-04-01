@@ -40,6 +40,7 @@ void Stats::print() noexcept {
               (double) exploreRequestsCnt_.load() / (double) treasuriesCnt_.load());
         infof("Avg explored area per treasure: %f",
               (double) exploreRequestTotalArea_.load() / (double) treasuriesCnt_.load());
+        infof("Avg cost per treasure: %f", (double) exploreRequestTotalCost_.load() / (double) treasuriesCnt_.load());
     }
     infof("Total requests duration: %lld", totalRequestsDuration_.load());
 //    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
