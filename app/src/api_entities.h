@@ -8,6 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cassert>
+#include "util.h"
 
 constexpr int32_t ApiErrorCodeUnknown = 1;
 
@@ -112,13 +113,15 @@ struct ExploreArea {
     size_t exploreDepth_{0};
     bool explored_{false};
     int childSwapsCnt_{0};
+    int32_t id_;
 
     ExploreArea(ExploreAreaPtr parent, Area area, size_t exploreDepth,
                 size_t actualTreasuriesCnt) :
             parent_{std::move(parent)},
             area_{area},
             actualTreasuriesCnt_{actualTreasuriesCnt},
-            exploreDepth_{exploreDepth} {}
+            exploreDepth_{exploreDepth},
+            id_{getNextUniqueId()} {}
 
     static ExploreAreaPtr
     NewExploreArea(ExploreAreaPtr parent, Area area, size_t exploreDepth,
@@ -218,7 +221,13 @@ struct ExploreArea {
 using ExploreAreaPtr = std::shared_ptr<ExploreArea>;
 
 inline bool operator<(const ExploreAreaPtr &l, const ExploreAreaPtr &r) noexcept {
-    return l->expectedChildTreasuriesCnt_ > r->expectedChildTreasuriesCnt_;
+    if (l->expectedChildTreasuriesCnt_ > r->expectedChildTreasuriesCnt_) {
+        return true;
+    }
+    if (l->expectedChildTreasuriesCnt_ < r->expectedChildTreasuriesCnt_) {
+        return false;
+    }
+    return l->id_ < r->id_;
 }
 
 inline bool operator<=(const ExploreAreaPtr &l, const ExploreAreaPtr &r) noexcept {

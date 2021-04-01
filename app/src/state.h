@@ -35,7 +35,7 @@ private:
     std::array<std::array<int32_t, kFieldMaxX>, kFieldMaxY> leftTreasuriesAmount_{};
     std::list<CoinID> coins_;
     std::multiset<DelayedDigRequest> digRequests_;
-    std::list<ExploreAreaPtr> exploreQueue_{};
+    std::set<ExploreAreaPtr> exploreQueue_{};
     ExploreAreaPtr root_{nullptr};
 
 public:
@@ -68,13 +68,7 @@ public:
     }
 
     void addExploreArea(ExploreAreaPtr ea) noexcept {
-        for (auto it = exploreQueue_.begin(); it != exploreQueue_.end(); it++) {
-            if (ea < *it) {
-                exploreQueue_.insert(it, std::move(ea));
-                return;
-            }
-        }
-        exploreQueue_.push_back(std::move(ea));
+        exploreQueue_.insert(std::move(ea));
     }
 
     ExploreAreaPtr fetchNextExploreArea() noexcept;
@@ -84,12 +78,10 @@ public:
     }
 
     void removeExploreAreaFromQueue(const ExploreAreaPtr &ea) noexcept {
-        for (auto it = exploreQueue_.begin(); it != exploreQueue_.end(); it++) {
-            if (*it == ea) {
-                exploreQueue_.erase(it);
-                return;
-            }
-        }
+        [[maybe_unused]] auto cnt = exploreQueue_.erase(ea);
+#ifdef _HLC_DEBUG
+        assert(cnt <= 1);
+#endif
     }
 
     void addLicence(License l) {

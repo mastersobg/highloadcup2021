@@ -212,7 +212,6 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
         if (auto err = processExploredArea(child, exploreArea->parent_->getLeftTreasuriesCnt()); err.hasError()) {
             return err.error();
         }
-        state_.removeExploreAreaFromQueue(exploreArea->parent_);
     }
 
 #ifdef _HLC_DEBUG
