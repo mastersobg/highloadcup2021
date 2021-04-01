@@ -72,38 +72,71 @@ ExpectedVoid App::fireInitRequests() noexcept {
 }
 
 void App::run() noexcept {
-    if (auto err = fireInitRequests(); err.hasError()) {
-        errorf("fireInitRequests: error: %d", err.error());
-        return;
-    }
-
+    HttpClient client{address_, "8000", "http"};
+    int x{0}, y{0};
+    int h{1}, w{1};
+    auto startTime = std::chrono::steady_clock::now();
+    const std::chrono::seconds limitSeconds(30);
+    int non200HttpCodes{0};
+    std::map<int, int> countMap;
+    std::map<int, int64_t> latencyMap;
     for (;;) {
-        if (getApp().isStopped()) {
+        if (isStopped()) {
             break;
         }
-
-        auto response = api_.getAvailableResponse();
-
-        Measure<std::chrono::nanoseconds> tm;
-        auto err = processResponse(response);
-        getStats().addProcessResponseTime(tm.getInt64());
-        if (err.hasError()) {
-            if (err.error() != ErrorCode::kErrCurlTimeout) {
-                errorf("error occurred: %d", err.error());
-                break;
+        auto now = std::chrono::steady_clock::now();
+        if (now - startTime >= limitSeconds) {
+            startTime = now;
+            if (h * 2 <= (int) kFieldMaxX) {
+                h *= 2;
             } else {
-                if (auto errInner = api_.scheduleRequest(std::move(response.getRequest())); errInner.hasError()) {
-                    errorf("error occurred: %d", errInner.error());
-                    break;
-                }
-                getStats().incTimeoutCnt();
+                w *= 2;
+            }
+            x = 0;
+            y = 0;
+//            debugf("switched");
+        }
+
+//        debugf("requesting x: %d y: %d h: %d w: %d", x, y, h, w);
+        auto resp = client.explore(Area(static_cast<int16_t>(x), static_cast<int16_t>(y), static_cast<int16_t>(h),
+                                        static_cast<int16_t>(w)));
+
+        if (resp.hasError()) {
+            if (resp.error() != ErrorCode::kErrCurlTimeout) {
+                errorf("error occurred: %d", resp.error());
+                break;
             }
         }
 
-        getStats().recordInUseLicenses(state_.getInUseLicensesCount());
-        getStats().recordCoinsAmount(state_.getCoinsAmount());
+        auto httpResp = resp.get();
+        if (httpResp.getHttpCode() != 200) {
+            non200HttpCodes++;
+        } else {
+            countMap[w * h]++;
+            latencyMap[w * h] += httpResp.getLatencyMcs().count();
+        }
+
+        x += h;
+        if (x >= (int) kFieldMaxX) {
+            x = 0;
+            y += w;
+            if (y >= (int) kFieldMaxY) {
+                x = 0;
+                y = 0;
+            }
+        }
     }
 
+    infof("Non 200 http codes: %d", non200HttpCodes);
+    std::string logStr{};
+    for (const auto[area, count] : countMap) {
+        auto totalLatency = latencyMap[area];
+        writeIntToString(area, logStr);
+        logStr += ":";
+        writeIntToString(totalLatency / (int64_t) count, logStr);
+        logStr += ",";
+    }
+    debugf("%s", logStr.c_str());
 }
 
 ExpectedVoid App::processResponse(Response &resp) noexcept {
