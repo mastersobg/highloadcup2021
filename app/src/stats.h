@@ -36,6 +36,7 @@ private:
     std::atomic<int64_t> totalProcessResponseTime_{0};
     std::atomic<int64_t> totalProcessExploreResponseTime_{0};
     std::atomic<int64_t> exploreRequestsCnt_{0};
+    std::atomic<int64_t> exploreRequestTotalArea_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -192,8 +193,9 @@ public:
         exploreAreaHistogramDuration_[idx] += durationMs;
     }
 
-    void incExploreRequestsCnt() noexcept {
+    void recordExploreRequest(int64_t area) noexcept {
         exploreRequestsCnt_++;
+        exploreRequestTotalArea_ += area;
     }
 
     void print() noexcept;
