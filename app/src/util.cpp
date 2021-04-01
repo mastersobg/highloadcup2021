@@ -1,4 +1,5 @@
 #include "util.h"
+#include <atomic>
 
 void writeIntToString(int64_t n, std::string &s) {
     if (n < 0) {
@@ -26,4 +27,10 @@ bool equal(double a, double b) noexcept {
 
 bool moreOrEqual(double a, double b) noexcept {
     return a > b || equal(a, b);
+}
+
+std::atomic<int32_t> uniqueId{0};
+
+int32_t getNextUniqueId() noexcept {
+    return uniqueId++;
 }
