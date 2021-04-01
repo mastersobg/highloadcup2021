@@ -24,11 +24,8 @@ struct ExploreAreaShift {
     int16_t height;
     int16_t width;
 };
-constexpr std::array<ExploreAreaShift, 10> kExploreAreas = {
+constexpr std::array<ExploreAreaShift, 7> kExploreAreas = {
         {
-                {512, 1},
-                {256, 1},
-                {128, 1},
                 {64, 1},
                 {32, 1},
                 {16, 1},
