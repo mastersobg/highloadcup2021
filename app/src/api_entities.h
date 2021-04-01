@@ -214,9 +214,7 @@ struct ExploreArea {
             " sizeY: " << area_.sizeY_;
         return msg.str();
     }
-
 };
-
 
 using ExploreAreaPtr = std::shared_ptr<ExploreArea>;
 
