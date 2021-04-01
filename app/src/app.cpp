@@ -153,7 +153,11 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
 }
 
 ExpectedVoid
-App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt) noexcept {
+App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt) noexcept {
+#ifdef _HLC_DEBUG
+    auto xBefore = exploreArea->area_.posX_;
+    auto yBefore = exploreArea->area_.posY_;
+#endif
     if (exploreArea->explored_) {
         getStats().incDuplicateSetExplored();
         return NoErr;
@@ -162,6 +166,9 @@ App::processExploredArea(ExploreAreaPtr &exploreArea, size_t actualTreasuriesCnt
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
     exploreArea->parent_->updateChildExplored(exploreArea);
+#ifdef _HLC_DEBUG
+    assert(exploreArea->area_.posX_ == xBefore && exploreArea->area_.posY_ == yBefore);
+#endif
     if (exploreArea->parent_->getLeftTreasuriesCnt() == 0) {
         state_.removeExploreAreaFromQueue(exploreArea->parent_);
     }
