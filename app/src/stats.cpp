@@ -33,11 +33,14 @@ void Stats::print() noexcept {
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
     infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
           totalProcessExploreResponseTime_.load());
+    infof("Avg explore request cost: %f",
+          (double) exploreRequestTotalCost_.load() / (double) exploreRequestsCnt_.load());
     if (treasuriesCnt_.load() > 0) {
         infof("Avg explore request per treasure: %f",
               (double) exploreRequestsCnt_.load() / (double) treasuriesCnt_.load());
         infof("Avg explored area per treasure: %f",
               (double) exploreRequestTotalArea_.load() / (double) treasuriesCnt_.load());
+        infof("Avg cost per treasure: %f", (double) exploreRequestTotalCost_.load() / (double) treasuriesCnt_.load());
     }
     infof("Total requests duration: %lld", totalRequestsDuration_.load());
 //    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
@@ -185,6 +188,17 @@ void Stats::printTreasuriesDiggedCount() noexcept {
     }
     infof("Digged treasuries count: %d", cnt);
 
+}
+
+const std::vector<int64_t> exploreCostThresholds = {0, 1058, 1036, 1132, 1538, 2065, 2571, 3120, 3634, 4123, 4723,
+                                                    5306, 6201, 7336, 8594, 11055, 15592, 24018, 40434, 71600,
+                                                    129316};
+
+int64_t Stats::calculateExploreCost(int64_t area) noexcept {
+    int64_t pos = 0;
+    for (pos = 0; (int64_t) 1LL << pos <= area; pos++) {
+    }
+    return exploreCostThresholds[static_cast<size_t>(pos)];
 }
 
 void recordInFlightRequests() {

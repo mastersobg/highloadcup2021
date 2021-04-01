@@ -36,6 +36,7 @@ private:
     std::atomic<int64_t> totalProcessExploreResponseTime_{0};
     std::atomic<int64_t> exploreRequestsCnt_{0};
     std::atomic<int64_t> exploreRequestTotalArea_{0};
+    std::atomic<int64_t> exploreRequestTotalCost_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -186,7 +187,10 @@ public:
     void recordExploreRequest(int64_t area) noexcept {
         exploreRequestsCnt_++;
         exploreRequestTotalArea_ += area;
+        exploreRequestTotalCost_ += calculateExploreCost(area);
     }
+
+    int64_t calculateExploreCost(int64_t area) noexcept;
 
     void print() noexcept;
 };
