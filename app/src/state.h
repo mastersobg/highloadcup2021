@@ -221,6 +221,10 @@ public:
         return !cashRequests_.empty();
     }
 
+    [[nodiscard]] size_t queuedCashRequestsCount() const noexcept {
+        return cashRequests_.size();
+    }
+
     DelayedCashRequest getNextCashRequest() noexcept {
         auto r = cashRequests_.extract(cashRequests_.begin()).value();
 #ifdef _HLC_DEBUG

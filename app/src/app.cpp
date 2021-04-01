@@ -72,8 +72,6 @@ ExpectedVoid App::fireInitRequests() noexcept {
 }
 
 void App::run() noexcept {
-    auto startTime = std::chrono::steady_clock::now();
-    constexpr std::chrono::seconds kElapsedSeconds(360);
     if (auto err = fireInitRequests(); err.hasError()) {
         errorf("fireInitRequests: error: %d", err.error());
         return;
@@ -105,15 +103,11 @@ void App::run() noexcept {
         getStats().recordInUseLicenses(state_.getInUseLicensesCount());
         getStats().recordCoinsAmount(state_.getCoinsAmount());
 
-
-        auto now = std::chrono::steady_clock::now();
-        if (now - startTime > kElapsedSeconds) {
-            while (state_.hasQueuedCashRequests()) {
-                auto r = state_.getNextCashRequest();
-                if (auto err1 = api_.scheduleCash(r.treasureId_, r.depth_); err1.hasError()) {
-                    errorf("error occurred while queueing cash request: %d", err.error());
-                    break;
-                }
+        while (state_.queuedCashRequestsCount() > kMinCashRequestsToStartCashing) {
+            auto r = state_.getNextCashRequest();
+            if (auto err1 = api_.scheduleCash(r.treasureId_, r.depth_); err1.hasError()) {
+                errorf("error occurred while queueing cash request: %d", err.error());
+                break;
             }
         }
     }

@@ -23,4 +23,3 @@ ExploreAreaPtr State::fetchNextExploreArea() noexcept {
 #endif
     return nullptr;
 }
-
