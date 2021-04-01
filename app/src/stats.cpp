@@ -29,14 +29,15 @@ void Stats::print() noexcept {
 //    infof("Timeouts: %d", timeoutCnt_.load());
 //    infof("Explored area: %lld", exploredArea_.load());
     infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
-//    infof("Cash skipped: %lld", cashSkippedCnt_.load());
-//    infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
-//    infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
-//          totalProcessExploreResponseTime_.load());
-//    if (totalLisenceDigAllowedCnt_ > 0) {
-//        infof("Avg license dig allowed: %f", (double) totalLicenseDigAllowed_ / (double) totalLisenceDigAllowedCnt_);
-//    }
-//    infof("Total requests duration: %lld", totalRequestsDuration_.load());
+    infof("Cash skipped: %lld", cashSkippedCnt_.load());
+    infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
+    infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
+          totalProcessExploreResponseTime_.load());
+    if (treasuriesCnt_.load() > 0) {
+        infof("Avg explore request per treasure: %f",
+              (double) exploreRequestsCnt_.load() / (double) treasuriesCnt_.load());
+    }
+    infof("Total requests duration: %lld", totalRequestsDuration_.load());
 //    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
 //    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
 //    infof("Average in flight requests: %f", (double) inFlightRequestsSum_ / (double) inFlightRequestsCnt_);

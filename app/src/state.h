@@ -48,14 +48,9 @@ private:
     std::list<CoinID> coins_;
     std::multiset<DelayedDigRequest> digRequests_;
     std::multiset<DelayedCashRequest> cashRequests_;
-    std::vector<ExploreAreaPtr> exploreQueue_{};
+    std::set<ExploreAreaPtr> exploreQueue_{};
     ExploreAreaPtr root_{nullptr};
     bool licensesRequested_{false};
-
-    void removeFromExploreQueue(size_t pos) noexcept {
-        exploreQueue_[pos] = std::move(exploreQueue_.back());
-        exploreQueue_.pop_back();
-    }
 
 public:
     State() = default;
@@ -95,7 +90,7 @@ public:
     }
 
     void addExploreArea(ExploreAreaPtr ea) noexcept {
-        exploreQueue_.push_back(std::move(ea));
+        exploreQueue_.insert(std::move(ea));
     }
 
     ExploreAreaPtr fetchNextExploreArea() noexcept;
@@ -105,13 +100,10 @@ public:
     }
 
     void removeExploreAreaFromQueue(const ExploreAreaPtr &ea) noexcept {
-        for (size_t i = 0; i < exploreQueue_.size(); i++) {
-            const auto &v = exploreQueue_[i];
-            if (v == ea) {
-                removeFromExploreQueue(i);
-                break;
-            }
-        }
+        [[maybe_unused]] auto cnt = exploreQueue_.erase(ea);
+#ifdef _HLC_DEBUG
+        assert(cnt <= 1);
+#endif
     }
 
     void addLicence(License l) {
