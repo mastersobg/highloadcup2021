@@ -103,7 +103,7 @@ Expected<HttpResponse<ExploreResponse>> HttpClient::explore(const Area &area) no
     auto latency = tm.getDuration();
 
     getApp().getStats().recordEndpointStats("explore", ret.get(), latency.count());
-    getApp().getStats().incExploreRequestsCnt();
+    getApp().getStats().recordExploreRequest((int64_t)area.getArea());
     return prepareResponse<ExploreResponse>(ret, resp_.data, latency, valueBuffer_, parseBuffer_,
                                             [this](std::string &data) {
                                                 return unmarshalExploreResponse(data, this->valueBuffer_,

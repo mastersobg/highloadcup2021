@@ -35,6 +35,8 @@ private:
     std::atomic<int64_t> totalProcessResponseTime_{0};
     std::atomic<int64_t> totalProcessExploreResponseTime_{0};
     std::atomic<int64_t> exploreRequestsCnt_{0};
+    std::atomic<int64_t> exploreRequestTotalArea_{0};
+    std::atomic<int64_t> exploreRequestTotalCost_{0};
     std::atomic<int64_t> totalLicenseDigAllowed_{0};
     std::atomic<int64_t> totalLisenceDigAllowedCnt_{0};
 
@@ -69,6 +71,8 @@ private:
     void printEndpointsStats() noexcept;
 
     void printDepthHistogram() noexcept;
+
+    void printTreasuriesDiggedCount() noexcept;
 
     void printCoinsDepthHistogram() noexcept;
 
@@ -191,9 +195,13 @@ public:
         exploreAreaHistogramDuration_[idx] += durationMs;
     }
 
-    void incExploreRequestsCnt() noexcept {
+    void recordExploreRequest(int64_t area) noexcept {
         exploreRequestsCnt_++;
+        exploreRequestTotalArea_ += area;
+        exploreRequestTotalCost_ += calculateExploreCost(area);
     }
+
+    int64_t calculateExploreCost(int64_t area) noexcept;
 
     void print() noexcept;
 };

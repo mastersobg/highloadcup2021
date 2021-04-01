@@ -33,9 +33,14 @@ void Stats::print() noexcept {
     infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
     infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
           totalProcessExploreResponseTime_.load());
+    infof("Avg explore request cost: %f",
+          (double) exploreRequestTotalCost_.load() / (double) exploreRequestsCnt_.load());
     if (treasuriesCnt_.load() > 0) {
         infof("Avg explore request per treasure: %f",
               (double) exploreRequestsCnt_.load() / (double) treasuriesCnt_.load());
+        infof("Avg explored area per treasure: %f",
+              (double) exploreRequestTotalArea_.load() / (double) treasuriesCnt_.load());
+        infof("Avg cost per treasure: %f", (double) exploreRequestTotalCost_.load() / (double) treasuriesCnt_.load());
     }
     infof("Total requests duration: %lld", totalRequestsDuration_.load());
 //    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
@@ -49,7 +54,9 @@ void Stats::print() noexcept {
 //    infof("Coins amount: %d", coinsAmount_.load());
 
 //    printEndpointsStats();
-    printDepthHistogram();
+//    printDepthHistogram();
+    printTreasuriesDiggedCount();
+
 //    printCoinsDepthHistogram();
 //    printExploreAreaHistogram();
 //    printCpuStat();
@@ -112,16 +119,12 @@ void Stats::printEndpointsStats() noexcept {
 void Stats::printDepthHistogram() noexcept {
     std::shared_lock lock(depthHistogramMutex_);
 
-//    std::string logString{};
-//    for (size_t i = 0; i <= 10; i++) {
-//        writeIntToString(depthHistogram_[i], logString);
-//        logString += ", ";
-//    }
-    int treasuriesDiggedCnt{0};
-    for (const auto val : depthHistogram_) {
-        treasuriesDiggedCnt += val;
+    std::string logString{};
+    for (size_t i = 0; i <= 10; i++) {
+        writeIntToString(depthHistogram_[i], logString);
+        logString += ", ";
     }
-    infof("treasuries digged count: %d", treasuriesDiggedCnt);
+    infof("depth histogram: %s", logString.c_str());
 }
 
 void Stats::printCoinsDepthHistogram() noexcept {
@@ -174,6 +177,28 @@ void Stats::printExploreAreaHistogram() noexcept {
     }
     infof("explore area avg duration histogram: %s", avgDurationStr.c_str());
     infof("explore area count histogram: %s", countStr.c_str());
+}
+
+void Stats::printTreasuriesDiggedCount() noexcept {
+    std::shared_lock lock(depthHistogramMutex_);
+
+    int cnt{0};
+    for (size_t i = 0; i <= 10; i++) {
+        cnt += depthHistogram_[i];
+    }
+    infof("Digged treasuries count: %d", cnt);
+
+}
+
+const std::vector<int64_t> exploreCostThresholds = {0, 1058, 1036, 1132, 1538, 2065, 2571, 3120, 3634, 4123, 4723,
+                                                    5306, 6201, 7336, 8594, 11055, 15592, 24018, 40434, 71600,
+                                                    129316};
+
+int64_t Stats::calculateExploreCost(int64_t area) noexcept {
+    int64_t pos = 0;
+    for (pos = 0; (int64_t) 1LL << pos <= area; pos++) {
+    }
+    return exploreCostThresholds[static_cast<size_t>(pos)];
 }
 
 void recordInFlightRequests() {
