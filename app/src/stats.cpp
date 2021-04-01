@@ -50,6 +50,8 @@ void Stats::print() noexcept {
 
     printEndpointsStats();
     printDepthHistogram();
+    printTreasuriesDiggedCount();
+
     printCoinsDepthHistogram();
 //    printExploreAreaHistogram();
     printCpuStat();
@@ -170,6 +172,17 @@ void Stats::printExploreAreaHistogram() noexcept {
     }
     infof("explore area avg duration histogram: %s", avgDurationStr.c_str());
     infof("explore area count histogram: %s", countStr.c_str());
+}
+
+void Stats::printTreasuriesDiggedCount() noexcept {
+    std::shared_lock lock(depthHistogramMutex_);
+
+    int cnt{0};
+    for (size_t i = 0; i <= 10; i++) {
+        cnt += depthHistogram_[i];
+    }
+    infof("Digged treasuries count: %d", cnt);
+
 }
 
 void recordInFlightRequests() {

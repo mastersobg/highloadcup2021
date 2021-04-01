@@ -69,6 +69,8 @@ private:
 
     void printDepthHistogram() noexcept;
 
+    void printTreasuriesDiggedCount() noexcept;
+
     void printCoinsDepthHistogram() noexcept;
 
     void printExploreAreaHistogram() noexcept;

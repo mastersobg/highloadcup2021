@@ -34,4 +34,6 @@ bool equal(double a, double b) noexcept;
 bool moreOrEqual(double a, double b) noexcept;
 
 
+int32_t getNextUniqueId() noexcept;
+
 #endif //HIGHLOADCUP2021_UTIL_H
