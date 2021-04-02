@@ -121,10 +121,10 @@ void App::run() noexcept {
         infof("area: %d non200: %d avg time: %lld", h * w, kRequestsCount - successCount,
               (int64_t) timeDiff / (int64_t) successCount);
 
-        if (h * 2 <= (int) kFieldMaxX) {
-            h *= 2;
+        if (h + 1 <= (int) kFieldMaxX) {
+            h++;
         } else {
-            w *= 2;
+            goto loopBreak;
         }
         x = 0;
         y = 0;
