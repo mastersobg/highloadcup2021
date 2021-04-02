@@ -47,7 +47,7 @@ void Api::threadLoop() {
 
         lock.unlock();
 
-//        getApp().getRateLimiter().acquire(r.getCost());
+        getApp().getRateLimiter().acquire(r.getCost());
 
         inFlightRequestsCnt_++;
         auto ret = makeApiRequest(client, r);
