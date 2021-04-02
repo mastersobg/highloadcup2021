@@ -219,6 +219,9 @@ struct ExploreArea {
 using ExploreAreaPtr = std::shared_ptr<ExploreArea>;
 
 inline bool operator<(const ExploreAreaPtr &l, const ExploreAreaPtr &r) noexcept {
+    if (l->area_.getArea() != r->area_.getArea()) {
+        return l->area_.getArea() < r->area_.getArea();
+    }
     if (l->expectedChildTreasuriesCnt_ > r->expectedChildTreasuriesCnt_) {
         return true;
     }
