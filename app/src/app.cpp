@@ -73,70 +73,76 @@ ExpectedVoid App::fireInitRequests() noexcept {
 
 void App::run() noexcept {
     HttpClient client{address_, "8000", "http"};
+    constexpr int kRequestsCount = 10'000;
     int x{0}, y{0};
     int h{1}, w{1};
-    auto startTime = std::chrono::steady_clock::now();
-    const std::chrono::seconds limitSeconds(30);
-    int non200HttpCodes{0};
-    std::map<int, int> countMap;
-    std::map<int, int64_t> latencyMap;
+//    int non200HttpCodes{0};
+//   std::map<int, int> countMap;
+//    std::map<int, int64_t> latencyMap;
     for (;;) {
         if (isStopped()) {
             break;
         }
-        auto now = std::chrono::steady_clock::now();
-        if (now - startTime >= limitSeconds) {
-            startTime = now;
-            if (h * 2 <= (int) kFieldMaxX) {
-                h *= 2;
-            } else {
-                w *= 2;
+        auto startTime = std::chrono::steady_clock::now();
+        for (auto i = 0; i < kRequestsCount; i++) {
+            auto err = api_.scheduleExplore(
+                    ExploreArea::NewExploreArea(nullptr, Area((int16_t) x, (int16_t) y, (int16_t) h, (int16_t) w), 0,
+                                                0));
+
+            if (err.hasError()) {
+                errorf("error occurred: %d", err.error());
+                goto loopBreak;
             }
-            x = 0;
-            y = 0;
-//            debugf("switched");
-        }
-
-//        debugf("requesting x: %d y: %d h: %d w: %d", x, y, h, w);
-        auto resp = client.explore(Area(static_cast<int16_t>(x), static_cast<int16_t>(y), static_cast<int16_t>(h),
-                                        static_cast<int16_t>(w)));
-
-        if (resp.hasError()) {
-            if (resp.error() != ErrorCode::kErrCurlTimeout) {
-                errorf("error occurred: %d", resp.error());
-                break;
-            }
-        }
-
-        auto httpResp = resp.get();
-        if (httpResp.getHttpCode() != 200) {
-            non200HttpCodes++;
-        } else {
-            countMap[w * h]++;
-            latencyMap[w * h] += httpResp.getLatencyMcs().count();
-        }
-
-        x += h;
-        if (x >= (int) kFieldMaxX) {
-            x = 0;
-            y += w;
-            if (y >= (int) kFieldMaxY) {
+            x += h;
+            if (x >= (int) kFieldMaxX) {
                 x = 0;
-                y = 0;
+                y += w;
+                if (y >= (int) kFieldMaxY) {
+                    x = 0;
+                    y = 0;
+                }
             }
         }
+        int successCount{0};
+        for (auto i = 0; i < kRequestsCount; i++) {
+            auto response = api_.getAvailableResponse();
+            auto req = response.getRequest().getExploreRequest();
+            auto resp = response.getExploreResponse();
+            if (resp.hasError()) {
+                errorf("error occurred: %d", resp.error());
+                goto loopBreak;
+            }
+            if (resp.get().getHttpCode() == 200) {
+                successCount++;
+            }
+        }
+        auto timeDiff = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now() - startTime).count();
+        infof("area: %d non200: %d avg time: %lld", h * w, kRequestsCount - successCount,
+              (int64_t) timeDiff / (int64_t) successCount);
+
+        if (h * 2 <= (int) kFieldMaxX) {
+            h *= 2;
+        } else {
+            w *= 2;
+        }
+        x = 0;
+        y = 0;
     }
 
-    infof("Non 200 http codes: %d", non200HttpCodes);
-    std::string logStr{};
-    for (const auto[area, count] : countMap) {
-        auto totalLatency = latencyMap[area];
-        writeIntToString(area, logStr);
-        logStr += ":";
-        writeIntToString(totalLatency / (int64_t) count, logStr);
-        logStr += ",";
-    }
-    debugf("%s", logStr.c_str());
+    loopBreak:
+
+//    infof("Non 200 http codes: %d", non200HttpCodes);
+//    std::string logStr{};
+//    for (const auto[area, count] : countMap) {
+//        auto totalLatency = latencyMap[area];
+//        writeIntToString(area, logStr);
+//        logStr += ":";
+//        writeIntToString(totalLatency / (int64_t) count, logStr);
+//        logStr += ",";
+//    }
+//    debugf("%s", logStr.c_str());
+    return;
 }
 
 ExpectedVoid App::processResponse(Response &resp) noexcept {
