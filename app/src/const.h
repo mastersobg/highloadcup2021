@@ -25,20 +25,22 @@ struct ExploreAreaShift {
     int16_t width;
 };
 
-constexpr std::array<ExploreAreaShift, 5> kExploreAreas = {
+constexpr double kExpectedChildTreasuriesThreshold = 0.00;
+
+constexpr std::array<ExploreAreaShift, 7> kExploreAreas = {
         {
-                {500, 10},
-                {500, 1},
-                {50, 1},
-                {5, 1},
-                {1, 1}
-//                {128, 128},
-//                {32, 1},
-//                {16, 1},
-//                {8, 1},
-//                {4, 1},
-//                {2, 1},
+//                {500, 10},
+//                {500, 1},
+//                {50, 1},
+//                {5, 1},
 //                {1, 1}
+                {128, 128},
+                {32, 1},
+                {16, 1},
+                {8, 1},
+                {4, 1},
+                {2, 1},
+                {1, 1}
 
 //                {16, 16},
 //                {16, 8},

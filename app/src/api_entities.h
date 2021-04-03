@@ -168,6 +168,10 @@ struct ExploreArea {
         return nonExploredChildrenCnt_;
     }
 
+    [[nodiscard]] double getExpectedChildTreasuriesCnt_() {
+        return expectedChildTreasuriesCnt_;
+    }
+
     [[nodiscard]] size_t getLeftTreasuriesCnt() const {
 #ifdef _HLC_DEBUG
         assert(actualTreasuriesCnt_ >= exploredChildrenTreasuriesCnt_);
