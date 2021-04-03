@@ -75,7 +75,7 @@ void App::run() noexcept {
     HttpClient client{address_, "8000", "http"};
     constexpr int kRequestsCount = 10'000;
     int x{0}, y{0};
-    int h{1}, w{1};
+    int h{2048}, w{8};
 //    int non200HttpCodes{0};
 //   std::map<int, int> countMap;
 //    std::map<int, int64_t> latencyMap;
@@ -121,10 +121,10 @@ void App::run() noexcept {
         infof("area: %d non200: %d avg time: %lld", h * w, kRequestsCount - successCount,
               (int64_t) timeDiff / (int64_t) successCount);
 
-        if (h + 1 <= (int) kFieldMaxX) {
-            h++;
+        if (h * 2 <= (int) kFieldMaxX) {
+            h *= 2;
         } else {
-            goto loopBreak;
+            w *= 2;
         }
         x = 0;
         y = 0;
@@ -325,7 +325,8 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
             }
 
             auto leftCount = state_.getLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_);
-            state_.setLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_, leftCount - (int32_t) treasuries.size());
+            state_.setLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_,
+                                           leftCount - (int32_t) treasuries.size());
             leftCount = state_.getLeftTreasuriesAmount(digRequest.posX_, digRequest.posY_);
             if (leftCount < 0) {
                 return ErrorCode::kTreasuriesLeftInconsistency;
