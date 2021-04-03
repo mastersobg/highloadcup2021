@@ -16,7 +16,7 @@ func main() {
 }
 
 func bruteForce() error {
-	best := int64(math.MaxInt64)
+	best := float64(math.MaxFloat64)
 	var bestArea [][]int
 	//for k := 1500; k > 1000; k-- {
 	for i := 51; i > 1; i-- {
@@ -52,7 +52,7 @@ func bruteForce() error {
 					}
 				}
 			}
-			fmt.Printf("best time: %v\n", best)
+			fmt.Printf("best cost per treasure: %v\n", best)
 			fmt.Printf("best areas: %v\n", bestArea)
 		}
 	}
@@ -60,7 +60,7 @@ func bruteForce() error {
 	return nil
 }
 
-func run(areas [][]int) (int64, error) {
+func run(areas [][]int) (float64, error) {
 	var args []string
 	for _, area := range areas {
 		for _, p := range area {
@@ -81,8 +81,8 @@ func run(areas [][]int) (int64, error) {
 
 	for _, line := range strings.Split(string(out), "\n") {
 		fmt.Println(line)
-		if strings.HasPrefix(line, "DEBUG Time elapsed: ") {
-			parsed, err := strconv.ParseInt(strings.TrimPrefix(line, "DEBUG Time elapsed: "), 10, 32)
+		if strings.HasPrefix(line, "DEBUG Avg cost per treasure: ") {
+			parsed, err := strconv.ParseFloat(strings.TrimPrefix(line, "DEBUG Avg cost per treasure: "), 64)
 			if err != nil {
 				return 0, err
 			}

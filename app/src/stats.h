@@ -158,10 +158,8 @@ public:
             for (const auto &[code, count] : endpointStatsMap_["explore"].httpCodes) {
                 totalReqs += count;
             }
-            auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now().time_since_epoch()
-            ).count();
-            debugf("Time elapsed: %lld", now - startTime_);
+            debugf("Avg cost per treasure: %f",
+                   (double) exploreRequestTotalCost_.load() / (double) treasuriesCnt_.load());
             std::abort();
         }
     }
