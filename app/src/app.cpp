@@ -159,7 +159,7 @@ App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt)
     if (exploreArea->parent_ != nullptr) {
         state_.removeExploreAreaFromQueue(exploreArea->parent_);
         exploreArea->parent_->updateChildExplored(exploreArea);
-        if (exploreArea->parent_->getLeftTreasuriesCnt() > 0) {
+        if (exploreArea->parent_->getExpectedChildTreasuriesCnt_() >= kExpectedChildTreasuriesThreshold) {
             state_.addExploreArea(exploreArea->parent_);
         }
     }
@@ -372,7 +372,7 @@ ExpectedVoid App::createSubAreas(const ExploreAreaPtr &root) noexcept {
         if (auto err = processExploredArea(child, root->getLeftTreasuriesCnt()); err.hasError()) {
             return err.error();
         }
-    } else {
+    } else if (root->getExpectedChildTreasuriesCnt_() >= kExpectedChildTreasuriesThreshold) {
         state_.addExploreArea(root);
     }
     return NoErr;
