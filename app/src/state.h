@@ -36,7 +36,8 @@ private:
     std::list<CoinID> coins_;
     std::multiset<DelayedDigRequest> digRequests_;
     std::set<ExploreAreaPtr> exploreQueue_{};
-    ExploreAreaPtr root_{nullptr};
+    std::vector<ExploreAreaPtr> rootAreas_;
+    int32_t lastX_{0}, lastY_{0};
 
 public:
     State() = default;
@@ -50,8 +51,32 @@ public:
     State &operator=(State &&s) = delete;
 
     ~State() {
-        cleanExploreAreaPtrs(root_);
-        root_ = nullptr;
+        for (const auto &node: rootAreas_) {
+            cleanExploreAreaPtrs(node);
+        }
+        rootAreas_.resize(0);
+    }
+
+    Area getNextBaseArea() {
+        auto x = lastX_;
+        auto y = lastY_;
+
+        lastX_ += kBaseExploreArea.height;
+        if (lastX_ >= (int16_t) kFieldMaxX) {
+            lastX_ = 0;
+            lastY_ += kBaseExploreArea.width;
+        }
+
+        auto h = kBaseExploreArea.height;
+        auto w = kBaseExploreArea.width;
+        if (x + h > (int) kFieldMaxX) {
+            h = static_cast<int16_t>(kFieldMaxX - static_cast<size_t>(x));
+        }
+        if (y + w > (int) kFieldMaxY) {
+            w = static_cast<int16_t> (kFieldMaxY - static_cast<size_t>(y));
+        }
+
+        return Area(static_cast<int16_t>(x), static_cast<int16_t>(y), h, w);
     }
 
     void cleanExploreAreaPtrs(const ExploreAreaPtr &node) {
@@ -63,8 +88,8 @@ public:
     }
 
 
-    void setRootExploreArea(ExploreAreaPtr r) noexcept {
-        root_ = std::move(r);
+    void addRootExploreArea(ExploreAreaPtr r) noexcept {
+        rootAreas_.push_back(std::move(r));
     }
 
     void addExploreArea(ExploreAreaPtr ea) noexcept {
@@ -72,10 +97,6 @@ public:
     }
 
     ExploreAreaPtr fetchNextExploreArea() noexcept;
-
-    bool hasMoreExploreAreas() noexcept {
-        return !exploreQueue_.empty();
-    }
 
     void removeExploreAreaFromQueue(const ExploreAreaPtr &ea) noexcept {
         [[maybe_unused]] auto cnt = exploreQueue_.erase(ea);

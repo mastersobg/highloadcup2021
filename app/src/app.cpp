@@ -56,19 +56,8 @@ ExpectedVoid App::fireInitRequests() noexcept {
 //            return err;
 //        }
 //    }
-    auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
-                                            kTreasuriesCount);
-    state_.setRootExploreArea(root);
-    if (auto err = createSubAreas(root); err.hasError()) {
-        return err.error();
-    }
 
-    for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
-        if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
-            return err;
-        }
-    }
-    return NoErr;
+    return newBaseArea();
 }
 
 void App::run() noexcept {
@@ -167,10 +156,12 @@ App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt)
     getStats().incExploredArea(exploreArea->area_.getArea());
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
-    state_.removeExploreAreaFromQueue(exploreArea->parent_);
-    exploreArea->parent_->updateChildExplored(exploreArea);
-    if (exploreArea->parent_->getLeftTreasuriesCnt() > 0) {
-        state_.addExploreArea(exploreArea->parent_);
+    if (exploreArea->parent_ != nullptr) {
+        state_.removeExploreAreaFromQueue(exploreArea->parent_);
+        exploreArea->parent_->updateChildExplored(exploreArea);
+        if (exploreArea->parent_->getLeftTreasuriesCnt() > 0) {
+            state_.addExploreArea(exploreArea->parent_);
+        }
     }
 #ifdef _HLC_DEBUG
     assert(exploreArea->area_.posX_ == xBefore && exploreArea->area_.posY_ == yBefore);
@@ -207,18 +198,27 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
         return err.error();
     }
 
-    if (exploreArea->parent_->getNonExploredChildrenCnt() == 1) {
+    if (exploreArea->parent_ != nullptr && exploreArea->parent_->getNonExploredChildrenCnt() == 1) {
         auto child = exploreArea->parent_->getLastNonExploredChild();
         if (auto err = processExploredArea(child, exploreArea->parent_->getLeftTreasuriesCnt()); err.hasError()) {
             return err.error();
         }
     }
 
-#ifdef _HLC_DEBUG
-    assert(state_.hasMoreExploreAreas());
-#endif
-
-    return api_.scheduleExplore(state_.fetchNextExploreArea());
+    while (kExploreConcurrentRequestsCnt - static_cast<size_t>(getStats().getInFlightExploreRequests()) > 0) {
+        auto next = state_.fetchNextExploreArea();
+        if (next != nullptr) {
+            if (auto err = api_.scheduleExplore(next); err.hasError()) {
+                return err.error();
+            }
+        } else {
+            if (auto err = newBaseArea(); err.hasError()) {
+                return err.error();
+            }
+            break;
+        }
+    }
+    return NoErr;
 }
 
 ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, HttpResponse<License> &resp) noexcept {
@@ -374,6 +374,17 @@ ExpectedVoid App::createSubAreas(const ExploreAreaPtr &root) noexcept {
         }
     } else {
         state_.addExploreArea(root);
+    }
+    return NoErr;
+}
+
+ExpectedVoid App::newBaseArea() noexcept {
+    auto baseArea = state_.getNextBaseArea();
+    auto root = ExploreArea::NewExploreArea(nullptr, baseArea, 0, 0);
+    state_.addRootExploreArea(root);
+
+    if (auto err = api_.scheduleExplore(root); err.hasError()) {
+        return err;
     }
     return NoErr;
 }

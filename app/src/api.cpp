@@ -128,6 +128,9 @@ Response Api::getAvailableResponse() noexcept {
 
     auto r = std::move(responses_.front());
     responses_.pop_front();
+    if (r.getType() == ApiEndpointType::Explore) {
+        getApp().getStats().incInFlightExploreRequests(-1);
+    }
 
     return r;
 }
@@ -160,6 +163,9 @@ ExpectedVoid Api::scheduleRequest(Request r) noexcept {
         return ErrorCode::kMaxApiRequestsQueueSizeExceeded;
     }
 
+    if (r.type_ == ApiEndpointType::Explore) {
+        getApp().getStats().incInFlightExploreRequests(1);
+    }
     requests_.insert(std::move(r));
 
     lock.unlock();
