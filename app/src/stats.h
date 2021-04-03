@@ -158,7 +158,10 @@ public:
             for (const auto &[code, count] : endpointStatsMap_["explore"].httpCodes) {
                 totalReqs += count;
             }
-            debugf("explore requests: %d", totalReqs);
+            auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch()
+            ).count();
+            debugf("Time elapsed: %lld", now - startTime_);
             std::abort();
         }
     }

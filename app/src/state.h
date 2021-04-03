@@ -61,7 +61,7 @@ public:
         auto x = lastX_;
         auto y = lastY_;
 
-        auto baseExploreArea = kExploreAreas[0];
+        auto baseExploreArea = getKExploreAreas()[0];
         lastX_ += baseExploreArea.height;
         if (lastX_ >= (int16_t) kFieldMaxX) {
             lastX_ = 0;

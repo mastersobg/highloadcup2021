@@ -25,18 +25,16 @@ func bruteForce() error {
 				continue
 			}
 			areas := [][]int{
-				//{512, 1},
-				//{256, 1},
-				//{128, 1},
-				//{64, 1},
-				//{32, 1},
-				//{16, 1},
-				//{243, 1},
-				//{81, 1},
-				{3000, 1},
-				{300, 1},
-				{30, 1},
-				{3, 1},
+				{128, 128},
+				{512, 1},
+				{256, 1},
+				{128, 1},
+				{64, 1},
+				{32, 1},
+				{16, 1},
+				{8, 1},
+				{4, 1},
+				{2, 1},
 				{1, 1},
 			}
 			ret, err := run(areas)
@@ -54,7 +52,7 @@ func bruteForce() error {
 					}
 				}
 			}
-			fmt.Printf("best requests: %v\n", best)
+			fmt.Printf("best time: %v\n", best)
 			fmt.Printf("best areas: %v\n", bestArea)
 		}
 	}
@@ -83,8 +81,8 @@ func run(areas [][]int) (int64, error) {
 
 	for _, line := range strings.Split(string(out), "\n") {
 		fmt.Println(line)
-		if strings.HasPrefix(line, "DEBUG explore requests: ") {
-			parsed, err := strconv.ParseInt(strings.TrimPrefix(line, "DEBUG explore requests: "), 10, 32)
+		if strings.HasPrefix(line, "DEBUG Time elapsed: ") {
+			parsed, err := strconv.ParseInt(strings.TrimPrefix(line, "DEBUG Time elapsed: "), 10, 32)
 			if err != nil {
 				return 0, err
 			}
