@@ -75,7 +75,7 @@ void App::run() noexcept {
     HttpClient client{address_, "8000", "http"};
     constexpr int kRequestsCount = 10'000;
     int x{0}, y{0};
-    int h{2048}, w{8};
+    int h{2048}, w{64};
 //    int non200HttpCodes{0};
 //   std::map<int, int> countMap;
 //    std::map<int, int64_t> latencyMap;
