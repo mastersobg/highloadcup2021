@@ -380,7 +380,7 @@ ExpectedVoid App::createSubAreas(const ExploreAreaPtr &root) noexcept {
 
 ExpectedVoid App::newBaseArea() noexcept {
     auto baseArea = state_.getNextBaseArea();
-    auto root = ExploreArea::NewExploreArea(nullptr, baseArea, 0, 0);
+    auto root = ExploreArea::NewExploreArea(nullptr, baseArea, 1, 0);
     state_.addRootExploreArea(root);
 
     if (auto err = api_.scheduleExplore(root); err.hasError()) {

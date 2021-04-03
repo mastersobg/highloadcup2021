@@ -61,14 +61,15 @@ public:
         auto x = lastX_;
         auto y = lastY_;
 
-        lastX_ += kBaseExploreArea.height;
+        auto baseExploreArea = kExploreAreas[0];
+        lastX_ += baseExploreArea.height;
         if (lastX_ >= (int16_t) kFieldMaxX) {
             lastX_ = 0;
-            lastY_ += kBaseExploreArea.width;
+            lastY_ += baseExploreArea.width;
         }
 
-        auto h = kBaseExploreArea.height;
-        auto w = kBaseExploreArea.width;
+        auto h = baseExploreArea.height;
+        auto w = baseExploreArea.width;
         if (x + h > (int) kFieldMaxX) {
             h = static_cast<int16_t>(kFieldMaxX - static_cast<size_t>(x));
         }
