@@ -44,6 +44,8 @@ private:
 
     [[nodiscard]] ExpectedVoid createSubAreas(const ExploreAreaPtr &root) noexcept;
 
+    ExpectedVoid newBaseArea() noexcept;
+
 public:
     App();
 

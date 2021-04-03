@@ -53,5 +53,11 @@ jwatch -path . -script ./sync.sh
 - запустить контейнер
 - выполнить скрипт `dump.sh`
 
+## Как запустить сервер локально
+- перейти в директорию stubserver
+- выполнить:
+```
+docker build -t hlc21_stub_server . && docker run -i --rm -t -e SERVER_RUN_TIME_IN_SECONDS=60000000 -p 8000:8000 hlc21_stub_server
+```
 ## Полезные ссылки:
 - https://blog.feabhas.com/2015/11/becoming-a-rule-of-zero-hero/

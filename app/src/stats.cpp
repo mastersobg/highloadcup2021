@@ -35,6 +35,7 @@ void Stats::print() noexcept {
           totalProcessExploreResponseTime_.load());
     infof("Avg explore request cost: %f",
           (double) exploreRequestTotalCost_.load() / (double) exploreRequestsCnt_.load());
+    infof("Treasures per second: %f", (double) treasuriesCnt_.load() / (double) timeElapsedMs * 1000.0);
     if (treasuriesCnt_.load() > 0) {
         infof("Avg explore request per treasure: %f",
               (double) exploreRequestsCnt_.load() / (double) treasuriesCnt_.load());
@@ -192,21 +193,21 @@ void Stats::printTreasuriesDiggedCount() noexcept {
 
 const std::vector<int64_t> exploreCostThresholds = {
         0,
-        789,
-        999,
-        1023,
-        1539,
-        2051,
-        2578,
-        3108,
-        3692,
-        4378,
-        5307,
-        6772,
-        11163,
-        12210,
-        13443,
-        15289,
+        789, // 1
+        999, // 2
+        1023, // 4
+        1539, // 8
+        2051, // 16
+        2578, // 32
+        3108,//64
+        3692, //128
+        4378, // 256
+        5307, //512
+        6772, // 1024
+        11163, //2048
+        12210, //4096
+        13443, //8192
+        15289, //16384
         1125899906842624,
         1125899906842624,
         1125899906842624,
@@ -232,12 +233,6 @@ int64_t Stats::calculateExploreCost(int64_t area) noexcept {
     return exploreCostThresholds[static_cast<size_t>(pos)];
 }
 
-void recordInFlightRequests() {
-    for (;;) {
-        getApp().getStats().recordInFlightRequests(getApp().getApi().getInFlightRequestsCnt());
-        getApp().getStats().recordInFlightExploreRequests(getApp().getApi().getInFlightExploreRequestsCnt());
-    }
-}
 
 void statsPrintLoop() {
 //    std::thread t{recordInFlightRequests};

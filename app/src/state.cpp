@@ -2,8 +2,10 @@
 #include "app.h"
 
 ExploreAreaPtr State::fetchNextExploreArea() noexcept {
+    if (exploreQueue_.empty()) {
+        return nullptr;
+    }
 #ifdef _HLC_DEBUG
-    assert(!exploreQueue_.empty());
     ExploreAreaPtr prev = nullptr;
     for (const auto &val : exploreQueue_) {
         if (prev != nullptr) {
@@ -18,8 +20,5 @@ ExploreAreaPtr State::fetchNextExploreArea() noexcept {
             return child;
         }
     }
-#ifdef _HLC_DEBUG
-    assert(false);
-#endif
     return nullptr;
 }

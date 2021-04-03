@@ -39,12 +39,6 @@ private:
     std::atomic<int64_t> exploreRequestTotalArea_{0};
     std::atomic<int64_t> exploreRequestTotalCost_{0};
 
-    std::atomic<int64_t> inFlightRequestsSum_{0};
-    std::atomic<int64_t> inFlightRequestsCnt_{0};
-
-    std::atomic<int64_t> inFlightExploreRequestsSum_{0};
-    std::atomic<int64_t> inFlightExploreRequestsCnt_{0};
-
     std::atomic<int64_t> cashedCoinsSum_{0};
     std::atomic<int64_t> cashedTreasuriesCnt_{0};
 
@@ -66,6 +60,8 @@ private:
 
     std::atomic<int64_t> lastTickRequestsCnt_{0};
     std::atomic<int64_t> startTime_{0};
+
+    std::atomic<int32_t> inFlightExploreRequests_{0};
 
     void printEndpointsStats() noexcept;
 
@@ -93,6 +89,14 @@ public:
 
     void incRequestsCnt() noexcept {
         requestsCnt_++;
+    }
+
+    void incInFlightExploreRequests(int32_t diff) noexcept {
+        inFlightExploreRequests_ += diff;
+    }
+
+    int32_t getInFlightExploreRequests() noexcept {
+        return inFlightExploreRequests_.load();
     }
 
     void incTimeoutCnt() noexcept {
@@ -126,16 +130,6 @@ public:
     void recordInUseLicenses(int cnt) noexcept {
         inUseLicensesSum_ += cnt;
         inUseLicensesCnt_++;
-    }
-
-    void recordInFlightRequests(int64_t cnt) noexcept {
-        inFlightRequestsCnt_++;
-        inFlightRequestsSum_ += cnt;
-    }
-
-    void recordInFlightExploreRequests(int64_t cnt) noexcept {
-        inFlightExploreRequestsCnt_++;
-        inFlightExploreRequestsSum_ += cnt;
     }
 
     void incIssuedLicenses() noexcept {
