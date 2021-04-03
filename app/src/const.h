@@ -50,6 +50,6 @@ constexpr int minDepthToCash{2};
 
 constexpr int kExploredTreasuriesThreshold = 1'000;
 
-constexpr double kExpectedChildTreasuriesThreshold = 0.03999;
+constexpr double kExpectedChildTreasuriesThreshold = 0.039;
 
 #endif //HIGHLOADCUP2021_CONST_H
