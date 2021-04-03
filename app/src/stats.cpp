@@ -35,6 +35,7 @@ void Stats::print() noexcept {
           totalProcessExploreResponseTime_.load());
     infof("Avg explore request cost: %f",
           (double) exploreRequestTotalCost_.load() / (double) exploreRequestsCnt_.load());
+    infof("Treasures per second: %f", (double) treasuriesCnt_.load() / (double) timeElapsedMs * 1000.0);
     if (treasuriesCnt_.load() > 0) {
         infof("Avg explore request per treasure: %f",
               (double) exploreRequestsCnt_.load() / (double) treasuriesCnt_.load());
