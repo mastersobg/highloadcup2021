@@ -133,7 +133,8 @@ void Stats::printCoinsDepthHistogram() noexcept {
     std::string logString{};
     int64_t totalDigs{0};
     for (size_t i = 0; i <= 10; i++) {
-        writeIntToString(depthCoinsHistogram_[i], logString);
+        writeIntToString(depthCoinsHistogramCount_[i] == 0 ? 0 : depthCoinsHistogram_[i] / depthCoinsHistogramCount_[i],
+                         logString);
         logString += ", ";
 
         totalDigs += (int64_t) i * depthCoinsHistogram_[i];
