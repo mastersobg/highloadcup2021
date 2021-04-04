@@ -256,9 +256,8 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
 }
 
 ExpectedVoid App::scheduleIssueLicense() noexcept {
-    int price = (int) distribution_(rnd_);
-    if (state_.hasCoins(price)) {
-        if (auto err = api_.scheduleIssuePaidLicense(state_.borrowCoins(price)); err.hasError()) {
+    if (state_.hasCoins(kLicensePrice)) {
+        if (auto err = api_.scheduleIssuePaidLicense(state_.borrowCoins(kLicensePrice)); err.hasError()) {
             return err.error();
         }
     } else {
