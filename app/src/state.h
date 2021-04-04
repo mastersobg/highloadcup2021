@@ -17,7 +17,7 @@
 #include <cassert>
 #include <set>
 
-const std::chrono::seconds DigDelay(60);
+const std::chrono::seconds DigDelay(0);
 
 struct DelayedDigRequest {
     int16_t x_, y_;
