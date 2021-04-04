@@ -102,6 +102,21 @@ void App::run() noexcept {
 
         getStats().recordInUseLicenses(state_.getInUseLicensesCount());
         getStats().recordCoinsAmount(state_.getCoinsAmount());
+
+        for (; state_.hasQueuedDigRequests() && state_.hasAvailableLicense();) {
+            auto licenseId = state_.reserveAvailableLicenseId();
+            if (licenseId.hasError()) {
+                errorf("error: %d", licenseId.error());
+                return;
+            }
+            auto digRequest = state_.getNextDigRequest();
+            if (auto err1 = api_.scheduleDig(
+                        {licenseId.get(), digRequest.x_, digRequest.y_, digRequest.depth_}); err1.hasError()) {
+                errorf("error: %d", err1.error());
+                return;
+            }
+        }
+
     }
 
 }
@@ -236,16 +251,16 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
     state_.addLicence(license);
     getStats().incIssuedLicenses();
 
-    for (; state_.hasQueuedDigRequests();) {
-        if (!state_.hasAvailableLicense()) {
-            break;
-        }
-
-        auto r = state_.getNextDigRequest();
-        if (auto err = scheduleDigRequest(r.x_, r.y_, r.depth_); err.hasError()) {
-            return err.error();
-        }
-    }
+//    for (; state_.hasQueuedDigRequests();) {
+//        if (!state_.hasAvailableLicense()) {
+//            break;
+//        }
+//
+//        auto r = state_.getNextDigRequest();
+//        if (auto err = scheduleDigRequest(r.x_, r.y_, r.depth_); err.hasError()) {
+//            return err.error();
+//        }
+//    }
     return NoErr;
 }
 
@@ -329,16 +344,16 @@ ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) no
 }
 
 ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcept {
-    if (state_.hasAvailableLicense()) {
-        auto licenseId = state_.reserveAvailableLicenseId();
-        if (licenseId.hasError()) {
-            return licenseId.error();
-        }
-        return api_.scheduleDig({licenseId.get(), x, y, depth});
-    } else {
-        state_.addDigRequest({x, y, depth});
-        return NoErr;
-    }
+//    if (state_.hasAvailableLicense()) {
+//        auto licenseId = state_.reserveAvailableLicenseId();
+//        if (licenseId.hasError()) {
+//            return licenseId.error();
+//        }
+//        return api_.scheduleDig({licenseId.get(), x, y, depth});
+//    } else {
+    state_.addDigRequest({x, y, depth});
+    return NoErr;
+//    }
 }
 
 ExpectedVoid App::createSubAreas(const ExploreAreaPtr &root) noexcept {

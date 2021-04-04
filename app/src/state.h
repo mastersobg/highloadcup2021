@@ -17,15 +17,21 @@
 #include <cassert>
 #include <set>
 
+const std::chrono::seconds DigDelay(15);
+
 struct DelayedDigRequest {
     int16_t x_, y_;
     int8_t depth_;
+    std::chrono::steady_clock::time_point timestamp_;
+
 
     DelayedDigRequest(int16_t x, int16_t y, int8_t depth) :
-            x_{x}, y_{y}, depth_{depth} {}
+            x_{x}, y_{y}, depth_{depth} {
+        timestamp_ = std::chrono::steady_clock::now();
+    }
 
     bool operator<(const DelayedDigRequest &r2) const noexcept {
-        return depth_ > r2.depth_;
+        return timestamp_ < r2.timestamp_;
     }
 };
 
@@ -170,18 +176,22 @@ public:
     }
 
     bool hasQueuedDigRequests() noexcept {
-        return !digRequests_.empty();
+        if (digRequests_.empty()) {
+            return false;
+        }
+        auto now = std::chrono::steady_clock::now();
+        return now - digRequests_.begin()->timestamp_ > DigDelay;
     }
 
     DelayedDigRequest getNextDigRequest() noexcept {
         auto r = digRequests_.extract(digRequests_.begin()).value();
-#ifdef _HLC_DEBUG
-        for (const auto &it : digRequests_) {
-            if (it.depth_ > r.depth_) {
-                assert(false);
-            }
-        }
-#endif
+//#ifdef _HLC_DEBUG
+//        for (const auto &it : digRequests_) {
+//            if (it.depth_ > r.depth_) {
+//                assert(false);
+//            }
+//        }
+//#endif
         return r;
     }
 };
