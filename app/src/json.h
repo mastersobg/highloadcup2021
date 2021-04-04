@@ -22,7 +22,7 @@ void marshalDig(LicenseID licenseId, int16_t posX, int16_t posY, int8_t depth, s
 void unmarshalTreasuriesList(std::string &data, JsonBufferType *valueBuffer, JsonBufferType *parseBuffer,
                              std::vector<TreasureID> &buf) noexcept;
 
-void marshalIssueLicenseRequest(CoinID coinId, std::string &buffer) noexcept;
+void marshalIssueLicenseRequest(const std::vector<CoinID> &coinIds, std::string &buffer) noexcept;
 
 void marshalFreeIssueLicenseRequest(std::string &buffer) noexcept;
 

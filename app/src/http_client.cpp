@@ -162,8 +162,8 @@ Expected<HttpResponse<License>> HttpClient::issueFreeLicense() noexcept {
     });
 }
 
-Expected<HttpResponse<License>> HttpClient::issueLicense(CoinID coinId) noexcept {
-    marshalIssueLicenseRequest(coinId, postDataBuffer_);
+Expected<HttpResponse<License>> HttpClient::issueLicense(const std::vector<CoinID> &coinIds) noexcept {
+    marshalIssueLicenseRequest(coinIds, postDataBuffer_);
     Measure<std::chrono::microseconds> tm;
     auto ret = makeRequest(issueLicenseURL_, postDataBuffer_.c_str());
     if (ret.hasError()) {
