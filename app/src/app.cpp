@@ -39,7 +39,7 @@ App::App() :
     }
     std::signal(SIGINT, []([[maybe_unused]]int signal) {
         app.stop();
-        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+//        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
         std::abort();
     });
 }
@@ -51,11 +51,11 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-//        if (auto err = scheduleIssueLicense(); err.hasError()) {
-//            return err;
-//        }
-//    }
+    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+        if (auto err = scheduleIssueLicense(); err.hasError()) {
+            return err;
+        }
+    }
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
