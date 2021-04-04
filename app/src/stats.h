@@ -37,8 +37,6 @@ private:
     std::atomic<int64_t> exploreRequestsCnt_{0};
     std::atomic<int64_t> exploreRequestTotalArea_{0};
     std::atomic<int64_t> exploreRequestTotalCost_{0};
-    std::atomic<int64_t> totalLicenseDigAllowed_{0};
-    std::atomic<int64_t> totalLisenceDigAllowedCnt_{0};
 
     std::atomic<int64_t> inFlightRequestsSum_{0};
     std::atomic<int64_t> inFlightRequestsCnt_{0};
@@ -64,6 +62,10 @@ private:
     std::shared_mutex exploreAreaHistogramMutex_;
     std::array<int64_t, 10> exploreAreaHistogramCount_{0,};
     std::array<int64_t, 10> exploreAreaHistogramDuration_{0,};
+
+    std::shared_mutex licenseMutex_;
+    std::map<int, int> totalDigs_;
+    std::map<int, int> totalLicenseCount_;
 
     std::atomic<int64_t> lastTickRequestsCnt_{0};
     std::atomic<int64_t> startTime_{0};
@@ -129,9 +131,10 @@ public:
         inUseLicensesCnt_++;
     }
 
-    void recordLicenseDigAllowed(int cnt) noexcept {
-        totalLisenceDigAllowedCnt_++;
-        totalLicenseDigAllowed_ += cnt;
+    void recordLicenseDigAllowed(int cost, int cnt) noexcept {
+        std::scoped_lock lock(licenseMutex_);
+        totalDigs_[cost] += cnt;
+        totalLicenseCount_[cost]++;
     }
 
     void recordInFlightRequests(int64_t cnt) noexcept {
@@ -200,6 +203,8 @@ public:
     int64_t calculateExploreCost(int64_t area) noexcept;
 
     void print() noexcept;
+
+    void printLicenseStats() noexcept;
 };
 
 void statsPrintLoop();

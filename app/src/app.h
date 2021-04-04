@@ -9,6 +9,7 @@
 #include "state.h"
 #include "rate_limiter.h"
 #include <vector>
+#include <random>
 
 
 class App {
@@ -21,6 +22,9 @@ private:
     Stats stats_{};
     State state_;
     RateLimiter rateLimiter_;
+    std::random_device randomDevice_;
+    std::default_random_engine rnd_{randomDevice_()};
+    std::uniform_int_distribution<size_t> distribution_{1, 100};
 
 
     [[nodiscard]] ExpectedVoid fireInitRequests() noexcept;

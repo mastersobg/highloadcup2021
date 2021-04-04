@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "sys.h"
 #include <numeric>
+#include <sstream>
 
 constexpr int64_t statsSleepDelayMs = 5000;
 
@@ -57,6 +58,7 @@ void Stats::print() noexcept {
     printEndpointsStats();
     printDepthHistogram();
     printTreasuriesDiggedCount();
+    printLicenseStats();
 
     printCoinsDepthHistogram();
 //    printExploreAreaHistogram();
@@ -231,6 +233,17 @@ int64_t Stats::calculateExploreCost(int64_t area) noexcept {
     for (pos = 0; (int64_t) 1LL << pos <= area; pos++) {
     }
     return exploreCostThresholds[static_cast<size_t>(pos)];
+}
+
+void Stats::printLicenseStats() noexcept {
+    std::scoped_lock lock(licenseMutex_);
+
+    std::ostringstream ss;
+    for (const auto &[cost, count]:totalLicenseCount_) {
+        auto dig = totalDigs_[cost];
+        ss << cost << ": " << (double) dig / count << "; ";
+    }
+    debugf("License stats: %s", ss.str().c_str());
 }
 
 void recordInFlightRequests() {

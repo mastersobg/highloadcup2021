@@ -7,6 +7,7 @@
 #include <memory>
 #include <limits>
 #include <cassert>
+#include <random>
 
 App app{};
 
@@ -51,11 +52,11 @@ App::~App() {
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
-//    for (size_t i = 0; i < kMaxLicensesCount; i++) {
-//        if (auto err = scheduleIssueLicense(); err.hasError()) {
-//            return err;
-//        }
-//    }
+    for (size_t i = 0; i < kMaxLicensesCount; i++) {
+        if (auto err = scheduleIssueLicense(); err.hasError()) {
+            return err;
+        }
+    }
     auto root = ExploreArea::NewExploreArea(nullptr, Area(0, 0, kFieldMaxX, kFieldMaxY), 0,
                                             kTreasuriesCount);
     state_.setRootExploreArea(root);
@@ -235,7 +236,11 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
     auto license = std::move(resp).getResponse();
     state_.addLicence(license);
     getStats().incIssuedLicenses();
-    getStats().recordLicenseDigAllowed((int) license.digAllowed_);
+    auto cost = 0;
+    if (req.type_ == ApiEndpointType::IssuePaidLicense) {
+        cost = (int) req.getIssueLicenseRequest().size();
+    }
+    getStats().recordLicenseDigAllowed(cost, (int) license.digAllowed_);
 
     for (; state_.hasQueuedDigRequests();) {
         if (!state_.hasAvailableLicense()) {
@@ -251,8 +256,9 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
 }
 
 ExpectedVoid App::scheduleIssueLicense() noexcept {
-    if (state_.hasCoins(kLicensePrice)) {
-        if (auto err = api_.scheduleIssuePaidLicense(state_.borrowCoins(kLicensePrice)); err.hasError()) {
+    int price = (int) distribution_(rnd_);
+    if (state_.hasCoins(price)) {
+        if (auto err = api_.scheduleIssuePaidLicense(state_.borrowCoins(price)); err.hasError()) {
             return err.error();
         }
     } else {
