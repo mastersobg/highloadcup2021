@@ -35,6 +35,7 @@ void Stats::print() noexcept {
           totalProcessExploreResponseTime_.load());
     infof("Avg explore request cost: %f",
           (double) exploreRequestTotalCost_.load() / (double) exploreRequestsCnt_.load());
+    infof("Treasures per second: %f", (double) treasuriesCnt_.load() / (double) timeElapsedMs * 1000.0);
     if (treasuriesCnt_.load() > 0) {
         infof("Avg explore request per treasure: %f",
               (double) exploreRequestsCnt_.load() / (double) treasuriesCnt_.load());
@@ -190,9 +191,40 @@ void Stats::printTreasuriesDiggedCount() noexcept {
 
 }
 
-const std::vector<int64_t> exploreCostThresholds = {0, 1058, 1036, 1132, 1538, 2065, 2571, 3120, 3634, 4123, 4723,
-                                                    5306, 6201, 7336, 8594, 11055, 15592, 24018, 40434, 71600,
-                                                    129316};
+const std::vector<int64_t> exploreCostThresholds = {
+        0,
+        789, // 1
+        999, // 2
+        1023, // 4
+        1539, // 8
+        2051, // 16
+        2578, // 32
+        3108, // 64
+        3692, // 128
+        4378, // 256
+        5307, // 512
+        6772, // 1024
+        11163, // 2048
+        12210, // 4096
+        13443, // 8192
+        15289, // 16384
+        17939, // 32768
+        21182, // 65536
+        28469, // 131072
+        1125899906842624,
+        1125899906842624,
+        1125899906842624,
+        1125899906842624,
+        1125899906842624,
+        1125899906842624,
+        1125899906842624,
+        1125899906842624,
+        1125899906842624,
+        1125899906842624,
+        1125899906842624,
+        1125899906842624,
+        1125899906842624
+};
 
 int64_t Stats::calculateExploreCost(int64_t area) noexcept {
     int64_t pos = 0;
