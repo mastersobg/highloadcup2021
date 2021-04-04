@@ -14,8 +14,8 @@ constexpr size_t kJsonParseBufferSize = kJsonParseBufferCap * kJsonBufferTypeSiz
 
 constexpr size_t kMaxApiRequestsQueueSize = 10'000'000;
 
-constexpr size_t kApiThreadCount = 13;
-constexpr int64_t kMaxRPS = 1'000;
+constexpr size_t kApiThreadCount = 50;
+constexpr int64_t kMaxRPS = 1'000'000;
 
 constexpr size_t kFieldMaxX = 3'500;
 constexpr size_t kFieldMaxY = 3'500;
@@ -44,7 +44,7 @@ constexpr long kRequestTimeout = 1'000'000;
 
 constexpr size_t kMaxLicensesCount = 10;
 
-constexpr size_t kExploreConcurrentRequestsCnt{2};
+constexpr size_t kExploreConcurrentRequestsCnt{10};
 
 constexpr int minDepthToCash{2};
 
