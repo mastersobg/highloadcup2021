@@ -62,6 +62,7 @@ ExpectedVoid App::fireInitRequests() noexcept {
             return err.error();
         }
     }
+    }
     return NoErr;
 }
 
