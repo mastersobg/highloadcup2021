@@ -25,7 +25,7 @@ struct ExploreAreaShift {
     int16_t width;
 };
 
-constexpr double kExpectedChildTreasuriesThreshold = 0.0375;
+constexpr double kNewBaseAreaTreasuriesThreshold = 0.04;
 
 
 constexpr std::array<ExploreAreaShift, 9> kExploreAreas = {

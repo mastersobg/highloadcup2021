@@ -57,7 +57,11 @@ public:
         rootAreas_.resize(0);
     }
 
-    Area getNextBaseArea() {
+    [[nodiscard]] bool hasNextBaseArea() const noexcept {
+        return (size_t) lastX_ < kFieldMaxX && (size_t) lastY_ < kFieldMaxY;
+    }
+
+    std::unique_ptr<Area> getNextBaseArea() {
         auto x = lastX_;
         auto y = lastY_;
 
@@ -66,6 +70,9 @@ public:
         if (lastX_ >= (int16_t) kFieldMaxX) {
             lastX_ = 0;
             lastY_ += baseExploreArea.width;
+        }
+        if (lastY_ >= (int16_t) kFieldMaxY) {
+            return nullptr;
         }
 
         auto h = baseExploreArea.height;
@@ -77,7 +84,7 @@ public:
             w = static_cast<int16_t> (kFieldMaxY - static_cast<size_t>(y));
         }
 
-        return Area(static_cast<int16_t>(x), static_cast<int16_t>(y), h, w);
+        return std::make_unique<Area>(Area(static_cast<int16_t>(x), static_cast<int16_t>(y), h, w));
     }
 
     void cleanExploreAreaPtrs(const ExploreAreaPtr &node) {
@@ -98,6 +105,14 @@ public:
     }
 
     ExploreAreaPtr fetchNextExploreArea() noexcept;
+
+    ExploreAreaPtr getFirstNextExploreArea() noexcept {
+        if (exploreQueue_.empty()) {
+            return nullptr;
+        }
+        return *exploreQueue_.begin();
+    }
+
 
     void removeExploreAreaFromQueue(const ExploreAreaPtr &ea) noexcept {
         [[maybe_unused]] auto cnt = exploreQueue_.erase(ea);

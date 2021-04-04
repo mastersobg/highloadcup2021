@@ -57,7 +57,12 @@ ExpectedVoid App::fireInitRequests() noexcept {
 //        }
 //    }
 
-    return newBaseArea();
+    while (kExploreConcurrentRequestsCnt - static_cast<size_t>(getStats().getInFlightExploreRequests()) > 0) {
+        if (auto err = newBaseArea(); err.hasError()) {
+            return err.error();
+        }
+    }
+    return NoErr;
 }
 
 void App::run() noexcept {
@@ -159,7 +164,7 @@ App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt)
     if (exploreArea->parent_ != nullptr) {
         state_.removeExploreAreaFromQueue(exploreArea->parent_);
         exploreArea->parent_->updateChildExplored(exploreArea);
-        if (exploreArea->parent_->getExpectedChildTreasuriesCnt_() >= kExpectedChildTreasuriesThreshold) {
+        if (exploreArea->parent_->getLeftTreasuriesCnt() > 0) {
             state_.addExploreArea(exploreArea->parent_);
         }
     }
@@ -206,16 +211,25 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     }
 
     while (kExploreConcurrentRequestsCnt - static_cast<size_t>(getStats().getInFlightExploreRequests()) > 0) {
-        auto next = state_.fetchNextExploreArea();
-        if (next != nullptr) {
-            if (auto err = api_.scheduleExplore(next); err.hasError()) {
-                return err.error();
-            }
-        } else {
+        auto nextExploreArea = state_.getFirstNextExploreArea();
+        if (state_.hasNextBaseArea() && (nextExploreArea == nullptr ||
+                                         nextExploreArea->getExpectedChildTreasuriesCnt_() <
+                                         kNewBaseAreaTreasuriesThreshold)) {
             if (auto err = newBaseArea(); err.hasError()) {
                 return err.error();
             }
-            break;
+        } else {
+            auto next = state_.fetchNextExploreArea();
+            if (next != nullptr) {
+                if (auto err = api_.scheduleExplore(next); err.hasError()) {
+                    return err.error();
+                }
+            } else {
+                if (auto err = newBaseArea(); err.hasError()) {
+                    return err.error();
+                }
+                break;
+            }
         }
     }
     return NoErr;
@@ -372,7 +386,7 @@ ExpectedVoid App::createSubAreas(const ExploreAreaPtr &root) noexcept {
         if (auto err = processExploredArea(child, root->getLeftTreasuriesCnt()); err.hasError()) {
             return err.error();
         }
-    } else if (root->getExpectedChildTreasuriesCnt_() >= kExpectedChildTreasuriesThreshold) {
+    } else {
         state_.addExploreArea(root);
     }
     return NoErr;
@@ -380,7 +394,10 @@ ExpectedVoid App::createSubAreas(const ExploreAreaPtr &root) noexcept {
 
 ExpectedVoid App::newBaseArea() noexcept {
     auto baseArea = state_.getNextBaseArea();
-    auto root = ExploreArea::NewExploreArea(nullptr, baseArea, 1, 0);
+    if (baseArea == nullptr) {
+        return NoErr;
+    }
+    auto root = ExploreArea::NewExploreArea(nullptr, *baseArea, 1, 0);
     state_.addRootExploreArea(root);
 
     if (auto err = api_.scheduleExplore(root); err.hasError()) {
