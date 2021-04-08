@@ -11,18 +11,30 @@ COPY CMakeLists.txt .
 ARG build_type
 ARG commit_hash
 
-RUN mkdir build
+RUN mkdir -p build/$build_type
+RUN ls build/
 
-RUN touch entry.sh && chmod a+x entry.sh
+RUN touch build.sh && chmod a+x build.sh
 RUN (\
     echo '#!/bin/bash';\
-    echo cmake -S . -B build -DBUILD_TYPE=$build_type -DCOMMIT_HASH=$commit_hash; \
-    echo 'cmake --build build -j 7'; \
-) > entry.sh
+    echo cmake -S . -B build/$build_type -DBUILD_TYPE=$build_type -DCOMMIT_HASH=$commit_hash; \
+    echo cmake --build build/$build_type -j 7 --target highloadcup2021; \
+    echo cp build/$build_type/highloadcup2021 build/; \
+) > build.sh
 
-RUN cat entry.sh
+RUN cat build.sh
+
+RUN touch test.sh && chmod a+x test.sh
+RUN (\
+    echo '#!/bin/bash';\
+    echo cmake -S . -B build/$build_type -DBUILD_TYPE=$build_type -DCOMMIT_HASH=$commit_hash; \
+    echo cmake --build build/$build_type -j 7 --target highloadcup2021_tests; \
+    echo ./build/$build_type/highloadcup2021_tests; \
+) > test.sh
+
+RUN cat test.sh
 
 COPY src ./src
 COPY CMakeLists.txt .
 
-ENTRYPOINT ["/bin/bash", "-c", "./entry.sh"]
+CMD ["./build.sh"]

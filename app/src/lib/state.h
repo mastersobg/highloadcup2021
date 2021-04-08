@@ -50,7 +50,9 @@ public:
     State &operator=(State &&s) = delete;
 
     ~State() {
-        cleanExploreAreaPtrs(root_);
+        if (root_ != nullptr) {
+            cleanExploreAreaPtrs(root_);
+        }
         root_ = nullptr;
     }
 

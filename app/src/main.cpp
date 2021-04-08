@@ -1,5 +1,4 @@
-#include "app.h"
-#include "log.h"
+#include "lib/app.h"
 
 int main() {
     auto app = App::createApp();

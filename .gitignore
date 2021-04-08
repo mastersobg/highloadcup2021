@@ -42,3 +42,4 @@ build
 highloadcup2021
 out
 sysroot
+cmake-build-debug

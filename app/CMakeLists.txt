@@ -10,10 +10,14 @@ set(BUILD_TYPE "" CACHE STRING "")
 set(COMMIT_HASH "" CACHE STRING "")
 
 find_package(RapidJSON REQUIRED)
-include_directories(${RAPIDJSON_INCLUDE_DIRS})
 
-file(GLOB TARGET_SRC src/*.cpp)
-add_executable(highloadcup2021 ${TARGET_SRC})
+file(GLOB TARGET_SRC src/lib/*.cpp)
+add_library(highloadcup2021_lib ${TARGET_SRC})
+target_link_libraries(highloadcup2021_lib curl)
+target_include_directories(highloadcup2021_lib PUBLIC ${RAPIDJSON_INCLUDE_DIRS})
+add_executable(highloadcup2021 src/main.cpp)
+target_link_libraries(highloadcup2021 highloadcup2021_lib)
+
 
 # common cxx flags
 set(CMAKE_CXX_FLAGS "-Werror -Wall -Wextra -Wformat=2 -Wfloat-equal -Wconversion -Warith-conversion -Wshadow -Wsign-conversion -Wlogical-op -Wdouble-promotion -Wshift-overflow=2  -Wduplicated-cond -Wcast-qual -Wcast-align  -pedantic -pipe")
@@ -48,4 +52,31 @@ endif ()
 
 message(STATUS "CXX flags: ${CMAKE_CXX_FLAGS}")
 
-target_link_libraries(highloadcup2021 pthread curl)
+
+include(FetchContent)
+FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/6c5c4554ac218a8e19168edc121b1ad232015185.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+file(GLOB TARGET_TEST_SRC src/test/*.cpp)
+message(STATUS "Test files: ${TARGET_TEST_SRC}")
+add_executable(
+        highloadcup2021_tests
+        ${TARGET_TEST_SRC}
+)
+target_link_libraries(
+        highloadcup2021_tests
+        highloadcup2021_lib
+        gtest_main
+        gmock_main
+)
+target_include_directories(highloadcup2021_tests PUBLIC src/lib/)
+
+include(GoogleTest)
+gtest_discover_tests(highloadcup2021_tests)

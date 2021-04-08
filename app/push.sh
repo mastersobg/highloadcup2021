@@ -8,6 +8,7 @@ if [[ -n $(git status --porcelain) ]]; then
 	read
 fi
 
+./test.sh
 rm -rf out/*
 ./build.sh release
 
