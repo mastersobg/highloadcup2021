@@ -2,4 +2,4 @@
 
 set -e
 
-docker exec -it highloadcup-app /bin/bash -c "./server-dump.sh"
+docker exec -it highloadcup-bin /bin/bash -c "./server-dump.sh"

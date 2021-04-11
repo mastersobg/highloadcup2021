@@ -1,0 +1,28 @@
+FROM ubuntu:20.10 as build
+
+RUN apt-get update && apt-get install -y \
+    g++ cmake libgoogle-perftools-dev rapidjson-dev libcurl4-openssl-dev
+
+WORKDIR /app
+
+COPY src ./src
+COPY CMakeLists.txt .
+
+ARG build_type
+ARG commit_hash
+
+RUN mkdir build
+
+RUN touch entry.sh && chmod a+x entry.sh
+RUN (\
+    echo '#!/bin/bash';\
+    echo cmake -S . -B build -DBUILD_TYPE=$build_type -DCOMMIT_HASH=$commit_hash; \
+    echo 'cmake --build build -j 7'; \
+) > entry.sh
+
+RUN cat entry.sh
+
+COPY src ./src
+COPY CMakeLists.txt .
+
+ENTRYPOINT ["/bin/bash", "-c", "./entry.sh"]

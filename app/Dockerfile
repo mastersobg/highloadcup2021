@@ -1,19 +1,3 @@
-FROM ubuntu:20.10 as build
-
-RUN apt-get update && apt-get install -y \
-    g++ cmake libgoogle-perftools-dev rapidjson-dev libcurl4-openssl-dev
-
-WORKDIR /app
-
-COPY src ./src
-COPY CMakeLists.txt .
-
-ARG build_type
-ARG commit_hash
-
-RUN cmake -DBUILD_TYPE=$build_type -DCOMMIT_HASH=$commit_hash .
-RUN cmake --build . -j 7
-
 FROM ubuntu:20.10
 
 WORKDIR /app
@@ -30,14 +14,6 @@ RUN go get -u github.com/google/pprof
 
 ENV PATH="/go/bin:${PATH}"
 
-COPY --from=build /app/highloadcup2021 .
-COPY server-runner.sh .
-COPY server-profile.sh .
-COPY server-dump.sh .
-COPY build.sh .
-COPY Dockerfile .
-COPY CMakeLists.txt .
-COPY src ./src
 
 RUN echo "set pagination off" > ~/.gdbinit
 
@@ -46,4 +22,14 @@ ARG build_type
 EXPOSE 9000
 
 ENV build_type_env=$build_type
+
+COPY server-runner.sh .
+COPY server-profile.sh .
+COPY server-dump.sh .
+COPY build.sh .
+COPY Dockerfile .
+COPY CMakeLists.txt .
+COPY src ./src
+COPY out/highloadcup2021 .
+
 ENTRYPOINT ["/bin/bash", "-c", "/app/server-runner.sh $build_type_env"]
