@@ -28,18 +28,21 @@ prepareResponse(Expected<int32_t> &response, std::string &data, std::chrono::mic
     }
 }
 
-HttpClient::HttpClient(const std::string &address, const std::string &port,
+HttpClient::HttpClient(std::shared_ptr<Stats> stats, const std::string &address,
+                       const std::string &port,
                        const std::string &schema
-) : errbuf_{0,},
-    valueBuffer_{0,},
-    parseBuffer_{0,},
-    baseURL_{schema + "://" + address + ":" + port},
-    checkHealthURL_{baseURL_ + "/health-check"},
-    exploreURL_{baseURL_ + "/explore"},
-    cashURL_{baseURL_ + "/cash"},
-    digURL_{baseURL_ + "/dig"},
-    issueLicenseURL_{baseURL_ + "/licenses"},
-    headers_{nullptr} {
+) :
+        stats_{std::move(stats)},
+        errbuf_{0,},
+        valueBuffer_{0,},
+        parseBuffer_{0,},
+        baseURL_{schema + "://" + address + ":" + port},
+        checkHealthURL_{baseURL_ + "/health-check"},
+        exploreURL_{baseURL_ + "/explore"},
+        cashURL_{baseURL_ + "/cash"},
+        digURL_{baseURL_ + "/dig"},
+        issueLicenseURL_{baseURL_ + "/licenses"},
+        headers_{nullptr} {
 
     session_ = curl_easy_init();
     if (session_ == nullptr) {
@@ -85,7 +88,8 @@ Expected<HttpResponse<HealthResponse>> HttpClient::checkHealth() noexcept {
         return ret.error();
     }
     auto latency = tm.getDuration();
-    getApp().getStats().recordEndpointStats("health", ret.get(), latency.count());
+
+    stats_->recordEndpointStats("health", ret.get(), latency.count());
     return prepareResponse<HealthResponse>(ret, resp_.data, latency, valueBuffer_, parseBuffer_,
                                            [](std::string &data) {
                                                return HealthResponse(data);
@@ -102,8 +106,8 @@ Expected<HttpResponse<ExploreResponse>> HttpClient::explore(const Area &area) no
     }
     auto latency = tm.getDuration();
 
-    getApp().getStats().recordEndpointStats("explore", ret.get(), latency.count());
-    getApp().getStats().recordExploreRequest((int64_t)area.getArea());
+    stats_->recordEndpointStats("explore", ret.get(), latency.count());
+    stats_->recordExploreRequest((int64_t) area.getArea());
     return prepareResponse<ExploreResponse>(ret, resp_.data, latency, valueBuffer_, parseBuffer_,
                                             [this](std::string &data) {
                                                 return unmarshalExploreResponse(data, this->valueBuffer_,
@@ -120,7 +124,7 @@ Expected<HttpResponse<Wallet>> HttpClient::cash(const TreasureID &treasureId) no
     }
     auto latency = tm.getDuration();
 
-    getApp().getStats().recordEndpointStats("cash", ret.get(), latency.count());
+    stats_->recordEndpointStats("cash", ret.get(), latency.count());
     return prepareResponse<Wallet>(ret, resp_.data, latency, valueBuffer_, parseBuffer_, [this](std::string &data) {
         Wallet w;
         unmarshallWallet(data, this->valueBuffer_, this->parseBuffer_, w);
@@ -137,7 +141,7 @@ Expected<HttpResponse<std::vector<TreasureID>>> HttpClient::dig(DigRequest reque
     }
     auto latency = tm.getDuration();
 
-    getApp().getStats().recordEndpointStats("dig", ret.get(), latency.count());
+    stats_->recordEndpointStats("dig", ret.get(), latency.count());
     return prepareResponse<std::vector<TreasureID>>(ret, resp_.data, latency, valueBuffer_, parseBuffer_,
                                                     [this](std::string &data) {
                                                         std::vector<TreasureID> buf;
@@ -156,7 +160,7 @@ Expected<HttpResponse<License>> HttpClient::issueFreeLicense() noexcept {
     }
     auto latency = tm.getDuration();
 
-    getApp().getStats().recordEndpointStats("issue_license_free", ret.get(), latency.count());
+    stats_->recordEndpointStats("issue_license_free", ret.get(), latency.count());
     return prepareResponse<License>(ret, resp_.data, latency, valueBuffer_, parseBuffer_, [this](std::string &data) {
         return unmarshalLicense(data, this->valueBuffer_, this->parseBuffer_);
     });
@@ -171,7 +175,7 @@ Expected<HttpResponse<License>> HttpClient::issueLicense(CoinID coinId) noexcept
     }
     auto latency = tm.getDuration();
 
-    getApp().getStats().recordEndpointStats("issue_license_paid", ret.get(), latency.count());
+    stats_->recordEndpointStats("issue_license_paid", ret.get(), latency.count());
     return prepareResponse<License>(ret, resp_.data, latency, valueBuffer_, parseBuffer_, [this](std::string &data) {
         return unmarshalLicense(data, this->valueBuffer_, this->parseBuffer_);
     });
@@ -180,31 +184,31 @@ Expected<HttpResponse<License>> HttpClient::issueLicense(CoinID coinId) noexcept
 Expected<int32_t>
 HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
     if (curl_easy_setopt(session_, CURLOPT_URL, url.c_str()) != CURLE_OK) {
-        getApp().getStats().incCurlErrCnt();
+        stats_->incCurlErrCnt();
         return ErrorCode::kErrCurl;
     }
     this->resp_.data.clear();
 
     if (data != nullptr) {
         if (curl_easy_setopt(session_, CURLOPT_POSTFIELDS, data) != CURLE_OK) {
-            getApp().getStats().incCurlErrCnt();
+            stats_->incCurlErrCnt();
             return ErrorCode::kErrCurl;
         }
     } else {
         if (curl_easy_setopt(session_, CURLOPT_HTTPGET, 1L) != CURLE_OK) {
-            getApp().getStats().incCurlErrCnt();
+            stats_->incCurlErrCnt();
             return ErrorCode::kErrCurl;
         }
     }
 
 //    debugf("making request: %s data: %s", url.c_str(), data);
     auto reqResult = curl_easy_perform(session_);
-    getApp().getStats().incRequestsCnt();
+    stats_->incRequestsCnt();
     if (reqResult != CURLE_OK) {
 //        errorf("curl_easy_perform failed: %s err code: %d err message: %s errbuf: %s", url.c_str(), reqResult,
 //               curl_easy_strerror(reqResult),
 //               errbuf_);
-        getApp().getStats().incCurlErrCnt();
+        stats_->incCurlErrCnt();
         if (reqResult == CURLE_OPERATION_TIMEDOUT) {
             return ErrorCode::kErrCurlTimeout;
         } else {
@@ -214,7 +218,7 @@ HttpClient::makeRequest(const std::string &url, const char *data) noexcept {
 
     long code;
     if (curl_easy_getinfo(session_, CURLINFO_RESPONSE_CODE, &code) != CURLE_OK) {
-        getApp().getStats().incCurlErrCnt();
+        stats_->incCurlErrCnt();
         return ErrorCode::kErrCurl;
     }
     return (int32_t) code;

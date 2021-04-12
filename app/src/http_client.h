@@ -8,6 +8,7 @@
 #include "error.h"
 #include "const.h"
 #include <chrono>
+#include "stats.h"
 
 template<class T>
 class HttpResponse {
@@ -53,6 +54,8 @@ struct respHolder {
 };
 
 class HttpClient {
+    std::shared_ptr<Stats> stats_;
+
     CURL *session_;
 
     char errbuf_[CURL_ERROR_SIZE];
@@ -72,7 +75,8 @@ class HttpClient {
     [[nodiscard]]Expected<int32_t> makeRequest(const std::string &url, const char *data) noexcept;
 
 public:
-    HttpClient(const std::string &address, const std::string &port, const std::string &schema);
+    HttpClient(std::shared_ptr<Stats> stats, const std::string &address,
+               const std::string &port, const std::string &schema);
 
     HttpClient(const HttpClient &c) = delete;
 

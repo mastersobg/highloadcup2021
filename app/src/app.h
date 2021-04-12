@@ -9,18 +9,16 @@
 #include "state.h"
 #include "rate_limiter.h"
 #include <vector>
-
+#include <memory>
 
 class App {
 private:
-    std::atomic<bool> stopped_;
+    std::atomic<bool> stopped_{false};
 
-    std::thread statsThread_;
-    std::string address_;
-    Api api_;
-    Stats stats_{};
+    std::shared_ptr<Api> api_;
+    std::shared_ptr<Stats> stats_;
     State state_;
-    RateLimiter rateLimiter_;
+//    RateLimiter rateLimiter_;
 
 
     [[nodiscard]] ExpectedVoid fireInitRequests() noexcept;
@@ -45,7 +43,7 @@ private:
     [[nodiscard]] ExpectedVoid createSubAreas(const ExploreAreaPtr &root) noexcept;
 
 public:
-    App();
+    App(std::shared_ptr<Api> api, std::shared_ptr<Stats> stats);
 
     ~App();
 
@@ -65,21 +63,9 @@ public:
         return stopped_.load();
     }
 
-    Stats &getStats() noexcept {
-        return stats_;
-    }
-
-    Api &getApi() noexcept {
-        return api_;
-    }
-
-    RateLimiter &getRateLimiter() noexcept {
-        return rateLimiter_;
-    }
-
     void run() noexcept;
-};
 
-App &getApp();
+    static std::shared_ptr<App> createApp();
+};
 
 #endif //HIGHLOADCUP2021_APP_H

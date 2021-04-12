@@ -69,6 +69,8 @@ Stats::Stats() {
     startTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now().time_since_epoch()
     ).count();
+
+    statsThread_ = std::thread(&Stats::statsPrintLoop, this);
 }
 
 void Stats::recordEndpointStats(const std::string &endpoint, int32_t httpCode, int64_t durationMcs) noexcept {
@@ -233,23 +235,20 @@ int64_t Stats::calculateExploreCost(int64_t area) noexcept {
     return exploreCostThresholds[static_cast<size_t>(pos)];
 }
 
-void recordInFlightRequests() {
-    for (;;) {
-        getApp().getStats().recordInFlightRequests(getApp().getApi().getInFlightRequestsCnt());
-        getApp().getStats().recordInFlightExploreRequests(getApp().getApi().getInFlightExploreRequestsCnt());
-    }
-}
 
-void statsPrintLoop() {
-//    std::thread t{recordInFlightRequests};
+void Stats::statsPrintLoop() {
     for (;;) {
         std::this_thread::sleep_for(std::chrono::milliseconds(statsSleepDelayMs));
 
-        getApp().getStats().print();
+        print();
 
-        if (getApp().isStopped()) {
+        if (shouldStopStatsThread_) {
             break;
         }
     }
 }
 
+Stats::~Stats() {
+    shouldStopStatsThread_ = true;
+    statsThread_.join();
+}

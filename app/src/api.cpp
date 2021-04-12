@@ -5,29 +5,36 @@
 #include <utility>
 #include "error.h"
 #include <thread>
+#include <memory>
 
-Api::Api(size_t threadsCount, std::string address) : address_{std::move(address)} {
-    for (size_t i = 0; i < threadsCount; i++) {
+Api::Api(std::shared_ptr<Stats> stats) :
+        stats_{std::move(stats)} {
+    auto addressEnv = std::getenv("ADDRESS");
+    address_ = "localhost";
+    if (addressEnv != nullptr) {
+        address_ = addressEnv;
+    }
+    for (size_t i = 0; i < kApiThreadCount; i++) {
         std::thread t(&Api::threadLoop, this);
         threads_.push_back(std::move(t));
     }
 }
 
 void Api::threadLoop() {
-    HttpClient client{address_, "8000", "http"};
+    HttpClient client{stats_, address_, "8000", "http"};
     for (;;) {
         std::unique_lock lock(requestsMu_);
         requestCondVar_.wait(lock, [this] {
-            return getApp().isStopped() || !requests_.empty();
+            return stopped_ || !requests_.empty();
         });
 
-        if (getApp().isStopped()) {
+        if (stopped_) {
             break;
         }
 
         if (requests_.empty()) {
             errorf("Woken up but requests queue is empty");
-            getApp().getStats().incWokenWithEmptyRequestsQueue();
+            stats_->incWokenWithEmptyRequestsQueue();
             continue;
         }
 
@@ -47,7 +54,7 @@ void Api::threadLoop() {
 
         lock.unlock();
 
-//        getApp().getRateLimiter().acquire(r.getCost());
+//        app_.lock()->getRateLimiter().acquire(r.getCost());
 
         inFlightRequestsCnt_++;
         auto ret = makeApiRequest(client, r);
@@ -62,9 +69,7 @@ void Api::threadLoop() {
 }
 
 Api::~Api() {
-    if (!getApp().isStopped()) {
-        errorf("Api destructor was called while app is not stopped yet");
-    }
+    stopped_ = true;
 
     requestCondVar_.notify_all();
 

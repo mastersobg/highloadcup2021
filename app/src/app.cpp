@@ -1,14 +1,10 @@
 #include "app.h"
 #include <curl/curl.h>
 #include <csignal>
-#include <cstdlib>
-#include <thread>
 #include <chrono>
 #include <memory>
 #include <limits>
 #include <cassert>
-
-App app{};
 
 void printBuildInfo() {
 #ifndef BUILD_TYPE
@@ -22,32 +18,19 @@ void printBuildInfo() {
     infof("Build type: %s commit hash: %s", BUILD_TYPE, COMMIT_HASH);
 }
 
-App &getApp() {
-    return app;
-}
-
-App::App() :
-        stopped_{false},
-        statsThread_{statsPrintLoop},
-        address_{std::getenv("ADDRESS")},
-        api_{kApiThreadCount, address_},
-        rateLimiter_{kMaxRPS} {
+App::App(std::shared_ptr<Api> api, std::shared_ptr<Stats> stats) :
+        api_{std::move(api)},
+        stats_{std::move(stats)} {
     printBuildInfo();
     if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
         errorf("curl global init failed: %d", val);
         throw std::runtime_error("curl init failed");
     }
-    std::signal(SIGINT, []([[maybe_unused]]int signal) {
-        app.stop();
-//        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-        std::abort();
-    });
 }
 
 App::~App() {
     stop();
     curl_global_cleanup();
-    statsThread_.join();
 }
 
 ExpectedVoid App::fireInitRequests() noexcept {
@@ -64,7 +47,7 @@ ExpectedVoid App::fireInitRequests() noexcept {
     }
 
     for (size_t i = 0; i < kExploreConcurrentRequestsCnt; i++) {
-        if (auto err = api_.scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
+        if (auto err = api_->scheduleExplore(state_.fetchNextExploreArea()); err.hasError()) {
             return err;
         }
     }
@@ -78,30 +61,30 @@ void App::run() noexcept {
     }
 
     for (;;) {
-        if (getApp().isStopped()) {
+        if (isStopped()) {
             break;
         }
 
-        auto response = api_.getAvailableResponse();
+        auto response = api_->getAvailableResponse();
 
         Measure<std::chrono::nanoseconds> tm;
         auto err = processResponse(response);
-        getStats().addProcessResponseTime(tm.getInt64());
+        stats_->addProcessResponseTime(tm.getInt64());
         if (err.hasError()) {
             if (err.error() != ErrorCode::kErrCurlTimeout) {
                 errorf("error occurred: %d", err.error());
                 break;
             } else {
-                if (auto errInner = api_.scheduleRequest(std::move(response.getRequest())); errInner.hasError()) {
+                if (auto errInner = api_->scheduleRequest(std::move(response.getRequest())); errInner.hasError()) {
                     errorf("error occurred: %d", errInner.error());
                     break;
                 }
-                getStats().incTimeoutCnt();
+                stats_->incTimeoutCnt();
             }
         }
 
-        getStats().recordInUseLicenses(state_.getInUseLicensesCount());
-        getStats().recordCoinsAmount(state_.getCoinsAmount());
+        stats_->recordInUseLicenses(state_.getInUseLicensesCount());
+        stats_->recordCoinsAmount(state_.getCoinsAmount());
     }
 
 }
@@ -115,7 +98,7 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
             auto apiResp = resp.getExploreResponse().get();
             Measure<std::chrono::nanoseconds> tm;
             auto err = processExploreResponse(resp.getRequest(), apiResp);
-            getStats().addProcessExploreResponseTime(tm.getInt64());
+            stats_->addProcessExploreResponseTime(tm.getInt64());
             return err;
         }
         case ApiEndpointType::IssueFreeLicense: {
@@ -161,10 +144,10 @@ App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt)
     auto yBefore = exploreArea->area_.posY_;
 #endif
     if (exploreArea->explored_) {
-        getStats().incDuplicateSetExplored();
+        stats_->incDuplicateSetExplored();
         return NoErr;
     }
-    getStats().incExploredArea(exploreArea->area_.getArea());
+    stats_->incExploredArea(exploreArea->area_.getArea());
     exploreArea->actualTreasuriesCnt_ = actualTreasuriesCnt;
     exploreArea->explored_ = true;
     state_.removeExploreAreaFromQueue(exploreArea->parent_);
@@ -177,7 +160,7 @@ App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt)
 #endif
 
     if (exploreArea->actualTreasuriesCnt_ > 0 && exploreArea->area_.getArea() == 1) {
-        getStats().recordTreasuriesCnt((int) exploreArea->actualTreasuriesCnt_);
+        stats_->recordTreasuriesCnt((int) exploreArea->actualTreasuriesCnt_);
         state_.setLeftTreasuriesAmount(exploreArea->area_.posX_, exploreArea->area_.posY_,
                                        (int32_t) exploreArea->actualTreasuriesCnt_);
         if (auto err = scheduleDigRequest(exploreArea->area_.posX_,
@@ -198,7 +181,7 @@ App::processExploredArea(ExploreAreaPtr exploreArea, size_t actualTreasuriesCnt)
 
 ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreResponse> &resp) noexcept {
     if (resp.getHttpCode() != 200) {
-        return api_.scheduleExplore(req.getExploreRequest());
+        return api_->scheduleExplore(req.getExploreRequest());
     }
     auto successResp = std::move(resp).getResponse();
     auto exploreArea = req.getExploreRequest();
@@ -218,7 +201,7 @@ ExpectedVoid App::processExploreResponse(Request &req, HttpResponse<ExploreRespo
     assert(state_.hasMoreExploreAreas());
 #endif
 
-    return api_.scheduleExplore(state_.fetchNextExploreArea());
+    return api_->scheduleExplore(state_.fetchNextExploreArea());
 }
 
 ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, HttpResponse<License> &resp) noexcept {
@@ -234,7 +217,7 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
 
     auto license = std::move(resp).getResponse();
     state_.addLicence(license);
-    getStats().incIssuedLicenses();
+    stats_->incIssuedLicenses();
 
     for (; state_.hasQueuedDigRequests();) {
         if (!state_.hasAvailableLicense()) {
@@ -251,11 +234,11 @@ ExpectedVoid App::processIssueLicenseResponse([[maybe_unused]]Request &req, Http
 
 ExpectedVoid App::scheduleIssueLicense() noexcept {
     if (state_.hasCoins()) {
-        if (auto err = api_.scheduleIssuePaidLicense(state_.borrowCoin()); err.hasError()) {
+        if (auto err = api_->scheduleIssuePaidLicense(state_.borrowCoin()); err.hasError()) {
             return err.error();
         }
     } else {
-        if (auto err = api_.scheduleIssueFreeLicense(); err.hasError()) {
+        if (auto err = api_->scheduleIssueFreeLicense(); err.hasError()) {
             return err.error();
         }
     }
@@ -276,10 +259,10 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
     switch (resp.getHttpCode()) {
         case 200: {
             auto treasuries = std::move(resp).getResponse();
-            getStats().recordTreasureDepth(digRequest.depth_, (int) treasuries.size());
+            stats_->recordTreasureDepth(digRequest.depth_, (int) treasuries.size());
             for (const auto &id : treasuries) {
                 if (digRequest.depth_ >= minDepthToCash) {
-                    if (auto err = api_.scheduleCash(id, digRequest.depth_); err.hasError()) {
+                    if (auto err = api_->scheduleCash(id, digRequest.depth_); err.hasError()) {
                         return err.error();
                     }
                 }
@@ -313,7 +296,7 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
 ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) noexcept {
     auto httpCode = resp.getHttpCode();
     if (httpCode >= 500) {
-        return api_.scheduleCash(r.getCashRequest().treasureId_, r.getCashRequest().depth_);
+        return api_->scheduleCash(r.getCashRequest().treasureId_, r.getCashRequest().depth_);
     }
     if (httpCode >= 400) {
         auto apiErr = std::move(resp).getErrResponse();
@@ -323,8 +306,8 @@ ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) no
     }
     auto successResp = std::move(resp).getResponse();
     state_.addCoins(successResp);
-    getStats().incCashedCoins((int64_t) successResp.coins.size());
-    getStats().recordCoinsDepth(r.getCashRequest().depth_, (int) successResp.coins.size());
+    stats_->incCashedCoins((int64_t) successResp.coins.size());
+    stats_->recordCoinsDepth(r.getCashRequest().depth_, (int) successResp.coins.size());
     return NoErr;
 }
 
@@ -334,7 +317,7 @@ ExpectedVoid App::scheduleDigRequest(int16_t x, int16_t y, int8_t depth) noexcep
         if (licenseId.hasError()) {
             return licenseId.error();
         }
-        return api_.scheduleDig({licenseId.get(), x, y, depth});
+        return api_->scheduleDig({licenseId.get(), x, y, depth});
     } else {
         state_.addDigRequest({x, y, depth});
         return NoErr;
@@ -376,4 +359,12 @@ ExpectedVoid App::createSubAreas(const ExploreAreaPtr &root) noexcept {
         state_.addExploreArea(root);
     }
     return NoErr;
+}
+
+std::shared_ptr<App> App::createApp() {
+    auto stats = std::make_shared<Stats>();
+    auto api = std::make_shared<Api>(stats);
+    auto app = std::make_shared<App>(api, stats);
+
+    return app;
 }

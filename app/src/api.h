@@ -17,6 +17,7 @@
 #include <atomic>
 #include "api_entities.h"
 #include <set>
+#include "stats.h"
 
 enum class ApiEndpointType : int {
     CheckHealth = 0,
@@ -205,9 +206,12 @@ public:
 
 };
 
-
 class Api {
 private:
+
+    std::shared_ptr<Stats> stats_;
+    std::atomic<bool> stopped_{false};
+
     std::vector<std::thread> threads_;
 
     std::mutex requestsMu_;
@@ -230,7 +234,7 @@ private:
     void publishResponse(Response &&r) noexcept;
 
 public:
-    explicit Api(size_t threadsCount, std::string address);
+    Api(std::shared_ptr<Stats> stats);
 
     Api(const Api &o) = delete;
 

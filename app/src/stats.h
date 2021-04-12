@@ -12,14 +12,20 @@
 #include <mutex>
 #include <array>
 #include <shared_mutex>
+#include <thread>
 
 struct EndpointStats {
     std::map<int32_t, int32_t> httpCodes;
     std::vector<int64_t> durations;
 };
 
+class App;
+
 class Stats {
 private:
+    std::atomic<bool> shouldStopStatsThread_{false};
+    std::thread statsThread_;
+
     std::atomic<int64_t> requestsCnt_{0};
     std::atomic<int64_t> curlErrCnt_{0};
     std::atomic<int64_t> wokenWithEmptyRequestsQueue_{0};
@@ -81,6 +87,8 @@ private:
 public:
 
     Stats();
+
+    ~Stats();
 
     Stats(const Stats &o) = delete;
 
@@ -193,8 +201,9 @@ public:
     int64_t calculateExploreCost(int64_t area) noexcept;
 
     void print() noexcept;
+
+    void statsPrintLoop();
 };
 
-void statsPrintLoop();
 
 #endif //HIGHLOADCUP2021_STATS_H

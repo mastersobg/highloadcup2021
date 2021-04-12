@@ -1,6 +1,8 @@
 #include "app.h"
+#include "log.h"
 
 int main() {
-    getApp().run();
+    auto app = App::createApp();
+    app->run();
     return 0;
 }

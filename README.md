@@ -114,6 +114,9 @@ mkdir -p sysroot ; docker cp -L highloadcup-bin:/lib sysroot
     - sysroot: путь к `app/sysroot`
     - запустить конфигурацию
 
+## GDB displays "Cannot instantiate printer for default visualizer" for many types of variables
+Disable "GNU C++ Library Renderers option" under Settings | Build, Execution, Deployment | Debugger | Data Views | C/C++.
+
 ## Полезные ссылки:
 
 - https://blog.feabhas.com/2015/11/becoming-a-rule-of-zero-hero/
