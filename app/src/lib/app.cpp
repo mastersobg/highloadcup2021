@@ -6,7 +6,10 @@
 #include <limits>
 #include <cassert>
 
-void printBuildInfo() {
+App::App(std::shared_ptr<Api> api, std::shared_ptr<Stats> stats, std::shared_ptr<Log> log) :
+        log_{std::move(log)},
+        api_{std::move(api)},
+        stats_{std::move(stats)} {
 #ifndef BUILD_TYPE
 #define BUILD_TYPE "unknown"
 #endif
@@ -15,15 +18,9 @@ void printBuildInfo() {
 #define COMMIT_HASH "unknown"
 #endif
 
-    infof("Build type: %s commit hash: %s", BUILD_TYPE, COMMIT_HASH);
-}
-
-App::App(std::shared_ptr<Api> api, std::shared_ptr<Stats> stats) :
-        api_{std::move(api)},
-        stats_{std::move(stats)} {
-    printBuildInfo();
+    log_->info() << "Build type: " << BUILD_TYPE << " commit hash: " << COMMIT_HASH;
     if (auto val = curl_global_init(CURL_GLOBAL_ALL)) {
-        errorf("curl global init failed: %d", val);
+        log_->error() << "curl global init failed: " << val;
         throw std::runtime_error("curl init failed");
     }
 }
@@ -56,7 +53,7 @@ ExpectedVoid App::fireInitRequests() noexcept {
 
 void App::run() noexcept {
     if (auto err = fireInitRequests(); err.hasError()) {
-        errorf("fireInitRequests: error: %d", err.error());
+        log_->error() << "fireInitRequests: error: " << err.error();
         return;
     }
 
@@ -72,11 +69,11 @@ void App::run() noexcept {
         stats_->addProcessResponseTime(tm.getInt64());
         if (err.hasError()) {
             if (err.error() != ErrorCode::kErrCurlTimeout) {
-                errorf("error occurred: %d", err.error());
+                log_->error() << "error occurred: " << err.error();
                 break;
             } else {
                 if (auto errInner = api_->scheduleRequest(std::move(response.getRequest())); errInner.hasError()) {
-                    errorf("error occurred: %d", errInner.error());
+                    log_->error() << "error occurred: " << errInner.error();
                     break;
                 }
                 stats_->incTimeoutCnt();
@@ -130,7 +127,7 @@ ExpectedVoid App::processResponse(Response &resp) noexcept {
             return processIssueLicenseResponse(resp.getRequest(), apiResp);
         }
         default: {
-            errorf("unknown response type: %d", resp.getType());
+            log_->error() << "unknown response type: " << resp.getType();
             break;
         }
     }
@@ -286,8 +283,8 @@ ExpectedVoid App::processDigResponse(Request &req, HttpResponse<std::vector<Trea
         default: {
             auto httpCode = resp.getHttpCode();
             auto apiErr = std::move(resp).getErrResponse();
-            errorf("unexpected dig response: http code: %d api code: %d message: %s", httpCode, apiErr.errorCode_,
-                   apiErr.message_.c_str());
+            log_->error() << "unexpected dig response: http code: " << httpCode << " api code: " << apiErr.errorCode_
+                          << " message: " << apiErr.message_;
             return ErrorCode::kUnexpectedDigResponse;
         }
     }
@@ -300,8 +297,8 @@ ExpectedVoid App::processCashResponse(Request &r, HttpResponse<Wallet> &resp) no
     }
     if (httpCode >= 400) {
         auto apiErr = std::move(resp).getErrResponse();
-        errorf("unexpected cash response: http code: %d api code: %d message: %s", httpCode, apiErr.errorCode_,
-               apiErr.message_.c_str());
+        log_->error() << "unexpected cash response: http code: " << httpCode << " api code: " << apiErr.errorCode_
+                      << " message: " << apiErr.message_;
         return ErrorCode::kUnexpectedCashResponse;
     }
     auto successResp = std::move(resp).getResponse();
@@ -362,9 +359,10 @@ ExpectedVoid App::createSubAreas(const ExploreAreaPtr &root) noexcept {
 }
 
 std::shared_ptr<App> App::createApp() {
-    auto stats = std::make_shared<Stats>();
-    auto api = std::make_shared<Api>(stats);
-    auto app = std::make_shared<App>(api, stats);
+    auto log = std::make_shared<Log>();
+    auto stats = std::make_shared<Stats>(log);
+    auto api = std::make_shared<Api>(stats, log);
+    auto app = std::make_shared<App>(api, stats, log);
 
     return app;
 }

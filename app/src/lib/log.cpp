@@ -1,50 +1,38 @@
-#include <cstdio>
-#include <cstdarg>
 #include "log.h"
 #include <mutex>
+#include <iostream>
 
-std::mutex mu;
-
-void debugf(const char *fmt...) {
-    std::unique_lock<std::mutex> lock(mu);
-    printf("DEBUG ");
-    va_list argptr;
-    va_start(argptr, fmt);
-    vfprintf(stdout, fmt, argptr);
-    va_end(argptr);
-    printf("\n");
-    fflush(stdout);
+LogWriter Log::debug() {
+    return LogWriter(*this, "DEBUG ");
 }
 
-void infof(const char *fmt...) {
-    std::unique_lock<std::mutex> lock(mu);
-    printf("INFO  ");
-    va_list argptr;
-    va_start(argptr, fmt);
-    vfprintf(stdout, fmt, argptr);
-    va_end(argptr);
-    printf("\n");
-    fflush(stdout);
+LogWriter Log::info() {
+    return LogWriter(*this, "INFO  ");
 }
 
-void errorf(const char *fmt...) {
-    std::unique_lock<std::mutex> lock(mu);
-    printf("ERROR ");
-    va_list argptr;
-    va_start(argptr, fmt);
-    vfprintf(stdout, fmt, argptr);
-    va_end(argptr);
-    printf("\n");
-    fflush(stdout);
+LogWriter Log::error() {
+    return LogWriter(*this, "ERROR ");
 }
 
-void warnf(const char *fmt, ...) {
-    std::unique_lock<std::mutex> lock(mu);
-    printf("WARN  ");
-    va_list argptr;
-    va_start(argptr, fmt);
-    vfprintf(stdout, fmt, argptr);
-    va_end(argptr);
-    printf("\n");
-    fflush(stdout);
+LogWriter Log::warn() {
+    return LogWriter(*this, "WARN  ");
+}
+
+void Log::log(const std::string &s) {
+    std::scoped_lock lock(mu_);
+    std::cout << s << std::flush;
+}
+
+LogWriter::LogWriter(Log &log, const std::string &logLevel) : log_{log} {
+    stream << logLevel;
+}
+
+LogWriter::~LogWriter() {
+    stream << std::endl;
+    log_.log(stream.str());
+}
+
+LogWriter &LogWriter::operator<<(std::ostream &(*f)(std::ostream &)) {
+    stream << f;
+    return *this;
 }

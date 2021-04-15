@@ -159,14 +159,6 @@ public:
         return cnt;
     }
 
-    void printLicenses() noexcept {
-        for (const auto &v: licenses_) {
-            errorf("id: %d allowed: %d used: %d confirmed: %d",
-                   v.id_, v.digAllowed_, v.digUsed_, v.digConfirmed_);
-        }
-        debugf("==============");
-    }
-
     void addDigRequest(DelayedDigRequest r) noexcept {
         digRequests_.insert(r);
     }

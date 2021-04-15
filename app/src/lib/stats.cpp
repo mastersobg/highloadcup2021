@@ -21,38 +21,39 @@ void Stats::print() noexcept {
     }
     int64_t tickRPS = (requestsCnt_.load() - lastTickRequestsCnt_.load()) * 1000L / statsSleepDelayMs;
 
-    infof("Requests count: %lld", requestsCnt_.load());
-    infof("RPS: %lld", rps);
-    infof("Tick RPS: %lld", tickRPS);
-    infof("Curl errs: %lld", curlErrCnt_.load());
-    infof("Time elapsed: %lld ms", timeElapsedMs);
-    infof("Timeouts: %d", timeoutCnt_.load());
-    infof("Explored area: %lld", exploredArea_.load());
-    infof("Explored treasuries amount: %lld", treasuriesCnt_.load());
-    infof("Cash skipped: %lld", cashSkippedCnt_.load());
-    infof("Duplicate set explored: %lld", duplicateSetExplored_.load());
-    infof("Total process time: %lld expore time: %lld", totalProcessResponseTime_.load(),
-          totalProcessExploreResponseTime_.load());
-    infof("Avg explore request cost: %f",
-          (double) exploreRequestTotalCost_.load() / (double) exploreRequestsCnt_.load());
-    infof("Treasures per second: %f", (double) treasuriesCnt_.load() / (double) timeElapsedMs * 1000.0);
+    log_->info() << "Requests count: " << requestsCnt_.load();
+    log_->info() << "RPS: " << rps;
+    log_->info() << "Tick RPS: " << tickRPS;
+    log_->info() << "Curl errs: " << curlErrCnt_.load();
+    log_->info() << "Time elapsed: " << timeElapsedMs << " ms";
+    log_->info() << "Timeouts: " << timeoutCnt_.load();
+    log_->info() << "Explored area: " << exploredArea_.load();
+    log_->info() << "Explored treasuries amount: " << treasuriesCnt_.load();
+    log_->info() << "Cash skipped: " << cashSkippedCnt_.load();
+    log_->info() << "Duplicate set explored: " << duplicateSetExplored_.load();
+    log_->info() << "Total process time: " << totalProcessResponseTime_.load() <<
+                 " explore time: " << totalProcessExploreResponseTime_.load();
+    log_->info() << "Avg explore request cost: "
+                 << (double) exploreRequestTotalCost_.load() / (double) exploreRequestsCnt_.load();
+    log_->info() << "Treasures per second:" << (double) treasuriesCnt_.load() / (double) timeElapsedMs * 1000.0;
     if (treasuriesCnt_.load() > 0) {
-        infof("Avg explore request per treasure: %f",
-              (double) exploreRequestsCnt_.load() / (double) treasuriesCnt_.load());
-        infof("Avg explored area per treasure: %f",
-              (double) exploreRequestTotalArea_.load() / (double) treasuriesCnt_.load());
-        infof("Avg cost per treasure: %f", (double) exploreRequestTotalCost_.load() / (double) treasuriesCnt_.load());
+        log_->info() << "Avg explore request per treasure: " <<
+                     (double) exploreRequestsCnt_.load() / (double) treasuriesCnt_.load();
+        log_->info() << "Avg explored area per treasure: " <<
+                     (double) exploreRequestTotalArea_.load() / (double) treasuriesCnt_.load();
+        log_->info() << "Avg cost per treasure: "
+                     << (double) exploreRequestTotalCost_.load() / (double) treasuriesCnt_.load();
     }
-    infof("Total requests duration: %lld", totalRequestsDuration_.load());
+    log_->info() << "Total requests duration: " << totalRequestsDuration_.load();
 //    infof("Woken with empty requests queue: %lld", wokenWithEmptyRequestsQueue_.load());
 //    infof("Average in use licenses: %f", (double) inUseLicensesSum_ / (double) inUseLicensesCnt_);
 //    infof("Average in flight requests: %f", (double) inFlightRequestsSum_ / (double) inFlightRequestsCnt_);
 //    infof("Average in flight explore requests: %f",
 //          (double) inFlightExploreRequestsSum_ / (double) inFlightExploreRequestsCnt_);
-    infof("Total cashed: %lld coins, %lld treasuries, %f avg", cashedCoinsSum_.load(), cashedTreasuriesCnt_.load(),
-          (double) cashedCoinsSum_.load() / (double) cashedTreasuriesCnt_.load());
-    infof("Issued licenses: %lld", issuedLicenses_.load());
-    infof("Coins amount: %d", coinsAmount_.load());
+    log_->info() << "Total cashed: " << cashedCoinsSum_.load() << " coins, " << cashedTreasuriesCnt_.load()
+                 << " treasuries, " << (double) cashedCoinsSum_.load() / (double) cashedTreasuriesCnt_.load() << " avg";
+    log_->info() << "Issued licenses: " << issuedLicenses_.load();
+    log_->info() << "Coins amount: " << coinsAmount_.load();
 
     printEndpointsStats();
     printDepthHistogram();
@@ -60,12 +61,12 @@ void Stats::print() noexcept {
 
     printCoinsDepthHistogram();
 //    printExploreAreaHistogram();
-    printCpuStat();
+//    printCpuStat();
 
     lastTickRequestsCnt_ = requestsCnt_.load();
 }
 
-Stats::Stats() {
+Stats::Stats(std::shared_ptr<Log> log) : log_{std::move(log)} {
     startTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now().time_since_epoch()
     ).count();
@@ -115,7 +116,7 @@ void Stats::printEndpointsStats() noexcept {
         logString += " p100: ";
         writeIntToString(stats.durations[size - 1], logString);
 
-        infof("%s", logString.c_str());
+        log_->info() << logString.c_str();
     }
 }
 
@@ -127,7 +128,7 @@ void Stats::printDepthHistogram() noexcept {
         writeIntToString(depthHistogram_[i], logString);
         logString += ", ";
     }
-    infof("depth histogram: %s", logString.c_str());
+    log_->info() << "depth histogram: " << logString.c_str();
 }
 
 void Stats::printCoinsDepthHistogram() noexcept {
@@ -141,26 +142,26 @@ void Stats::printCoinsDepthHistogram() noexcept {
         totalDigs += (int64_t) i * depthCoinsHistogram_[i];
     }
 
-    infof("coin avg dig count: %f", (double) totalDigs / (double) cashedCoinsSum_.load());
-    infof("depth coins histogram: %s", logString.c_str());
+    log_->info() << "coin avg dig count: " << (double) totalDigs / (double) cashedCoinsSum_.load();
+    log_->info() << "depth coins histogram: " << logString.c_str();
 }
 
-void Stats::printCpuStat() noexcept {
-    auto stats = getCpuStats();
-    infof("CPU active: %f%% CPU idle: %f%%\nUser: %f%% Nice: %f%% System: %f%% Idle: %f%% IOWait: %f%% Irq: %f%% SoftIrq: %f%% Steal: %f%% Guest: %f%% GuestNice: %f%%",
-          stats.getActivePercent(), stats.getIdlePercent(),
-          stats.getStatsPercent(CpuStatsState::User),
-          stats.getStatsPercent(CpuStatsState::Nice),
-          stats.getStatsPercent(CpuStatsState::System),
-          stats.getStatsPercent(CpuStatsState::Idle),
-          stats.getStatsPercent(CpuStatsState::IOWait),
-          stats.getStatsPercent(CpuStatsState::Irq),
-          stats.getStatsPercent(CpuStatsState::Softirq),
-          stats.getStatsPercent(CpuStatsState::Steal),
-          stats.getStatsPercent(CpuStatsState::Guest),
-          stats.getStatsPercent(CpuStatsState::GuestNice)
-    );
-}
+//void Stats::printCpuStat() noexcept {
+//    auto stats = getCpuStats();
+//    infof("CPU active: %f%% CPU idle: %f%%\nUser: %f%% Nice: %f%% System: %f%% Idle: %f%% IOWait: %f%% Irq: %f%% SoftIrq: %f%% Steal: %f%% Guest: %f%% GuestNice: %f%%",
+//          stats.getActivePercent(), stats.getIdlePercent(),
+//          stats.getStatsPercent(CpuStatsState::User),
+//          stats.getStatsPercent(CpuStatsState::Nice),
+//          stats.getStatsPercent(CpuStatsState::System),
+//          stats.getStatsPercent(CpuStatsState::Idle),
+//          stats.getStatsPercent(CpuStatsState::IOWait),
+//          stats.getStatsPercent(CpuStatsState::Irq),
+//          stats.getStatsPercent(CpuStatsState::Softirq),
+//          stats.getStatsPercent(CpuStatsState::Steal),
+//          stats.getStatsPercent(CpuStatsState::Guest),
+//          stats.getStatsPercent(CpuStatsState::GuestNice)
+//    );
+//}
 
 void Stats::printExploreAreaHistogram() noexcept {
     std::shared_lock lock(exploreAreaHistogramMutex_);
@@ -178,8 +179,8 @@ void Stats::printExploreAreaHistogram() noexcept {
         writeIntToString(exploreAreaHistogramCount_[i], countStr);
         countStr += ", ";
     }
-    infof("explore area avg duration histogram: %s", avgDurationStr.c_str());
-    infof("explore area count histogram: %s", countStr.c_str());
+    log_->info() << "explore area avg duration histogram: " << avgDurationStr.c_str();
+    log_->info() << "explore area count histogram: " << countStr.c_str();
 }
 
 void Stats::printTreasuriesDiggedCount() noexcept {
@@ -189,7 +190,7 @@ void Stats::printTreasuriesDiggedCount() noexcept {
     for (size_t i = 0; i <= 10; i++) {
         cnt += depthHistogram_[i];
     }
-    infof("Digged treasuries count: %d", cnt);
+    log_->info() << "Digged treasuries count: " << cnt;
 
 }
 

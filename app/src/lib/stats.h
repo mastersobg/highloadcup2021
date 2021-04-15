@@ -23,6 +23,8 @@ class App;
 
 class Stats {
 private:
+    std::shared_ptr<Log> log_;
+
     std::atomic<bool> shouldStopStatsThread_{false};
     std::thread statsThread_;
 
@@ -82,11 +84,11 @@ private:
 
     void printExploreAreaHistogram() noexcept;
 
-    void printCpuStat() noexcept;
+//    void printCpuStat() noexcept;
 
 public:
 
-    Stats();
+    Stats(std::shared_ptr<Log> log);
 
     ~Stats();
 

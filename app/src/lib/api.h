@@ -18,6 +18,7 @@
 #include "api_entities.h"
 #include <set>
 #include "stats.h"
+#include <ostream>
 
 enum class ApiEndpointType : int {
     CheckHealth = 0,
@@ -27,6 +28,8 @@ enum class ApiEndpointType : int {
     Dig = 4,
     Cash = 5,
 };
+
+std::ostream &operator<<(std::ostream &os, const ApiEndpointType &type);
 
 struct CashRequest {
     TreasureID treasureId_;
@@ -209,6 +212,7 @@ public:
 class Api {
 private:
 
+    std::shared_ptr<Log> log_;
     std::shared_ptr<Stats> stats_;
     std::atomic<bool> stopped_{false};
 
@@ -234,7 +238,7 @@ private:
     void publishResponse(Response &&r) noexcept;
 
 public:
-    Api(std::shared_ptr<Stats> stats);
+    Api(std::shared_ptr<Stats> stats, std::shared_ptr<Log> log);
 
     Api(const Api &o) = delete;
 

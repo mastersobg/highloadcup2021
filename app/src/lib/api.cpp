@@ -7,7 +7,8 @@
 #include <thread>
 #include <memory>
 
-Api::Api(std::shared_ptr<Stats> stats) :
+Api::Api(std::shared_ptr<Stats> stats, std::shared_ptr<Log> log) :
+        log_{log},
         stats_{std::move(stats)} {
     auto addressEnv = std::getenv("ADDRESS");
     address_ = "localhost";
@@ -33,7 +34,7 @@ void Api::threadLoop() {
         }
 
         if (requests_.empty()) {
-            errorf("Woken up but requests queue is empty");
+            log_->error() << "Woken up but requests queue is empty";
             stats_->incWokenWithEmptyRequestsQueue();
             continue;
         }
@@ -60,7 +61,7 @@ void Api::threadLoop() {
         auto ret = makeApiRequest(client, r);
         inFlightRequestsCnt_--;
         if (ret.hasError()) {
-            errorf("Error during making API request: %d", ret.error());
+            log_->error() << "Error during making API request: " << ret.error();
             throw std::runtime_error("Error during making API request");
         }
 
@@ -107,7 +108,7 @@ Expected<Response> Api::makeApiRequest(HttpClient &client, Request &r) noexcept 
             return Response(std::move(r), client.issueLicense(coinId));
         }
         default: {
-            errorf("Unsupported request type: %d", r.type_);
+            log_->error() << "Unsupported request type: " << r.type_;
             return ErrorCode::kUnknownRequestType;
         }
     }
@@ -177,3 +178,7 @@ size_t Api::requestsQueueSize() noexcept {
     return requests_.size();
 }
 
+std::ostream &operator<<(std::ostream &os, const ApiEndpointType &type) {
+    os << (int) type;
+    return os;
+}

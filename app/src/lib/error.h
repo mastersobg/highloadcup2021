@@ -2,6 +2,7 @@
 #define HIGHLOADCUP2021_ERROR_H
 
 #include <variant>
+#include <ostream>
 
 enum class ErrorCode : int {
     kNoErr = 0,
@@ -15,6 +16,8 @@ enum class ErrorCode : int {
     kUnexpectedCashResponse = 8,
     kErrCurlTimeout = 9,
 };
+
+std::ostream &operator<<(std::ostream &os, const ErrorCode &ec);
 
 template<class T>
 class Expected {

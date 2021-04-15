@@ -15,6 +15,7 @@ class App {
 private:
     std::atomic<bool> stopped_{false};
 
+    std::shared_ptr<Log> log_;
     std::shared_ptr<Api> api_;
     std::shared_ptr<Stats> stats_;
     State state_;
@@ -43,7 +44,7 @@ private:
     [[nodiscard]] ExpectedVoid createSubAreas(const ExploreAreaPtr &root) noexcept;
 
 public:
-    App(std::shared_ptr<Api> api, std::shared_ptr<Stats> stats);
+    App(std::shared_ptr<Api> api, std::shared_ptr<Stats> stats, std::shared_ptr<Log> log);
 
     ~App();
 
